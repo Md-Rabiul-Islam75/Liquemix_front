@@ -1,0 +1,16 @@
+services:
+  nextjs:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+      dockerfile: Dockerfile
+    container_name: nexadocs-user-panel
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=${NODE_ENV}
+    restart: unless-stopped

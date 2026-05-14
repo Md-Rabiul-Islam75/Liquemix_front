@@ -1,0 +1,150 @@
+import Link from "next/link";
+import { FiArrowRight, FiPlay } from "react-icons/fi";
+
+export default function Hero() {
+  return (
+    <section className="relative overflow-hidden bg-neutral-900 text-white-base">
+      {/* Decorative brand swirl */}
+      <div
+        aria-hidden
+        className="absolute inset-0 opacity-90"
+        style={{
+          background:
+            "radial-gradient(ellipse 60% 80% at 85% 30%, rgba(245,124,0,0.55) 0%, transparent 60%), radial-gradient(ellipse 70% 60% at 10% 90%, rgba(255,179,0,0.35) 0%, transparent 55%), linear-gradient(120deg, #072454 0%, #0a3674 35%, #0d4690 75%, #1565c0 100%)",
+        }}
+      />
+
+      {/* Subtle grid */}
+      <div
+        aria-hidden
+        className="absolute inset-0 opacity-[0.07]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
+          backgroundSize: "44px 44px",
+        }}
+      />
+
+      <div className="relative container-page py-20 md:py-28 lg:py-32 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+        <div className="lg:col-span-7">
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur border border-white/15 text-xs font-semibold tracking-[0.18em] uppercase text-accent-300">
+            <span className="block w-1.5 h-1.5 rounded-full bg-accent-400 animate-pulse" />
+            Construction Chemicals · Engineered Systems
+          </span>
+
+          <h1 className="mt-6 text-4xl md:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight text-balance">
+            Build on{" "}
+            <span className="relative inline-block">
+              <span className="brand-gradient-text">simple systems.</span>
+            </span>
+            <br />
+            <span className="text-white/90">Engineered for the real world.</span>
+          </h1>
+
+          <p className="mt-6 text-lg md:text-xl text-white/75 max-w-2xl text-balance">
+            From basement waterproofing to industrial flooring — LiqueMix
+            delivers complete engineered systems with full technical
+            documentation, applicator support, and a guaranteed service life.
+          </p>
+
+          <div className="mt-10 flex flex-wrap items-center gap-4">
+            <Link href="/products" className="btn-accent text-base">
+              Explore Products <FiArrowRight />
+            </Link>
+            <Link href="/solutions" className="btn-outline-light text-base">
+              <FiPlay /> Watch Systems
+            </Link>
+          </div>
+
+          <div className="mt-12 grid grid-cols-3 gap-6 max-w-xl">
+            {[
+              { kpi: "200+", label: "Products" },
+              { kpi: "40+", label: "Countries served" },
+              { kpi: "1500+", label: "Reference projects" },
+            ].map((m) => (
+              <div key={m.label} className="border-l-2 border-accent-400 pl-3">
+                <p className="text-2xl md:text-3xl font-bold leading-none">{m.kpi}</p>
+                <p className="mt-1 text-xs uppercase tracking-wider text-white/65">
+                  {m.label}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right visual */}
+        <div className="lg:col-span-5 relative">
+          <div className="relative aspect-square max-w-[520px] mx-auto">
+            {/* outer ring */}
+            <div className="absolute inset-0 rounded-full border border-white/15 animate-[spin_60s_linear_infinite]" />
+            <div className="absolute inset-6 rounded-full border border-white/10 animate-[spin_90s_linear_infinite_reverse]" />
+
+            {/* product cards */}
+            <div className="absolute inset-0 grid place-items-center">
+              <div className="relative w-[68%] aspect-[3/4] rounded-3xl bg-white-base/95 backdrop-blur shadow-2xl rotate-[-6deg] overflow-hidden">
+                <div className="absolute inset-0 brand-gradient opacity-15" />
+                <div className="relative p-6 h-full flex flex-col justify-between">
+                  <div>
+                    <span className="chip-new">NEW</span>
+                    <p className="mt-3 text-xs uppercase tracking-wider text-primary-700">
+                      Waterproofing
+                    </p>
+                    <h3 className="mt-1 text-2xl font-bold text-neutral-900 leading-tight">
+                      Hydro-Guard 3X
+                    </h3>
+                  </div>
+                  <div>
+                    <div className="h-32 rounded-xl bg-gradient-to-br from-primary-100 via-primary-50 to-secondary-100" />
+                    <p className="mt-3 text-xs text-neutral-500">
+                      Triple-action waterproofing slurry — crystalline, elastic,
+                      sealing.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute right-0 bottom-8 w-[42%] aspect-[3/4] rounded-2xl bg-white-base/95 shadow-2xl rotate-[8deg] overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-secondary-100 via-accent-50 to-white" />
+                <div className="relative p-4 h-full flex flex-col justify-between">
+                  <span className="chip-featured w-fit">★ TOP</span>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-secondary-700">
+                      Tile
+                    </p>
+                    <h3 className="text-base font-bold text-neutral-900">Fix MT-3</h3>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom segment band — Schomburg-inspired but modernized */}
+      <div className="relative">
+        <div className="container-page">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-white/10 rounded-t-2xl overflow-hidden -mb-px">
+            {[
+              { label: "Waterproofing & Restoration", color: "bg-primary-500" },
+              { label: "Tile · Natural Stone · Screed", color: "bg-secondary-500" },
+              { label: "Protective Flooring & Coatings", color: "bg-accent-500" },
+              { label: "Concrete Technology", color: "bg-success-500" },
+            ].map((s) => (
+              <Link
+                key={s.label}
+                href="/products"
+                className="group relative bg-neutral-900/80 backdrop-blur px-5 py-5 flex items-center justify-between hover:bg-neutral-900 transition-colors"
+              >
+                <span className={`absolute left-0 top-0 bottom-0 w-1 ${s.color}`} />
+                <span className="text-sm font-semibold pl-2 leading-snug">
+                  {s.label}
+                </span>
+                <FiArrowRight className="text-white/60 group-hover:text-accent-400 group-hover:translate-x-1 transition-all" />
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

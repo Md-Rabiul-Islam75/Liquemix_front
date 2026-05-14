@@ -1,127 +1,411 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
+/*
+ * LiqueMix Design System
+ * Brand triad: Cobalt Blue (primary), Vivid Orange (secondary), Golden Yellow (accent)
+ * Source: LiqueMix.png logo
+ */
 @theme {
   --color-white-base: #ffffff;
 
-  --color-neutral-50: #eeeeee;
-  --color-neutral-100: #c9c9c9;
-  --color-neutral-200: #afafaf;
-  --color-neutral-300: #8a8a8a;
-  --color-neutral-400: #747474;
-  --color-neutral-500: #515151;
-  --color-neutral-600: #4a4a4a;
-  --color-neutral-900: #222222;
+  /* Neutrals (UI scaffolding) */
+  --color-neutral-50: #f6f7f9;
+  --color-neutral-100: #eceef2;
+  --color-neutral-200: #d6dae3;
+  --color-neutral-300: #b3bac8;
+  --color-neutral-400: #8b94a7;
+  --color-neutral-500: #647084;
+  --color-neutral-600: #485265;
+  --color-neutral-700: #323a49;
+  --color-neutral-800: #1e2330;
+  --color-neutral-900: #0f1320;
 
-  --color-error-50: #ffe6e6;
+  /* Primary — LiqueMix Cobalt Blue */
+  --color-primary-50:  #e8f1fc;
+  --color-primary-100: #c5dbf6;
+  --color-primary-200: #9cc1ee;
+  --color-primary-300: #6ba0e4;
+  --color-primary-400: #3f88d6;
+  --color-primary-500: #1565c0;
+  --color-primary-600: #1158ab;
+  --color-primary-700: #0d4690;
+  --color-primary-800: #0a3674;
+  --color-primary-900: #072454;
+
+  /* Secondary — LiqueMix Vivid Orange */
+  --color-secondary-50:  #fff3e6;
+  --color-secondary-100: #ffd9b5;
+  --color-secondary-200: #ffbe80;
+  --color-secondary-300: #ffa24d;
+  --color-secondary-400: #fb8c25;
+  --color-secondary-500: #f57c00;
+  --color-secondary-600: #dc6e00;
+  --color-secondary-700: #b85c00;
+  --color-secondary-800: #8a4500;
+  --color-secondary-900: #5c2e00;
+
+  /* Accent — LiqueMix Golden Yellow */
+  --color-accent-50:  #fff8e1;
+  --color-accent-100: #ffecb3;
+  --color-accent-200: #ffe082;
+  --color-accent-300: #ffd54f;
+  --color-accent-400: #ffc529;
+  --color-accent-500: #ffb300;
+  --color-accent-600: #e69f00;
+  --color-accent-700: #b87e00;
+  --color-accent-800: #8a5e00;
+  --color-accent-900: #5c3e00;
+
+  /* Semantic */
+  --color-error-50:  #ffe6e6;
   --color-error-300: #ff5454;
   --color-error-400: #ff3333;
-  --color-error-500: #ff0000;
-  --color-error-600: #e80000;
+  --color-error-500: #e11d1d;
+  --color-error-600: #b91515;
   --color-error-900: #6b0000;
 
-  --color-warning-50: #fff1ed;
+  --color-warning-50:  #fff1ed;
   --color-warning-500: #ff764a;
   --color-warning-600: #e86b43;
 
-  --color-success-50: #f3ffeb;
-  --color-success-600: #76e533;
-  --color-success-700: #5cb328;
-  --color-success-800: #488b1f;
-  --color-success-900: #376a18;
+  --color-success-50:  #e8f7ec;
+  --color-success-500: #2fa84f;
+  --color-success-600: #228a3f;
+  --color-success-700: #1c6b31;
+  --color-success-900: #0e3d1a;
 
-  --color-secondary-50: #efecfd;
-  --color-secondary-100: #cdc4f7;
-  --color-secondary-200: #b5a8f4;
-  --color-secondary-500: #5e42e6;
-  --color-secondary-600: #563cd1;
-  --color-secondary-900: #271c61;
+  /* Shadows */
+  --shadow-primary: 0 10px 30px -10px rgba(21, 101, 192, 0.30);
+  --shadow-accent: 0 10px 30px -10px rgba(245, 124, 0, 0.30);
+  --shadow-soft: 0 2px 8px 0 rgba(15, 19, 32, 0.06), 0 12px 24px -10px rgba(15, 19, 32, 0.08);
 
-  --color-primary-50: #e9f3fd;
-  --color-primary-100: #bad9f8;
-  --color-primary-200: #99c7f4;
-  --color-primary-400: #4d9eed;
-  --color-primary-500: #2186e8;
-  --color-primary-600: #1e7ad3;
-  --color-primary-700: #175fa5;
-  --color-primary-900: #0e3861;
+  /* Segment-tinted shadows — used on branded panels to anchor each card
+     in its segment's color palette without overpowering content. */
+  --shadow-segment-blue:   0 12px 28px -14px rgba(21, 101, 192, 0.45), 0 2px 6px -2px rgba(21, 101, 192, 0.12);
+  --shadow-segment-orange: 0 12px 28px -14px rgba(245, 124, 0, 0.45),  0 2px 6px -2px rgba(245, 124, 0, 0.14);
+  --shadow-segment-yellow: 0 12px 28px -14px rgba(255, 179, 0, 0.55),  0 2px 6px -2px rgba(255, 179, 0, 0.18);
+  --shadow-segment-green:  0 12px 28px -14px rgba(47, 168, 79, 0.40),  0 2px 6px -2px rgba(47, 168, 79, 0.12);
+  --shadow-brand:          0 12px 28px -14px rgba(21, 101, 192, 0.30), 0 2px 6px -2px rgba(245, 124, 0, 0.10);
 
-  --shadow-primary: 0px 0px 15px 0px rgba(77, 158, 237, 0.35);
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
 }
 
-/* scroll bar hide */
-@layer utilities {
-  .scrollbar-hide {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
-  }
-
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none; /* Chrome, Safari and Opera */
-  }
+/* ---------- Base ---------- */
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  font-family: var(--font-poppins), sans-serif;
+  font-family: var(--font-poppins), system-ui, -apple-system, "Segoe UI", sans-serif;
   background-color: var(--color-white-base);
   color: var(--color-neutral-900);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* common styles */
+/* ---------- Utilities ---------- */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .container-page {
+    @apply mx-auto w-full max-w-[1320px] px-4 sm:px-6 lg:px-8;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Decorative brand gradient — mirrors the logo swirl */
+  .brand-gradient {
+    background-image: linear-gradient(
+      135deg,
+      var(--color-primary-500) 0%,
+      var(--color-primary-400) 30%,
+      var(--color-secondary-500) 70%,
+      var(--color-accent-500) 100%
+    );
+  }
+
+  .brand-gradient-text {
+    background-image: linear-gradient(
+      90deg,
+      var(--color-primary-500) 0%,
+      var(--color-secondary-500) 80%,
+      var(--color-accent-500) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .text-shadow-soft {
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  }
+}
+
+/* ---------- Section primitives ---------- */
+.section {
+  @apply py-16 md:py-24;
+}
+
+.eyebrow {
+  @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary-600;
+}
+
+.section-title {
+  @apply text-3xl md:text-5xl font-bold tracking-tight text-neutral-900 text-balance;
+}
+
+.section-subtitle {
+  @apply mt-4 text-base md:text-lg text-neutral-600 max-w-2xl text-balance;
+}
+
+/* ---------- Buttons ---------- */
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 h-12 px-6 rounded-[10px]
+         bg-primary-500 text-white-base font-semibold
+         shadow-[0_8px_24px_-8px_rgba(21,101,192,0.45)]
+         transition-all duration-200
+         hover:bg-primary-600 hover:-translate-y-0.5
+         active:translate-y-0 active:bg-primary-700
+         disabled:bg-neutral-200 disabled:text-neutral-400 disabled:shadow-none disabled:cursor-not-allowed;
+}
+
+.btn-accent {
+  @apply inline-flex items-center justify-center gap-2 h-12 px-6 rounded-[10px]
+         bg-secondary-500 text-white-base font-semibold
+         shadow-[0_8px_24px_-8px_rgba(245,124,0,0.45)]
+         transition-all duration-200
+         hover:bg-secondary-600 hover:-translate-y-0.5
+         active:translate-y-0 active:bg-secondary-700;
+}
+
+.btn-ghost {
+  @apply inline-flex items-center justify-center gap-2 h-12 px-6 rounded-[10px]
+         bg-white-base text-primary-700 font-semibold border border-neutral-200
+         transition-all duration-200
+         hover:border-primary-300 hover:text-primary-600 hover:bg-primary-50;
+}
+
+.btn-outline-light {
+  @apply inline-flex items-center justify-center gap-2 h-12 px-6 rounded-[10px]
+         bg-transparent text-white-base font-semibold border border-white/40
+         transition-all duration-200
+         hover:bg-white/10 hover:border-white;
+}
+
+.chip {
+  @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold;
+}
+
+.chip-new {
+  @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-secondary-500 text-white-base;
+}
+
+.chip-featured {
+  @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-accent-500 text-neutral-900;
+}
+
+.chip-segment-blue {
+  @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary-50 text-primary-700;
+}
+.chip-segment-orange {
+  @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-secondary-50 text-secondary-700;
+}
+.chip-segment-yellow {
+  @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-accent-50 text-accent-800;
+}
+.chip-segment-green {
+  @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-success-50 text-success-700;
+}
+
+/* ---------- Branded panels ----------
+ * Used for filter sidebars, key-facts panels, and the catalogue Categories
+ * card next to each segment. Every variant gets:
+ *   • a subtle tinted background gradient (segment or primary)
+ *   • a 4px accent bar at the top edge
+ *   • a brand-tinted shadow
+ *   • a brand-colored eyebrow class via `.brand-panel__eyebrow`
+ *
+ * Add `brand-panel` for the default (primary blue), or `brand-panel-{color}`
+ * for a segment-specific variant. The ::before bar handles the top accent.
+ */
+.brand-panel {
+  @apply relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary-50/40 via-white-base to-white-base
+         border border-primary-100/70 shadow-[var(--shadow-brand)];
+}
+.brand-panel::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 4px;
+  background-image: linear-gradient(
+    90deg,
+    var(--color-primary-500) 0%,
+    var(--color-secondary-500) 60%,
+    var(--color-accent-500) 100%
+  );
+}
+
+.brand-panel-blue {
+  @apply relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary-50/50 via-white-base to-white-base
+         border border-primary-100/70 shadow-[var(--shadow-segment-blue)];
+}
+.brand-panel-blue::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 0; height: 4px;
+  background-image: linear-gradient(90deg, var(--color-primary-700), var(--color-primary-400) 60%, var(--color-primary-500));
+}
+
+.brand-panel-orange {
+  @apply relative rounded-2xl overflow-hidden bg-gradient-to-br from-secondary-50/50 via-white-base to-white-base
+         border border-secondary-100/70 shadow-[var(--shadow-segment-orange)];
+}
+.brand-panel-orange::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 0; height: 4px;
+  background-image: linear-gradient(90deg, var(--color-secondary-700), var(--color-secondary-400) 60%, var(--color-secondary-500));
+}
+
+.brand-panel-yellow {
+  @apply relative rounded-2xl overflow-hidden bg-gradient-to-br from-accent-50/60 via-white-base to-white-base
+         border border-accent-100/70 shadow-[var(--shadow-segment-yellow)];
+}
+.brand-panel-yellow::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 0; height: 4px;
+  background-image: linear-gradient(90deg, var(--color-accent-600), var(--color-accent-300) 60%, var(--color-accent-500));
+}
+
+.brand-panel-green {
+  @apply relative rounded-2xl overflow-hidden bg-gradient-to-br from-success-50/60 via-white-base to-white-base
+         border border-success-50 shadow-[var(--shadow-segment-green)];
+}
+.brand-panel-green::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 0; height: 4px;
+  background-image: linear-gradient(90deg, var(--color-success-700), var(--color-success-500) 60%, var(--color-success-600));
+}
+
+/* Eyebrow text colors that match each panel variant */
+.brand-panel__eyebrow {
+  @apply text-xs font-bold tracking-[0.18em] uppercase text-primary-700;
+}
+.brand-panel-blue   .brand-panel__eyebrow { color: var(--color-primary-700); }
+.brand-panel-orange .brand-panel__eyebrow { color: var(--color-secondary-700); }
+.brand-panel-yellow .brand-panel__eyebrow { color: var(--color-accent-800); }
+.brand-panel-green  .brand-panel__eyebrow { color: var(--color-success-700); }
+
+/* List-item hover treatment used inside branded panels */
+.brand-panel-item {
+  @apply flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-sm text-neutral-800 transition-all
+         hover:bg-primary-50 hover:text-primary-700;
+}
+.brand-panel-blue   .brand-panel-item:hover { background-color: var(--color-primary-50);   color: var(--color-primary-700); }
+.brand-panel-orange .brand-panel-item:hover { background-color: var(--color-secondary-50); color: var(--color-secondary-700); }
+.brand-panel-yellow .brand-panel-item:hover { background-color: var(--color-accent-50);    color: var(--color-accent-800); }
+.brand-panel-green  .brand-panel-item:hover { background-color: var(--color-success-50);   color: var(--color-success-700); }
+
+.brand-panel-dot {
+  @apply inline-block w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0;
+}
+.brand-panel-blue   .brand-panel-dot { background-color: var(--color-primary-500); }
+.brand-panel-orange .brand-panel-dot { background-color: var(--color-secondary-500); }
+.brand-panel-yellow .brand-panel-dot { background-color: var(--color-accent-600); }
+.brand-panel-green  .brand-panel-dot { background-color: var(--color-success-600); }
+
+/* ---------- Cards ----------
+ * NOTE: `group` is not @apply-able in Tailwind 4 — it's a variant marker, not a
+ * utility. Add `group` directly to the JSX className alongside these classes
+ * when the card has children that use `group-hover:`.
+ */
+.card-product {
+  @apply relative flex flex-col rounded-2xl bg-white-base border border-neutral-100
+         overflow-hidden shadow-soft transition-all duration-300
+         hover:shadow-primary hover:-translate-y-1 hover:border-primary-200;
+}
+
+.card-segment {
+  @apply relative flex flex-col justify-between rounded-2xl overflow-hidden
+         min-h-[280px] p-7 text-white-base transition-all duration-300
+         hover:shadow-lg hover:-translate-y-1;
+}
+
+.card-reference {
+  @apply relative flex flex-col rounded-2xl overflow-hidden bg-neutral-900 text-white-base
+         shadow-soft transition-all duration-300
+         hover:shadow-lg hover:-translate-y-1;
+}
+
+/* ---------- Header / Navigation ---------- */
+.nav-link {
+  @apply relative inline-flex items-center gap-1 px-3 py-2 text-sm font-semibold text-neutral-700
+         transition-colors duration-200 hover:text-primary-600;
+}
+
+.nav-link::after {
+  content: "";
+  @apply absolute left-3 right-3 -bottom-0.5 h-0.5 bg-primary-500 scale-x-0 origin-left transition-transform duration-300;
+}
+
+.nav-link:hover::after,
+.nav-link[aria-expanded="true"]::after {
+  @apply scale-x-100;
+}
+
+.megamenu {
+  @apply absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[min(1180px,calc(100vw-2rem))]
+         rounded-2xl bg-white-base shadow-soft border border-neutral-100
+         opacity-0 invisible translate-y-2 transition-all duration-200 z-50;
+}
+
+.megamenu[data-open="true"] {
+  @apply opacity-100 visible translate-y-0;
+}
+
+/* ---------- Auth (preserved for the future login/register flow) ---------- */
 .authCard {
   @apply w-full md:w-[70%] max-w-[734px] p-6 md:p-10 lg:p-16 rounded-2xl bg-white-base shadow-primary;
 }
-.authCard1 {
-  @apply w-full md:w-[70%]  p-6 md:p-10 lg:p-16 rounded-2xl bg-white-base shadow-primary;
-}
-
 .authLinkContent {
   @apply text-center text-sm font-medium;
 }
-
 .linkBlue {
   @apply text-primary-500 hover:text-primary-600 hover:underline;
 }
-
 .dividerWrapper {
   @apply flex items-center;
 }
-
 .divider {
   @apply flex-grow border-t border-neutral-900 opacity-25;
 }
-
 .dividerText {
   @apply text-sm font-medium mx-4;
 }
-
 .icon24 {
   @apply text-2xl;
 }
-
 .errorMsg {
-  @apply text-sm text-error-300;
+  @apply text-sm text-error-400;
 }
 
-.contentCard {
-  @apply bg-white-base shadow-primary rounded-[10px];
-}
-
-.contentCardTitle {
-  @apply text-xl font-medium text-primary-900 px-4 py-3;
-}
-/* common styles */
-
-/* selection role */
-.selectionRole {
-  position: relative;
-  width: 300px;
-  height: 350px;
-  background-color: #ffffff; /* Assuming white-base is white */
-  border-radius: 0.75rem; /* Tailwind's rounded-xl = 12px */
-}
-
-/* button styles */
 .primaryBtn {
   height: 48px;
   padding: 8px;
@@ -131,25 +415,16 @@ body {
   background: var(--color-primary-500);
   color: var(--color-white-base);
   border: 1px solid var(--color-primary-500);
-  border-radius: 4px;
+  border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
 }
-
-.primaryBtn:hover {
-  background: var(--color-primary-400);
-  border: 1px solid var(--color-primary-400);
-}
-
-.primaryBtn:active {
-  background: var(--color-primary-600);
-  border: 1px solid var(--color-primary-600);
-}
-
+.primaryBtn:hover { background: var(--color-primary-600); border-color: var(--color-primary-600); }
+.primaryBtn:active { background: var(--color-primary-700); border-color: var(--color-primary-700); }
 .primaryBtn:disabled {
-  background: var(--color-neutral-50);
-  color: var(--color-neutral-300);
-  border: 1px solid var(--color-neutral-50);
+  background: var(--color-neutral-100);
+  color: var(--color-neutral-400);
+  border-color: var(--color-neutral-100);
   cursor: not-allowed;
 }
 
@@ -162,382 +437,41 @@ body {
   background: var(--color-white-base);
   color: var(--color-primary-500);
   border: 1px solid var(--color-primary-500);
-  border-radius: 4px;
+  border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
 }
+.primaryOutlineBtn:hover { background: var(--color-primary-50); }
+.primaryOutlineBtn:active { background: var(--color-primary-100); }
 
-.primaryOutlineBtn:hover {
-  background: var(--color-primary-50);
-}
-
-.primaryOutlineBtn:active {
-  background: var(--color-primary-100);
-}
-
-.primaryOutlineBtn:disabled {
-  background: var(--color-neutral-50);
-  color: var(--color-neutral-300);
-  border: 1px solid var(--color-neutral-50);
-  cursor: not-allowed;
-}
-
-.errorBtnOutline {
-  height: 48px;
-  padding: 8px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: var(--color-white-base);
-  color: var(--color-error-500);
-  border: 1px solid var(--color-error-500);
-  border-radius: 4px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.errorBtnOutline:hover {
-  background: var(--color-error-50);
-}
-
-.errorBtnOutline:active {
-  background: var(--color-error-50);
-}
-
-.errorBtnOutline:disabled {
-  background: var(--color-neutral-50);
-  color: var(--color-neutral-300);
-  border: 1px solid var(--color-neutral-50);
-  cursor: not-allowed;
-}
-/* button styles */
-
-/* form styles  */
-.inputWrapper {
-  position: relative;
-}
-
+.inputWrapper { position: relative; }
 .inputField {
   width: 100%;
   outline: none;
-  border: 1px solid var(--color-neutral-400);
-  border-radius: 4px;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: 8px;
   padding: 16px;
   font-weight: 500;
 }
-
-.inputField::placeholder {
-  font-size: 14px;
-  font-weight: 400;
-}
-
-.inputField:focus {
-  border: 1px solid var(--color-primary-500);
-}
-
+.inputField:focus { border-color: var(--color-primary-500); }
 .inputLabel {
   position: absolute;
-  top: -14px;
+  top: -10px;
   left: 12px;
   background: var(--color-white-base);
-  padding: 4px;
-  font-size: 14px;
+  padding: 0 6px;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--color-neutral-700);
-  z-index: 20;
+  color: var(--color-neutral-600);
 }
-
-.inputWrapper:focus-within .inputLabel {
-  color: var(--color-primary-500);
-}
-
-.requiredIcon {
-  color: var(--color-error-400);
-}
-
+.requiredIcon { color: var(--color-error-400); }
 .inputPasswordField {
   width: 100%;
-  border: 1px solid var(--color-neutral-400);
-  border-radius: 4px;
-  font-weight: 500;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: 8px;
   display: flex;
   align-items: center;
 }
-
-.inputWrapper:focus-within .inputPasswordField {
-  border: 1px solid var(--color-primary-500);
-}
-
-.inputPasswordField input {
-  width: 100%;
-  outline: none;
-  padding: 16px 8px 16px 16px;
-}
-
-.eyeIconContainer {
-  flex-shrink: 0;
-  padding: 16px 16px 16px 8px;
-}
-
-.eyeIcon {
-  font-size: 24px;
-  cursor: pointer;
-}
-
-.searchBox {
-  width: 100%;
-  background: var(--color-neutral-50);
-  color: var(--color-neutral-500);
-  border: 1px solid var(--color-neutral-50);
-  border-radius: 24px;
-  padding: 4px;
-  font-weight: 500;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.searchInput {
-  flex-grow: 1;
-  outline: none;
-  padding: 0 12px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.searchIconBox {
-  flex-shrink: 0;
-  background: var(--color-primary-400);
-  color: var(--color-white-base);
-  border-radius: 50%;
-  padding: 6px;
-  cursor: pointer;
-}
-
-.phoneContainer {
-  width: 100%;
-  position: relative;
-}
-
-.phoneInput {
-  width: 100% !important;
-  height: 54px !important;
-  outline: none !important;
-  border: 1px solid var(--color-neutral-400) !important;
-  border-radius: 4px !important;
-  padding: 16px 16px 16px 48px !important;
-  color: var(--color-neutral-900);
-  font-size: 16px !important;
-  font-weight: 500 !important;
-}
-
-.phoneDropdown {
-  position: absolute !important;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 25;
-  width: 48px !important;
-  height: 54px !important;
-  background-color: var(--color-white-base) !important;
-  padding: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border: 1px solid var(--color-neutral-400) !important;
-  border-radius: 4px 0 0 4px !important;
-  border-right: none !important;
-}
-
-.inputWrapper:focus-within .phoneInput {
-  border: 1px solid var(--color-primary-500) !important;
-}
-
-.inputWrapper:focus-within .phoneDropdown {
-  border: 1px solid var(--color-primary-500) !important;
-  border-right: none !important;
-}
-
-.react-tel-input .country-list {
-  border: 1px solid var(--color-neutral-50) !important;
-  border-radius: 4px !important;
-  box-shadow: 0px 0px 8px 0px rgba(77, 158, 237, 0.35) !important;
-  overflow: hidden;
-  z-index: 50;
-}
-
-.react-tel-input .country-list .country {
-  color: var(--color-neutral-900) !important;
-  cursor: pointer;
-}
-
-.react-tel-input .country-list .country:hover {
-  background-color: var(--color-primary-100) !important;
-}
-
-.react-tel-input .country-list .country.highlight {
-  background-color: var(--color-primary-400) !important;
-}
-/* form styles  */
-
-/* dropzone styles  */
-.zoneBox {
-  width: 100%;
-  border: 1px dashed var(--color-neutral-400);
-  border-radius: 4px;
-  padding: 30px 16px;
-  cursor: pointer;
-}
-
-.zoneBox:focus-within,
-.zoneBoxActive {
-  border: 1px dashed var(--color-primary-500);
-}
-
-.zoneBox p,
-.zoneBox div {
-  color: var(--color-neutral-500);
-  font-size: 12px;
-  text-align: center;
-}
-/* dropzone styles  */
-
-/* table style */
-.tableConatiner {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.tableConatiner thead tr {
-  background: var(--color-white-base);
-}
-
-.tableConatiner thead tr td {
-  padding: 12px;
-  color: var(--color-neutral-600);
-  text-align: center;
-  font-size: 14px;
-  font-weight: 400;
-}
-
-.tableConatiner tbody tr td {
-  padding: 12px;
-  border-bottom: 1px solid rgba(14, 55, 97, 0.25);
-  color: var(--color-neutral-900);
-  text-align: center;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.tableHeader {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-}
-
-.tableHeader .headerIcon {
-  color: var(--color-primary-700);
-  font-size: 16px;
-}
-
-.sortIcon {
-  color: var(--color-neutral-600);
-  font-size: 14px;
-}
-/* table style */
-
-/* pagination style */
-.paginationContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-}
-
-.pageItem {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--color-white-base);
-  color: var(--color-neutral-600);
-  cursor: pointer;
-}
-
-.pageItem:hover {
-  background: var(--color-primary-400);
-  color: var(--color-primary-50);
-}
-
-.pageLink {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.pageLinkArrow {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  font-size: 24px;
-}
-
-.active {
-  background: var(--color-primary-400);
-  color: var(--color-primary-50);
-}
-
-.pageItemDisabled {
-  background: var(--color-neutral-50);
-  color: var(--color-neutral-300);
-  cursor: not-allowed;
-}
-
-.pageItemDisabled:hover {
-  background: var(--color-neutral-50);
-  color: var(--color-neutral-300);
-}
-
-.paginateMetaInfo {
-  color: var(--color-neutral-600);
-  font-size: 14px;
-}
-/* pagination style */
-
-/* modal styles */
-.modaleOverlay {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 99;
-  background: rgba(45, 45, 45, 0.6);
-  backdrop-filter: blur(5px);
-}
-
-.modalContent {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 101;
-  width: 90vw;
-  max-width: 500px;
-  background: var(--color-white-base);
-  padding: 20px;
-  border-radius: 4px;
-  box-shadow: var(--shadow-primary);
-}
-
-.modalTitle {
-  font-size: 20px;
-  font-weight: 600;
-}
-/* modal styles */
+.inputPasswordField input { width: 100%; outline: none; padding: 16px 8px 16px 16px; }
+.eyeIconContainer { padding: 16px 16px 16px 8px; }
+.eyeIcon { font-size: 24px; cursor: pointer; }

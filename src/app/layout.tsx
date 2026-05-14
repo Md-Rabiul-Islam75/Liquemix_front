@@ -12,8 +12,20 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "IDS",
-  description: "IDS - Authentication Platform",
+  title: {
+    default: "LiqueMix — Construction Chemical & Industrial Solutions",
+    template: "%s · LiqueMix",
+  },
+  description:
+    "Engineered construction-chemical systems for waterproofing, tile installation, protective flooring, and concrete technology. Complete technical documentation, applicator support, and a guaranteed service life.",
+  metadataBase: new URL("https://liquemix.com"),
+  openGraph: {
+    title: "LiqueMix — Construction Chemical & Industrial Solutions",
+    description:
+      "Engineered construction-chemical systems for waterproofing, tile, flooring, and concrete technology.",
+    type: "website",
+    siteName: "LiqueMix",
+  },
 };
 
 export default function RootLayout({

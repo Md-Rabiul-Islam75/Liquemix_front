@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FaWhatsapp, FaLinkedinIn, FaFacebookF, FaWeixin } from "react-icons/fa";
+import { FaWhatsapp, FaLinkedinIn, FaFacebookF } from "react-icons/fa";
 import { FiMail, FiPhone, FiArrowUpRight } from "react-icons/fi";
 
 /**

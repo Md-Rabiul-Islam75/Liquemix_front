@@ -182,7 +182,7 @@ export default function ProductSearchModal({
             <div className="p-10 text-center">
               <p className="text-sm text-neutral-500">
                 No products match{" "}
-                <span className="font-semibold text-neutral-900">"{query}"</span>.
+                <span className="font-semibold text-neutral-900">&quot;{query}&quot;</span>.
                 Try a different keyword or browse{" "}
                 <Link
                   href="/products"
@@ -203,7 +203,7 @@ export default function ProductSearchModal({
               )}
               {query && (
                 <p className="px-5 pt-4 pb-2 text-[11px] font-bold uppercase tracking-wider text-neutral-500">
-                  {results.length} {results.length === 1 ? "match" : "matches"} for "{query}"
+                  {results.length} {results.length === 1 ? "match" : "matches"} for &quot;{query}&quot;
                 </p>
               )}
               <ul className="pb-2">

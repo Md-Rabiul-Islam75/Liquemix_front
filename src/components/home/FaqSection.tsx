@@ -69,7 +69,7 @@ export default function FaqSection() {
             </h2>
             <p className="section-subtitle">
               The six questions our technical service team hears most often.
-              If yours isn't here, ask us — we reply within four business
+              If yours isn&apos;t here, ask us — we reply within four business
               hours.
             </p>
 
@@ -95,11 +95,11 @@ export default function FaqSection() {
                 </span>
                 <div>
                   <p className="text-sm font-bold text-neutral-900">
-                    Can't find the question?
+                    Can&apos;t find the question?
                   </p>
                   <p className="mt-1 text-xs text-neutral-500 leading-relaxed">
-                    Send us the project type, location, and what you're
-                    trying to achieve — we'll come back with the system
+                    Send us the project type, location, and what you&apos;re
+                    trying to achieve — we&apos;ll come back with the system
                     that fits.
                   </p>
                 </div>
@@ -176,7 +176,7 @@ export default function FaqSection() {
                   Still chasing a specification?
                 </p>
                 <p className="mt-1 text-sm text-white/85">
-                  Share your section drawing or pour schedule — we'll come
+                  Share your section drawing or pour schedule — we&apos;ll come
                   back with a system in under four business hours.
                 </p>
               </div>

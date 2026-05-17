@@ -80,7 +80,7 @@ export default async function ContactPage({ searchParams }: Props) {
             <div className="brand-panel-blue p-6 md:p-7 flex flex-col md:flex-row md:items-center gap-5 md:gap-8">
               <div>
                 <p className="brand-panel__eyebrow mb-1">
-                  You're enquiring about
+                  You&apos;re enquiring about
                 </p>
                 <h2 className="text-2xl font-bold text-neutral-900">
                   {product.name}

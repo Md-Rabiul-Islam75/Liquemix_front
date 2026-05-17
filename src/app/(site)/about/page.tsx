@@ -180,7 +180,7 @@ export default function AboutPage() {
               Four principles that shape every product we ship.
             </h2>
             <p className="section-subtitle">
-              These aren't slogans. They're the filters we use when we decide
+              These aren&apos;t slogans. They&apos;re the filters we use when we decide
               what to put on the truck, what to keep in the lab, and what to
               decline to sell.
             </p>
@@ -298,8 +298,8 @@ export default function AboutPage() {
               </h2>
               <p className="section-subtitle">
                 Every batch leaves the plant only after release by QA against
-                an ISO 9001-aligned procedure. Standards aren't a marketing
-                line — they're a release condition.
+                an ISO 9001-aligned procedure. Standards aren&apos;t a marketing
+                line — they&apos;re a release condition.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link href="/service/downloads" className="btn-primary">
@@ -363,7 +363,7 @@ export default function AboutPage() {
                 Lower-carbon chemistry, measured in absolute terms.
               </h2>
               <p className="mt-4 text-base md:text-lg text-white/85 max-w-2xl">
-                We don't market sustainability — we report it. Every product
+                We don&apos;t market sustainability — we report it. Every product
                 family carries a published embodied-carbon number, audited
                 against the 2020 baseline.
               </p>

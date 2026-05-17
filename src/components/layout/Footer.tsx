@@ -92,7 +92,7 @@ export default function Footer() {
             {[
               ["/solutions", "System Solutions"],
               ["/references", "References"],
-              ["/downloads", "Downloads"],
+              ["/service/downloads", "Downloads"],
               ["/news", "News & Press"],
             ].map(([href, label]) => (
               <li key={href}>
@@ -111,9 +111,9 @@ export default function Footer() {
           <ul className="space-y-2.5 text-sm">
             {[
               ["/about", "About Us"],
-              ["/about/quality", "Quality"],
-              ["/about/sustainability", "Sustainability"],
-              ["/about/careers", "Careers"],
+              ["/about#quality", "Quality"],
+              ["/about#sustainability", "Sustainability"],
+              ["/about#careers", "Careers"],
               ["/contact", "Contact"],
             ].map(([href, label]) => (
               <li key={href}>

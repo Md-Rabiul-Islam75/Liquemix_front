@@ -8,6 +8,7 @@ import { FiSearch, FiMenu, FiX, FiChevronDown } from "react-icons/fi";
 import { segments } from "@/data/segments";
 import { getRootCategoriesBySegment } from "@/data/categories";
 import { systemSolutions } from "@/data/solutions";
+import ProductSearchModal from "@/components/search/ProductSearchModal";
 import TopBar from "./TopBar";
 
 type MenuKey = "products" | "solutions" | "service" | "about" | null;
@@ -22,6 +23,7 @@ const SEGMENT_BAR_COLOR: Record<string, string> = {
 export default function Header() {
   const [openMenu, setOpenMenu] = useState<MenuKey>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [hoveredSegment, setHoveredSegment] = useState<string | null>(
     segments[0]?.id ?? null
@@ -47,6 +49,18 @@ export default function Header() {
       document.body.style.overflow = prev;
     };
   }, [mobileOpen]);
+
+  // Cmd/Ctrl+K to open product search from anywhere.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   const cancelClose = () => {
     if (closeTimer.current) {
@@ -361,12 +375,12 @@ export default function Header() {
           >
             <div className="p-6 grid grid-cols-3 gap-2">
               {[
-                { href: "/about", title: "Corporate Values", desc: "Our mission and principles." },
-                { href: "/about/management", title: "Management", desc: "Meet the leadership team." },
-                { href: "/about/quality", title: "Quality", desc: "Certifications and lab testing." },
-                { href: "/about/history", title: "Our Story", desc: "From the lab to your site." },
-                { href: "/about/sustainability", title: "Sustainability", desc: "Low-carbon pathway." },
-                { href: "/about/careers", title: "Careers", desc: "Join the team." },
+                { href: "/about#values", title: "Corporate Values", desc: "Our mission and principles." },
+                { href: "/about#management", title: "Management", desc: "Meet the leadership team." },
+                { href: "/about#quality", title: "Quality", desc: "Certifications and lab testing." },
+                { href: "/about#story", title: "Our Story", desc: "From the lab to your site." },
+                { href: "/about#sustainability", title: "Sustainability", desc: "Low-carbon pathway." },
+                { href: "/about#careers", title: "Careers", desc: "Join the team." },
               ].map((item) => (
                 <Link
                   key={item.href}
@@ -388,8 +402,9 @@ export default function Header() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            aria-label="Search"
-            className="hidden md:inline-flex items-center justify-center w-10 h-10 rounded-full text-neutral-600 hover:text-primary-600 hover:bg-primary-50 transition-colors"
+            aria-label="Search products"
+            onClick={() => setSearchOpen(true)}
+            className="inline-flex items-center justify-center w-10 h-10 rounded-full text-neutral-600 hover:text-primary-600 hover:bg-primary-50 transition-colors"
           >
             <FiSearch className="text-lg" />
           </button>
@@ -505,6 +520,12 @@ export default function Header() {
           </div>,
           document.body
         )}
+
+      {/* Product search modal */}
+      <ProductSearchModal
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+      />
     </header>
   );
 }

@@ -5,6 +5,7 @@ import FeaturedProducts from "@/components/home/FeaturedProducts";
 import SolutionsSection from "@/components/home/SolutionsSection";
 import ReferencesGrid from "@/components/home/ReferencesGrid";
 import NewsSection from "@/components/home/NewsSection";
+import FaqSection from "@/components/home/FaqSection";
 
 export default function HomePage() {
   return (
@@ -16,6 +17,7 @@ export default function HomePage() {
       <SolutionsSection />
       <ReferencesGrid />
       <NewsSection />
+      <FaqSection />
     </>
   );
 }

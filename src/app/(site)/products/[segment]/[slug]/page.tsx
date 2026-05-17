@@ -17,6 +17,8 @@ import PackagingTable from "@/components/product/PackagingTable";
 import PrintButton from "@/components/product/PrintButton";
 import ProductCard from "@/components/product/ProductCard";
 import VideoCard from "@/components/video/VideoCard";
+import EnquireOptions, { whatsappUrl, buildEnquiryMessage } from "@/components/contact/EnquireOptions";
+import { FaWhatsapp } from "react-icons/fa";
 
 import { products, getProductBySlug, getRelatedProducts } from "@/data/products";
 import { getSegmentBySlug, getSegmentById } from "@/data/segments";
@@ -96,38 +98,40 @@ export default async function ProductDetailPage({ params }: Props) {
 
   return (
     <>
-      <PageHeader
-        breadcrumbs={[
-          { label: "Home", href: "/" },
-          { label: "Products", href: "/products" },
-          { label: segment.name, href: `/products/${segment.slug}` },
-          ...(primaryCategory
-            ? [
-                {
-                  label: primaryCategory.name,
-                  href: `/products/${segment.slug}?category=${primaryCategory.slug}`,
-                },
-              ]
-            : []),
-          { label: product.name },
-        ]}
-        eyebrow={primaryCategory?.name ?? segment.name}
-        title={product.name}
-        description={product.shortDescription}
-      >
-        <div className="flex items-center gap-2">
-          <Link
-            href={`/products/${segment.slug}`}
-            className="hidden md:inline-flex items-center gap-1.5 text-sm font-semibold text-neutral-600 hover:text-primary-600"
-          >
-            <FiArrowLeft /> Back to {segment.name}
-          </Link>
-          <PrintButton />
-        </div>
-      </PageHeader>
+      <div className="print:hidden">
+        <PageHeader
+          breadcrumbs={[
+            { label: "Home", href: "/" },
+            { label: "Products", href: "/products" },
+            { label: segment.name, href: `/products/${segment.slug}` },
+            ...(primaryCategory
+              ? [
+                  {
+                    label: primaryCategory.name,
+                    href: `/products/${segment.slug}?category=${primaryCategory.slug}`,
+                  },
+                ]
+              : []),
+            { label: product.name },
+          ]}
+          eyebrow={primaryCategory?.name ?? segment.name}
+          title={product.name}
+          description={product.shortDescription}
+        >
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/products/${segment.slug}`}
+              className="hidden md:inline-flex items-center gap-1.5 text-sm font-semibold text-neutral-600 hover:text-primary-600"
+            >
+              <FiArrowLeft /> Back to {segment.name}
+            </Link>
+            <PrintButton />
+          </div>
+        </PageHeader>
+      </div>
 
-      {/* Hero block: image + key info */}
-      <section className="bg-white-base">
+      {/* Hero block: image + key info — also the ONLY section printed. */}
+      <section className="bg-white-base product-print-area">
         <div className="container-page py-10 md:py-14 grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* Image / chips */}
           <div className="lg:col-span-5">
@@ -234,12 +238,25 @@ export default async function ProductDetailPage({ params }: Props) {
                 </div>
               )}
 
-              <div className="mt-7 flex flex-wrap gap-3">
+              <div className="mt-7 flex flex-wrap gap-3 print:hidden">
+                <a
+                  href={whatsappUrl(
+                    buildEnquiryMessage({
+                      productName: product.name,
+                      productSku: product.sku,
+                    })
+                  )}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-[10px] bg-[#25D366] text-white-base font-semibold shadow-[0_8px_24px_-8px_rgba(37,211,102,0.45)] hover:bg-[#1ea355] transition-colors"
+                >
+                  <FaWhatsapp className="text-lg" /> Enquire on WhatsApp
+                </a>
                 <Link
                   href={`/contact?product=${encodeURIComponent(product.sku)}`}
-                  className="btn-accent"
+                  className="btn-ghost"
                 >
-                  <FiMessageCircle /> Enquire for this product
+                  <FiMessageCircle /> More enquiry options
                 </Link>
                 <a href="#downloads" className="btn-ghost">
                   Downloads & data sheets
@@ -247,9 +264,29 @@ export default async function ProductDetailPage({ params }: Props) {
               </div>
             </div>
 
+            {/* Social enquiry — all channels, prefilled with this product's
+                name + SKU. */}
+            <div id="enquire" className="mt-8 rounded-2xl border border-neutral-100 bg-white-base p-6 md:p-7 shadow-soft print:hidden">
+              <p className="brand-panel__eyebrow mb-1">Enquire about this product</p>
+              <h3 className="text-lg font-bold text-neutral-900 mb-1">
+                Reach the right team in one tap.
+              </h3>
+              <p className="text-sm text-neutral-600 mb-5 max-w-2xl">
+                Each option opens with your enquiry pre-filled — including
+                product name and SKU — so we can answer with full context.
+              </p>
+              <EnquireOptions
+                layout="list"
+                context={{
+                  productName: product.name,
+                  productSku: product.sku,
+                }}
+              />
+            </div>
+
             {/* Packaging */}
             {product.packaging.length > 0 && (
-              <div className="mt-8">
+              <div className="mt-8 print:hidden">
                 <h3 className="text-base font-bold text-neutral-900 mb-3">
                   Packaging & article numbers
                 </h3>
@@ -261,7 +298,7 @@ export default async function ProductDetailPage({ params }: Props) {
       </section>
 
       {/* Downloads */}
-      <section id="downloads" className="section pt-0 bg-white-base">
+      <section id="downloads" className="section pt-0 bg-white-base print:hidden">
         <div className="container-page">
           <DocumentAccordion documents={product.documents} />
         </div>
@@ -269,7 +306,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
       {/* Videos */}
       {videos.length > 0 && (
-        <section className="section pt-0 bg-white-base">
+        <section className="section pt-0 bg-white-base print:hidden">
           <div className="container-page">
             <div className="rounded-2xl bg-neutral-900 text-white-base p-6 md:p-10">
               <div className="flex items-baseline justify-between mb-6">
@@ -293,7 +330,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
       {/* Used in projects */}
       {usedInProjects.length > 0 && (
-        <section className="section pt-0 bg-white-base">
+        <section className="section pt-0 bg-white-base print:hidden">
           <div className="container-page">
             <div className="flex items-baseline justify-between mb-6">
               <h2 className="text-xl md:text-2xl font-bold text-neutral-900">
@@ -342,7 +379,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
       {/* Related products */}
       {related.length > 0 && (
-        <section className="section pt-0 bg-white-base">
+        <section className="section pt-0 bg-white-base print:hidden">
           <div className="container-page">
             <div className="flex items-baseline justify-between mb-6">
               <h2 className="text-xl md:text-2xl font-bold text-neutral-900">

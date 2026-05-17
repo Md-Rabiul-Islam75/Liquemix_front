@@ -187,8 +187,12 @@ export interface NewsPost {
   slug: string;
   title: string;
   excerpt: string;
+  body?: string;
   publishedAt: string;
   coverImage: string;
+  author?: { name: string; role?: string };
   category: "Product Launch" | "Company News" | "Industry" | "Project";
   readMinutes: number;
+  tags?: string[];
+  relatedProductIds?: string[];
 }

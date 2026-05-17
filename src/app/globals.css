@@ -354,6 +354,116 @@ body {
          hover:shadow-lg hover:-translate-y-1;
 }
 
+/* ---------- News article body ----------
+ * Minimal typographic resets for the HTML returned by the news body field.
+ * Kept scoped to .prose-news so it doesn't bleed into the rest of the site. */
+.prose-news {
+  @apply text-neutral-700;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+.prose-news > * + * {
+  margin-top: 1.25rem;
+}
+.prose-news p {
+  @apply text-neutral-700;
+}
+.prose-news h2 {
+  @apply text-2xl md:text-3xl font-bold text-neutral-900 mt-12 mb-2 tracking-tight;
+}
+.prose-news h3 {
+  @apply text-xl font-bold text-neutral-900 mt-10 mb-1;
+}
+.prose-news ul {
+  @apply list-disc pl-6 space-y-2;
+}
+.prose-news ol {
+  @apply list-decimal pl-6 space-y-2;
+}
+.prose-news li {
+  @apply text-neutral-700 leading-relaxed;
+}
+.prose-news a {
+  @apply text-primary-600 hover:text-primary-700 underline underline-offset-2;
+}
+.prose-news strong {
+  @apply text-neutral-900 font-semibold;
+}
+.prose-news blockquote {
+  @apply border-l-4 border-primary-500 pl-5 italic text-neutral-600 my-6;
+}
+.prose-news code {
+  @apply px-1.5 py-0.5 rounded bg-neutral-100 text-sm font-mono text-neutral-800;
+}
+
+/* ---------- Print styles ----------
+ * The product detail page is the only page that uses Print. The PrintButton
+ * triggers window.print() and we expect the printed output to contain ONLY
+ * the hero block (image + product details panel) — every other section is
+ * marked .print:hidden in the JSX.
+ *
+ * These rules normalise the kept hero so it prints cleanly on A4: white
+ * background, no shadows, no rounded corners, a fixed two-column layout
+ * even on small viewports, and a margin large enough for binder holes.
+ */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  html, body {
+    background: #ffffff !important;
+  }
+
+  /* The kept print region — adjust spacing and visuals for paper. */
+  .product-print-area {
+    background: #ffffff !important;
+  }
+  .product-print-area > div {
+    padding: 0 !important;
+    gap: 1.5rem !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1.4fr !important;
+  }
+  .product-print-area .lg\:col-span-5,
+  .product-print-area .lg\:col-span-7 {
+    grid-column: auto !important;
+  }
+  /* Strip the heavy decorative styling that doesn't help on paper. */
+  .product-print-area .rounded-3xl,
+  .product-print-area .rounded-2xl {
+    border-radius: 8px !important;
+    box-shadow: none !important;
+  }
+  .product-print-area .brand-panel-blue,
+  .product-print-area .brand-panel-orange,
+  .product-print-area .brand-panel-yellow,
+  .product-print-area .brand-panel-green {
+    border: 1px solid #d6dae3 !important;
+    background: #ffffff !important;
+  }
+  .product-print-area .brand-panel-blue::before,
+  .product-print-area .brand-panel-orange::before,
+  .product-print-area .brand-panel-yellow::before,
+  .product-print-area .brand-panel-green::before {
+    display: none !important;
+  }
+
+  /* Ensure colored backgrounds and the segment hero tint actually print
+     (browsers strip backgrounds by default in print). */
+  .product-print-area * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Tame the image card height — square on screen, shorter on paper so the
+     details panel fits next to it without overflowing one page. */
+  .product-print-area .aspect-square {
+    aspect-ratio: 4 / 5 !important;
+  }
+}
+
 /* ---------- Header / Navigation ---------- */
 .nav-link {
   @apply relative inline-flex items-center gap-1 px-3 py-2 text-sm font-semibold text-neutral-700
@@ -475,3 +585,50 @@ body {
 .inputPasswordField input { width: 100%; outline: none; padding: 16px 8px 16px 16px; }
 .eyeIconContainer { padding: 16px 16px 16px 8px; }
 .eyeIcon { font-size: 24px; cursor: pointer; }
+
+/* ---------- Print stylesheet ----------
+ * Product detail page must print as a single tidy datasheet: hero image on
+ * the left, product details panel on the right, nothing else. Everything
+ * else on the page (and the surrounding chrome — header, footer, floating
+ * WhatsApp, breadcrumbs, action buttons, enquiry block, packaging,
+ * documents, videos, related rails) is marked `print:hidden` at the JSX
+ * level. The `.product-print-area` container disables sticky positioning and any
+ * residual transforms so the layout flows cleanly onto A4. */
+@media print {
+  @page { margin: 16mm; }
+
+  html, body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* Strip browser UI cruft */
+  a[href]::after { content: none !important; }
+
+  /* Cancel sticky / fixed / animation states that would break paging */
+  .product-print-area,
+  .product-print-area * {
+    position: static !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Slightly tighter typography for print */
+  .product-print-area h2 { font-size: 22pt; }
+  .product-print-area h3 { font-size: 14pt; }
+  .product-print-area p, .product-print-area li, .product-print-area dd { font-size: 10.5pt; }
+
+  /* Avoid page-breaks inside the two-column hero */
+  .product-print-area {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Make sure backgrounds (segment-tinted hero) actually print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

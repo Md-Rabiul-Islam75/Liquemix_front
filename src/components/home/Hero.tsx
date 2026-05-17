@@ -1,13 +1,24 @@
 import Image from "next/image";
 import Link from "next/link";
-import { FiArrowRight, FiPlay } from "react-icons/fi";
+import { FiArrowRight, FiArrowUpRight, FiPlay } from "react-icons/fi";
 import { getProductBySlug } from "@/data/products";
+import { getSegmentById } from "@/data/segments";
 
 export default function Hero() {
   const hydroGuard = getProductBySlug("lique-hydro-guard-3x");
   const fixMt3 = getProductBySlug("lique-fix-mt-3");
   const hydroImage = hydroGuard?.images.find((i) => i.isPrimary) ?? hydroGuard?.images[0];
   const fixImage = fixMt3?.images.find((i) => i.isPrimary) ?? fixMt3?.images[0];
+  const hydroSegment = hydroGuard ? getSegmentById(hydroGuard.segmentId) : null;
+  const fixSegment = fixMt3 ? getSegmentById(fixMt3.segmentId) : null;
+  const hydroHref =
+    hydroGuard && hydroSegment
+      ? `/products/${hydroSegment.slug}/${hydroGuard.slug}`
+      : "/products";
+  const fixHref =
+    fixMt3 && fixSegment
+      ? `/products/${fixSegment.slug}/${fixMt3.slug}`
+      : "/products";
 
   return (
     <section className="relative overflow-hidden bg-neutral-900 text-white-base">
@@ -79,68 +90,149 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Right visual */}
+        {/* Right visual — Hydro-Guard card sits large and offset left; the
+            smaller Fix MT-3 card overlaps from the bottom-right. Both
+            cards are clickable. Soft brand-colored glows sit behind each
+            card to lift them off the dark hero background. */}
         <div className="hidden sm:block lg:col-span-5 relative">
-          <div className="relative aspect-square max-w-[520px] mx-auto">
-            {/* outer ring */}
+          <div className="relative aspect-square max-w-[600px] mx-auto">
+            {/* Decorative rings — kept subtle behind the cards */}
             <div className="absolute inset-0 rounded-full border border-white/15 animate-[spin_60s_linear_infinite]" />
             <div className="absolute inset-6 rounded-full border border-white/10 animate-[spin_90s_linear_infinite_reverse]" />
 
-            {/* product cards */}
-            <div className="absolute inset-0 grid place-items-center">
-              <div className="relative w-[68%] aspect-[3/4] rounded-3xl bg-white-base/95 backdrop-blur shadow-2xl rotate-[-6deg] overflow-hidden">
-                <div className="absolute inset-0 brand-gradient opacity-15" />
-                <div className="relative p-6 h-full flex flex-col justify-between">
-                  <div>
-                    <span className="chip-new">NEW</span>
-                    <p className="mt-3 text-xs uppercase tracking-wider text-primary-700">
+            {/* Soft brand glows — blurred radial blobs positioned behind
+                each card so the white cards look like they're floating on
+                a brand-tinted halo. */}
+            <div
+              aria-hidden
+              className="absolute -left-8 top-4 w-[70%] aspect-square rounded-full blur-3xl opacity-50"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(21,101,192,0.55) 0%, transparent 65%)",
+              }}
+            />
+            <div
+              aria-hidden
+              className="absolute -right-6 bottom-0 w-[55%] aspect-square rounded-full blur-3xl opacity-55"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(245,124,0,0.55) 0%, transparent 65%)",
+              }}
+            />
+
+            {/* Product cards */}
+            <div className="absolute inset-0">
+              {/* ── Primary card — Hydro-Guard 3X ────────────────────── */}
+              <Link
+                href={hydroHref}
+                aria-label="View Lique Hydro-Guard 3X"
+                className="group absolute left-0 top-1/2 -translate-y-[55%] w-[82%] aspect-[3/4] rounded-3xl bg-white-base shadow-[0_30px_60px_-20px_rgba(7,36,84,0.55)] rotate-[-3deg] hover:rotate-[-1deg] hover:-translate-y-[58%] transition-all duration-500 overflow-hidden ring-1 ring-white/40"
+              >
+                {/* Brand stripe at top */}
+                <span
+                  aria-hidden
+                  className="absolute left-0 right-0 top-0 h-1.5 bg-gradient-to-r from-primary-700 via-primary-500 to-secondary-500 z-10"
+                />
+                {/* Very soft brand wash */}
+                <div className="absolute inset-0 brand-gradient opacity-[0.08]" />
+                {/* Subtle pinstripe pattern in the upper-right corner */}
+                <div
+                  aria-hidden
+                  className="absolute -right-10 -top-10 w-48 h-48 rounded-full border-2 border-primary-100"
+                />
+
+                <div className="relative p-7 h-full flex flex-col">
+                  {/* Top row — NEW badge */}
+                  <div className="flex items-start justify-between">
+                    <span className="chip-new shadow-[0_8px_20px_-8px_rgba(245,124,0,0.6)]">
+                      NEW
+                    </span>
+                  </div>
+
+                  {/* Heading */}
+                  <div className="mt-5">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-700">
                       Waterproofing
                     </p>
-                    <h3 className="mt-1 text-2xl font-bold text-neutral-900 leading-tight">
+                    <h3 className="mt-1.5 text-[1.75rem] leading-[1.05] font-bold text-neutral-900 tracking-tight">
                       Hydro-Guard 3X
                     </h3>
                   </div>
-                  <div>
-                    <div className="relative h-32 rounded-xl bg-gradient-to-br from-primary-100 via-primary-50 to-secondary-100 overflow-hidden">
-                      {hydroImage && (
-                        <Image
-                          src={encodeURI(hydroImage.url)}
-                          alt={hydroImage.alt}
-                          fill
-                          sizes="200px"
-                          className="object-contain p-2"
-                        />
-                      )}
-                    </div>
-                    <p className="mt-3 text-xs text-neutral-500">
-                      Triple-action waterproofing slurry — crystalline, elastic,
-                      sealing.
-                    </p>
+
+                  {/* Product image — large, dominant */}
+                  <div className="relative mt-5 flex-1 rounded-2xl bg-gradient-to-br from-primary-50 via-white-base to-secondary-50/70 overflow-hidden ring-1 ring-primary-100/60">
+                    {/* Subtle radial spot behind the bag */}
+                    <div
+                      aria-hidden
+                      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] aspect-square rounded-full"
+                      style={{
+                        background:
+                          "radial-gradient(circle, rgba(21,101,192,0.10) 0%, transparent 70%)",
+                      }}
+                    />
+                    {hydroImage && (
+                      <Image
+                        src={encodeURI(hydroImage.url)}
+                        alt={hydroImage.alt}
+                        fill
+                        sizes="(min-width: 1024px) 400px, 320px"
+                        className="object-contain p-4 drop-shadow-[0_12px_18px_rgba(7,36,84,0.18)] transition-transform duration-500 group-hover:scale-[1.04]"
+                      />
+                    )}
+                  </div>
+
+                  {/* Footer row — spec chip + arrow */}
+                  <div className="mt-5 flex items-center justify-between gap-3">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-50 text-primary-700 text-[10px] font-bold tracking-wider uppercase">
+                      ≥ 7 bar pressure
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-primary-700 group-hover:gap-2 transition-all">
+                      View product <FiArrowUpRight className="text-base" />
+                    </span>
                   </div>
                 </div>
-              </div>
+              </Link>
 
-              <div className="absolute right-0 bottom-8 w-[42%] aspect-[3/4] rounded-2xl bg-white-base/95 shadow-2xl rotate-[8deg] overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-secondary-100 via-accent-50 to-white" />
+              {/* ── Secondary card — Fix MT-3 ────────────────────────── */}
+              <Link
+                href={fixHref}
+                aria-label="View Lique Fix MT-3"
+                className="group absolute right-0 bottom-2 w-[48%] aspect-[3/4] rounded-2xl bg-white-base shadow-[0_24px_50px_-18px_rgba(245,124,0,0.55)] rotate-[6deg] hover:rotate-[3deg] hover:-translate-y-1 transition-all duration-500 overflow-hidden ring-1 ring-white/50"
+              >
+                {/* Brand stripe at top — orange family */}
+                <span
+                  aria-hidden
+                  className="absolute left-0 right-0 top-0 h-1.5 bg-gradient-to-r from-secondary-700 via-secondary-500 to-accent-500 z-10"
+                />
+                {/* Soft tile-segment background wash */}
+                <div className="absolute inset-0 bg-gradient-to-br from-secondary-50 via-white-base to-accent-50/80" />
+
+                {/* Product image — fills the card */}
                 {fixImage && (
                   <Image
                     src={encodeURI(fixImage.url)}
                     alt={fixImage.alt}
                     fill
-                    sizes="160px"
-                    className="object-contain p-4"
+                    sizes="(min-width: 1024px) 240px, 200px"
+                    className="object-contain p-4 drop-shadow-[0_12px_18px_rgba(245,124,0,0.18)] transition-transform duration-500 group-hover:scale-[1.05]"
                   />
                 )}
-                <div className="relative p-4 h-full flex flex-col justify-between">
-                  <span className="chip-featured w-fit">★ TOP</span>
+
+                {/* Top-right TOP chip + bottom title overlay */}
+                <div className="relative p-4 h-full flex flex-col justify-between pointer-events-none">
+                  <span className="chip-featured w-fit shadow-[0_8px_20px_-8px_rgba(255,179,0,0.7)]">
+                    ★ TOP
+                  </span>
                   <div>
-                    <p className="text-[10px] uppercase tracking-wider text-secondary-700">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-secondary-700">
                       Tile
                     </p>
-                    <h3 className="text-base font-bold text-neutral-900">Fix MT-3</h3>
+                    <h3 className="mt-1 text-lg font-bold text-neutral-900 leading-tight">
+                      Fix MT-3
+                    </h3>
                   </div>
                 </div>
-              </div>
+              </Link>
             </div>
           </div>
         </div>

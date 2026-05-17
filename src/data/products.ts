@@ -42,7 +42,7 @@ export const products: Product[] = [
       { type: "MSDS", title: "Safety Data Sheet", url: "/document-sheet/Lique Hydro-Guard 3x.pdf", language: "EN", revision: "R02", uploadedAt: "2025-09-12" },
     ],
     images: [
-      { url: "/images/products/hydro-guard-3x.jpg", alt: "Lique Hydro-Guard 3X — 25 kg bag", isPrimary: true },
+      { url: "/dummy_products_images/AQUAFIN-2KM-PLUS_kombi.jpg", alt: "Lique Hydro-Guard 3X — 25 kg bag", isPrimary: true },
     ],
     videos: [
       { title: "Hydro-Guard application demo", youtubeId: "dQw4w9WgXcQ" },
@@ -83,7 +83,7 @@ export const products: Product[] = [
       { type: "TDS", title: "Technical Data Sheet (Updated)", url: "/document-sheet/CRYSTAL-Flex-Skim Liquemix.pdf", language: "EN", revision: "R03", uploadedAt: "2025-11-20" },
     ],
     images: [
-      { url: "/images/products/crystal-flex-skim.jpg", alt: "Crystal Flex-Skim 24 kg combo", isPrimary: true },
+      { url: "/dummy_products_images/AQUAFIN-CJ1.jpg", alt: "Crystal Flex-Skim 24 kg combo", isPrimary: true },
     ],
     relatedProductIds: ["prod-hydro-guard-3x", "prod-fix-mt3"],
     isFeatured: true,
@@ -119,7 +119,7 @@ export const products: Product[] = [
       { type: "TDS", title: "Technical Data Sheet", url: "/document-sheet/Ligue Restoration GP40 D.pdf", language: "EN", revision: "R01", uploadedAt: "2025-07-22" },
     ],
     images: [
-      { url: "/images/products/restoration-gp40d.jpg", alt: "Lique Restoration GP40 D 25 kg bag", isPrimary: true },
+      { url: "/dummy_products_images/ASOCRET-BIS-5-40.jpg", alt: "Lique Restoration GP40 D 25 kg bag", isPrimary: true },
     ],
     relatedProductIds: ["prod-microcrete-me55d", "prod-precision-grout-pg70"],
     isFeatured: true,
@@ -157,7 +157,7 @@ export const products: Product[] = [
       { type: "TDS", title: "Technical Data Sheet (previous)", url: "/document-sheet/Lique Cure-E25 OLD.pdf", language: "EN", revision: "R01", uploadedAt: "2024-09-01" },
     ],
     images: [
-      { url: "/images/products/cure-e25.jpg", alt: "Lique Cure-E25 20 L drum", isPrimary: true },
+      { url: "/dummy_products_images/BLANKOL-SUPER.jpg", alt: "Lique Cure-E25 20 L drum", isPrimary: true },
     ],
     publishedAt: "2024-09-01",
   },
@@ -192,7 +192,7 @@ export const products: Product[] = [
       { type: "TDS", title: "Technical Data Sheet", url: "/document-sheet/Lique FIX MT-3.pdf", language: "EN", revision: "R01", uploadedAt: "2025-05-18" },
     ],
     images: [
-      { url: "/images/products/fix-mt3.jpg", alt: "Lique Fix MT-3 25 kg bag", isPrimary: true },
+      { url: "/dummy_products_images/ASO-Unigrund-PLUS.jpg", alt: "Lique Fix MT-3 25 kg bag", isPrimary: true },
     ],
     relatedProductIds: ["prod-crystal-flex-skim"],
     isFeatured: true,
@@ -229,7 +229,7 @@ export const products: Product[] = [
       { type: "TDS", title: "Technical Data Sheet", url: "/document-sheet/Lique Latex Bond - SBR .pdf", language: "EN", revision: "R02", uploadedAt: "2025-04-08" },
     ],
     images: [
-      { url: "/images/products/latex-bond-sbr.jpg", alt: "Lique Latex Bond SBR 20 L drum", isPrimary: true },
+      { url: "/dummy_products_images/ASODUR-K4031.jpg", alt: "Lique Latex Bond SBR 20 L drum", isPrimary: true },
     ],
     publishedAt: "2024-04-08",
   },
@@ -264,7 +264,7 @@ export const products: Product[] = [
       { type: "TDS", title: "Technical Data Sheet", url: "/document-sheet/Lique Plastorix -500.pdf", language: "EN", revision: "R01", uploadedAt: "2025-02-19" },
     ],
     images: [
-      { url: "/images/products/plastorix-500.jpg", alt: "Lique Plastorix-500", isPrimary: true },
+      { url: "/dummy_products_images/ASODUR-SG2__1_.jpg", alt: "Lique Plastorix-500", isPrimary: true },
     ],
     publishedAt: "2025-02-19",
   },
@@ -298,7 +298,7 @@ export const products: Product[] = [
       { type: "TDS", title: "Technical Data Sheet", url: "/document-sheet/Lique MicroCrete me 55 D.pdf", language: "EN", revision: "R01", uploadedAt: "2025-08-30" },
     ],
     images: [
-      { url: "/images/products/microcrete-me55d.jpg", alt: "Lique MicroCrete ME 55 D", isPrimary: true },
+      { url: "/dummy_products_images/ASOCRET-BIS-5-40 (1).jpg", alt: "Lique MicroCrete ME 55 D", isPrimary: true },
     ],
     relatedProductIds: ["prod-precision-grout-pg70", "prod-restoration-gp40d"],
     isNew: true,
@@ -334,7 +334,7 @@ export const products: Product[] = [
       { type: "TDS", title: "Technical Data Sheet", url: "/document-sheet/Lique Precision grout PG70.pdf", language: "EN", revision: "R02", uploadedAt: "2025-09-05" },
     ],
     images: [
-      { url: "/images/products/precision-grout-pg70.jpg", alt: "Lique Precision Grout PG70", isPrimary: true },
+      { url: "/dummy_products_images/ASODUR-SG3.jpg", alt: "Lique Precision Grout PG70", isPrimary: true },
     ],
     relatedProductIds: ["prod-microcrete-me55d"],
     isFeatured: true,
@@ -371,7 +371,7 @@ export const products: Product[] = [
       { type: "TDS", title: "Technical Data Sheet", url: "/document-sheet/Lique- ShutterLube.pdf", language: "EN", revision: "R01", uploadedAt: "2025-01-25" },
     ],
     images: [
-      { url: "/images/products/shutter-lube.jpg", alt: "Lique ShutterLube 20 L drum", isPrimary: true },
+      { url: "/dummy_products_images/ASO-Antislide.jpg", alt: "Lique ShutterLube 20 L drum", isPrimary: true },
     ],
     publishedAt: "2025-01-25",
   },
@@ -405,7 +405,7 @@ export const products: Product[] = [
       { type: "TDS", title: "Technical Data Sheet", url: "/document-sheet/LIQUE Pump Primer.pdf", language: "EN", revision: "R01", uploadedAt: "2025-10-12" },
     ],
     images: [
-      { url: "/images/products/pump-primer.jpg", alt: "Lique Pump Primer sachet", isPrimary: true },
+      { url: "/dummy_products_images/INDUFLEX-PU.jpg", alt: "Lique Pump Primer sachet", isPrimary: true },
     ],
     isNew: true,
     publishedAt: "2025-10-12",
@@ -441,7 +441,7 @@ export const products: Product[] = [
       { type: "TDS", title: "Technical Data Sheet", url: "/document-sheet/Lique_Retanta WS-50.pdf", language: "EN", revision: "R01", uploadedAt: "2025-07-04" },
     ],
     images: [
-      { url: "/images/products/retanta-ws50.jpg", alt: "Lique Retanta WS-50 barrel", isPrimary: true },
+      { url: "/dummy_products_images/RD-SK50.jpg", alt: "Lique Retanta WS-50 barrel", isPrimary: true },
     ],
     publishedAt: "2025-07-04",
   },

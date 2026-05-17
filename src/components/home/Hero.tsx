@@ -1,7 +1,14 @@
+import Image from "next/image";
 import Link from "next/link";
 import { FiArrowRight, FiPlay } from "react-icons/fi";
+import { getProductBySlug } from "@/data/products";
 
 export default function Hero() {
+  const hydroGuard = getProductBySlug("lique-hydro-guard-3x");
+  const fixMt3 = getProductBySlug("lique-fix-mt-3");
+  const hydroImage = hydroGuard?.images.find((i) => i.isPrimary) ?? hydroGuard?.images[0];
+  const fixImage = fixMt3?.images.find((i) => i.isPrimary) ?? fixMt3?.images[0];
+
   return (
     <section className="relative overflow-hidden bg-neutral-900 text-white-base">
       {/* Decorative brand swirl */}
@@ -94,7 +101,17 @@ export default function Hero() {
                     </h3>
                   </div>
                   <div>
-                    <div className="h-32 rounded-xl bg-gradient-to-br from-primary-100 via-primary-50 to-secondary-100" />
+                    <div className="relative h-32 rounded-xl bg-gradient-to-br from-primary-100 via-primary-50 to-secondary-100 overflow-hidden">
+                      {hydroImage && (
+                        <Image
+                          src={encodeURI(hydroImage.url)}
+                          alt={hydroImage.alt}
+                          fill
+                          sizes="200px"
+                          className="object-contain p-2"
+                        />
+                      )}
+                    </div>
                     <p className="mt-3 text-xs text-neutral-500">
                       Triple-action waterproofing slurry — crystalline, elastic,
                       sealing.
@@ -105,6 +122,15 @@ export default function Hero() {
 
               <div className="absolute right-0 bottom-8 w-[42%] aspect-[3/4] rounded-2xl bg-white-base/95 shadow-2xl rotate-[8deg] overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-secondary-100 via-accent-50 to-white" />
+                {fixImage && (
+                  <Image
+                    src={encodeURI(fixImage.url)}
+                    alt={fixImage.alt}
+                    fill
+                    sizes="160px"
+                    className="object-contain p-4"
+                  />
+                )}
                 <div className="relative p-4 h-full flex flex-col justify-between">
                   <span className="chip-featured w-fit">★ TOP</span>
                   <div>

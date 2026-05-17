@@ -32,7 +32,7 @@ export default function Hero() {
             Construction Chemicals · Engineered Systems
           </span>
 
-          <h1 className="mt-6 text-4xl md:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight text-balance">
+          <h1 className="mt-5 sm:mt-6 text-[2rem] sm:text-4xl md:text-6xl lg:text-7xl font-bold leading-[1.08] tracking-tight text-balance">
             Build on{" "}
             <span className="relative inline-block">
               <span className="brand-gradient-text">simple systems.</span>
@@ -56,15 +56,15 @@ export default function Hero() {
             </Link>
           </div>
 
-          <div className="mt-12 grid grid-cols-3 gap-6 max-w-xl">
+          <div className="mt-10 md:mt-12 grid grid-cols-3 gap-3 sm:gap-6 max-w-xl">
             {[
               { kpi: "200+", label: "Products" },
               { kpi: "40+", label: "Countries served" },
               { kpi: "1500+", label: "Reference projects" },
             ].map((m) => (
-              <div key={m.label} className="border-l-2 border-accent-400 pl-3">
-                <p className="text-2xl md:text-3xl font-bold leading-none">{m.kpi}</p>
-                <p className="mt-1 text-xs uppercase tracking-wider text-white/65">
+              <div key={m.label} className="border-l-2 border-accent-400 pl-2 sm:pl-3">
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold leading-none">{m.kpi}</p>
+                <p className="mt-1 text-[10px] sm:text-xs uppercase tracking-wider text-white/65 leading-tight">
                   {m.label}
                 </p>
               </div>
@@ -73,7 +73,7 @@ export default function Hero() {
         </div>
 
         {/* Right visual */}
-        <div className="lg:col-span-5 relative">
+        <div className="hidden sm:block lg:col-span-5 relative">
           <div className="relative aspect-square max-w-[520px] mx-auto">
             {/* outer ring */}
             <div className="absolute inset-0 rounded-full border border-white/15 animate-[spin_60s_linear_infinite]" />

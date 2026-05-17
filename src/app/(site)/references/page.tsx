@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { FiArrowUpRight, FiMapPin } from "react-icons/fi";
 import PageHeader from "@/components/common/PageHeader";
@@ -90,48 +91,36 @@ export default async function ReferencesPage({ searchParams }: Props) {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filtered.map((ref, i) => {
-                const gradients = [
-                  "linear-gradient(135deg, #072454, #1565c0)",
-                  "linear-gradient(135deg, #5c2e00, #f57c00)",
-                  "linear-gradient(135deg, #5c3e00, #ffb300)",
-                  "linear-gradient(135deg, #0e3d1a, #2fa84f)",
-                  "linear-gradient(135deg, #0a3674, #3f88d6)",
-                  "linear-gradient(135deg, #8a4500, #fb8c25)",
-                ];
-                return (
-                  <Link
-                    key={ref.id}
-                    href={`/references/${ref.slug}`}
-                    className="group relative aspect-[4/5] rounded-2xl overflow-hidden flex flex-col justify-end shadow-soft hover:shadow-primary hover:-translate-y-1 transition-all duration-300"
-                    style={{ background: gradients[i % gradients.length] }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/30 to-transparent" />
-                    <div
-                      aria-hidden
-                      className="absolute inset-0 opacity-20"
-                      style={{
-                        backgroundImage:
-                          "repeating-linear-gradient(45deg, rgba(255,255,255,0.4) 0, rgba(255,255,255,0.4) 1px, transparent 1px, transparent 14px)",
-                      }}
-                    />
-                    <div className="relative p-5">
-                      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-accent-300">
-                        <FiMapPin /> {ref.location.city}, {ref.location.country}
-                      </div>
-                      <h3 className="mt-2 text-lg font-bold text-white-base leading-tight">
-                        {ref.title}
-                      </h3>
-                      <div className="mt-3 flex items-center justify-between">
-                        <p className="text-xs text-white/70">
-                          {ref.projectType} · {ref.year}
-                        </p>
-                        <FiArrowUpRight className="text-xl text-accent-400 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                      </div>
+              {filtered.map((ref) => (
+                <Link
+                  key={ref.id}
+                  href={`/references/${ref.slug}`}
+                  className="group relative aspect-[4/5] rounded-2xl overflow-hidden flex flex-col justify-end shadow-soft hover:shadow-primary hover:-translate-y-1 transition-all duration-300 bg-neutral-800"
+                >
+                  <Image
+                    src={encodeURI(ref.heroImage)}
+                    alt={ref.title}
+                    fill
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/40 to-transparent" />
+                  <div className="relative p-5">
+                    <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-accent-300">
+                      <FiMapPin /> {ref.location.city}, {ref.location.country}
                     </div>
-                  </Link>
-                );
-              })}
+                    <h3 className="mt-2 text-lg font-bold text-white-base leading-tight">
+                      {ref.title}
+                    </h3>
+                    <div className="mt-3 flex items-center justify-between">
+                      <p className="text-xs text-white/70">
+                        {ref.projectType} · {ref.year}
+                      </p>
+                      <FiArrowUpRight className="text-xl text-accent-400 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    </div>
+                  </div>
+                </Link>
+              ))}
             </div>
           )}
         </div>

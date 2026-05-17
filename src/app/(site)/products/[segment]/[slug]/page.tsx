@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -294,13 +295,15 @@ export default async function ProductDetailPage({ params }: Props) {
                   href={`/references/${proj.slug}`}
                   className="group flex gap-4 p-4 rounded-2xl border border-neutral-100 hover:border-primary-200 hover:shadow-soft transition-all"
                 >
-                  <div
-                    className="w-24 h-20 shrink-0 rounded-lg"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #072454 0%, #1565c0 100%)",
-                    }}
-                  />
+                  <div className="relative w-24 h-20 shrink-0 rounded-lg overflow-hidden bg-neutral-200">
+                    <Image
+                      src={encodeURI(proj.heroImage)}
+                      alt={proj.title}
+                      fill
+                      sizes="96px"
+                      className="object-cover"
+                    />
+                  </div>
                   <div className="min-w-0">
                     <p className="text-[10px] uppercase tracking-wider text-neutral-500">
                       {proj.location.city}, {proj.location.country}

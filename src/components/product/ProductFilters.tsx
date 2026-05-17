@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useState, useTransition } from "react";
-import { FiSearch, FiX } from "react-icons/fi";
+import { FiSearch, FiX, FiSliders, FiChevronDown } from "react-icons/fi";
 import type { Category } from "@/types/Catalog";
 
 export default function ProductFilters({
@@ -22,6 +22,7 @@ export default function ProductFilters({
   const currentCategory = params.get("category") ?? "";
   const currentQ = params.get("q") ?? "";
   const [q, setQ] = useState(currentQ);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const updateParam = (key: string, value: string) => {
     const next = new URLSearchParams(params.toString());
@@ -40,8 +41,31 @@ export default function ProductFilters({
   const hasFilters = currentCategory || currentQ;
 
   return (
-    <aside className="sticky top-28">
-      <div className="brand-panel p-5 space-y-6">
+    <aside className="lg:sticky lg:top-28">
+      {/* Mobile/tablet toggle — collapses the filter panel on small screens
+          so the product grid is reachable without scrolling past every
+          category. Always-open on lg+. */}
+      <button
+        type="button"
+        onClick={() => setMobileOpen((v) => !v)}
+        aria-expanded={mobileOpen}
+        className="lg:hidden w-full mb-3 flex items-center justify-between gap-3 px-4 h-12 rounded-xl bg-white-base border border-neutral-200 text-sm font-semibold text-neutral-800 shadow-soft"
+      >
+        <span className="inline-flex items-center gap-2">
+          <FiSliders className="text-primary-600" />
+          Filters
+          <span className="text-xs font-normal text-neutral-500">
+            ({filtered} of {total})
+          </span>
+        </span>
+        <FiChevronDown
+          className={`text-neutral-500 transition-transform ${mobileOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      <div
+        className={`brand-panel p-4 sm:p-5 space-y-6 ${mobileOpen ? "block" : "hidden lg:block"}`}
+      >
         <div>
           <label htmlFor="product-search" className="brand-panel__eyebrow block mb-2">
             Search

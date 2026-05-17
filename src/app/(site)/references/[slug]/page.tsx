@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -168,14 +169,15 @@ export default async function ReferenceDetailPage({ params }: Props) {
               className="relative aspect-[16/10] rounded-3xl overflow-hidden"
               style={{ background: heroBg }}
             >
-              <div
-                aria-hidden
-                className="absolute inset-0 opacity-15"
-                style={{
-                  backgroundImage:
-                    "repeating-linear-gradient(135deg, rgba(255,255,255,0.5) 0, rgba(255,255,255,0.5) 1px, transparent 1px, transparent 22px)",
-                }}
+              <Image
+                src={encodeURI(project.heroImage)}
+                alt={project.title}
+                fill
+                priority
+                sizes="(min-width: 1024px) 66vw, 100vw"
+                className="object-cover"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/85 via-neutral-900/30 to-transparent" />
               <div className="absolute inset-x-8 bottom-8">
                 <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/15 backdrop-blur text-[11px] font-bold tracking-wider uppercase text-white-base">
                   {firstSegment?.name ?? "Project"}
@@ -240,20 +242,20 @@ export default async function ReferenceDetailPage({ params }: Props) {
               </Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {otherReferences.map((r, i) => (
+              {otherReferences.map((r) => (
                 <Link
                   key={r.id}
                   href={`/references/${r.slug}`}
-                  className="group relative aspect-[4/5] rounded-2xl overflow-hidden flex flex-col justify-end"
-                  style={{
-                    background: [
-                      "linear-gradient(135deg, #072454, #1565c0)",
-                      "linear-gradient(135deg, #5c2e00, #f57c00)",
-                      "linear-gradient(135deg, #0e3d1a, #2fa84f)",
-                    ][i % 3],
-                  }}
+                  className="group relative aspect-[4/5] rounded-2xl overflow-hidden flex flex-col justify-end bg-neutral-800"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/30 to-transparent" />
+                  <Image
+                    src={encodeURI(r.heroImage)}
+                    alt={r.title}
+                    fill
+                    sizes="(min-width: 768px) 33vw, 100vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/40 to-transparent" />
                   <div className="relative p-5">
                     <p className="text-[11px] uppercase tracking-wider text-accent-300">
                       {r.location.city}, {r.location.country}

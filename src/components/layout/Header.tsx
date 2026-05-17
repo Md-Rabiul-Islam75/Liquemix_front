@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { FiSearch, FiMenu, FiX, FiChevronDown } from "react-icons/fi";
 import { segments } from "@/data/segments";
 import { getRootCategoriesBySegment } from "@/data/categories";
@@ -21,6 +22,7 @@ const SEGMENT_BAR_COLOR: Record<string, string> = {
 export default function Header() {
   const [openMenu, setOpenMenu] = useState<MenuKey>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [hoveredSegment, setHoveredSegment] = useState<string | null>(
     segments[0]?.id ?? null
   );
@@ -30,10 +32,21 @@ export default function Header() {
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    setMounted(true);
     return () => {
       if (closeTimer.current) clearTimeout(closeTimer.current);
     };
   }, []);
+
+  // Lock body scroll while the mobile drawer is open.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileOpen]);
 
   const cancelClose = () => {
     if (closeTimer.current) {
@@ -399,74 +412,99 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile Drawer */}
-      {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-[60] bg-neutral-900/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)}>
+      {/* Mobile Drawer (portaled to document.body to escape the header's
+          backdrop-filter containing block, which would otherwise bound the
+          fixed overlay to the header strip). */}
+      {mounted && mobileOpen &&
+        createPortal(
           <div
-            className="absolute right-0 top-0 bottom-0 w-[88vw] max-w-sm bg-white-base shadow-2xl p-6 overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
+            className="lg:hidden fixed inset-0 z-[100] bg-neutral-900/60 backdrop-blur-sm"
+            onClick={() => setMobileOpen(false)}
+            role="dialog"
+            aria-modal="true"
           >
-            <div className="flex items-center justify-between mb-6">
-              <Image src="/logo/LiqueMix.png" alt="LiqueMix" width={140} height={40} className="h-8 w-auto" />
-              <button onClick={() => setMobileOpen(false)} aria-label="Close" className="w-10 h-10 inline-flex items-center justify-center rounded-full hover:bg-neutral-50">
-                <FiX className="text-2xl" />
-              </button>
-            </div>
-
-            <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-neutral-500 mb-3">
-              Products
-            </p>
-            <ul className="space-y-1 mb-6">
-              {segments.map((seg) => (
-                <li key={seg.id}>
-                  <Link
-                    href={`/products/${seg.slug}`}
-                    onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3 py-2.5 text-sm font-semibold text-neutral-800"
-                  >
-                    <span className={`block w-1 h-5 rounded-full ${SEGMENT_BAR_COLOR[seg.color]}`} />
-                    {seg.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-
-            <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-neutral-500 mb-3">
-              Explore
-            </p>
-            <ul className="space-y-2 mb-8">
-              {[
-                ["/solutions", "System Solutions"],
-                ["/references", "References"],
-                ["/service/downloads", "Downloads"],
-                ["/service/videos", "Videos"],
-                ["/service/events", "Events"],
-                ["/news", "News"],
-                ["/about", "About"],
-                ["/contact", "Contact"],
-              ].map(([href, label]) => (
-                <li key={href}>
-                  <Link
-                    href={href}
-                    onClick={() => setMobileOpen(false)}
-                    className="block py-2 text-sm font-semibold text-neutral-800"
-                  >
-                    {label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-
-            <Link
-              href="/contact"
-              onClick={() => setMobileOpen(false)}
-              className="btn-accent w-full"
+            <div
+              className="absolute right-0 top-0 bottom-0 w-[88vw] max-w-sm sm:max-w-md bg-white-base shadow-2xl overflow-y-auto flex flex-col"
+              onClick={(e) => e.stopPropagation()}
             >
-              Enquire Now
-            </Link>
-          </div>
-        </div>
-      )}
+              <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-neutral-100 sticky top-0 bg-white-base z-10">
+                <Image
+                  src="/logo/LiqueMix.png"
+                  alt="LiqueMix"
+                  width={140}
+                  height={40}
+                  className="h-8 w-auto"
+                />
+                <button
+                  onClick={() => setMobileOpen(false)}
+                  aria-label="Close menu"
+                  className="w-10 h-10 inline-flex items-center justify-center rounded-full text-neutral-700 hover:bg-neutral-50"
+                >
+                  <FiX className="text-2xl" />
+                </button>
+              </div>
+
+              <div className="flex-1 px-5 sm:px-6 py-5">
+                <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-neutral-500 mb-3">
+                  Products
+                </p>
+                <ul className="space-y-1 mb-6">
+                  {segments.map((seg) => (
+                    <li key={seg.id}>
+                      <Link
+                        href={`/products/${seg.slug}`}
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-3 py-2.5 text-sm font-semibold text-neutral-800 hover:text-primary-700"
+                      >
+                        <span
+                          className={`block w-1 h-5 rounded-full ${SEGMENT_BAR_COLOR[seg.color]}`}
+                        />
+                        {seg.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+
+                <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-neutral-500 mb-3">
+                  Explore
+                </p>
+                <ul className="space-y-1 mb-8">
+                  {[
+                    ["/solutions", "System Solutions"],
+                    ["/references", "References"],
+                    ["/service/downloads", "Downloads"],
+                    ["/service/videos", "Videos"],
+                    ["/service/events", "Events"],
+                    ["/news", "News"],
+                    ["/about", "About"],
+                    ["/contact", "Contact"],
+                  ].map(([href, label]) => (
+                    <li key={href}>
+                      <Link
+                        href={href}
+                        onClick={() => setMobileOpen(false)}
+                        className="block py-2 text-sm font-semibold text-neutral-800 hover:text-primary-700"
+                      >
+                        {label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="px-5 sm:px-6 py-4 border-t border-neutral-100 sticky bottom-0 bg-white-base">
+                <Link
+                  href="/contact"
+                  onClick={() => setMobileOpen(false)}
+                  className="btn-accent w-full"
+                >
+                  Enquire Now
+                </Link>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </header>
   );
 }

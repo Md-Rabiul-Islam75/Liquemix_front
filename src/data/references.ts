@@ -14,7 +14,7 @@ export const referenceProjects: ReferenceProject[] = [
       "Three-level basement below the water table with rooftop infinity pool — both required guaranteed watertightness with a 15-year performance guarantee.",
     solution:
       "Two-coat positive-side waterproofing with Hydro-Guard 3X over the basement raft, flexible Crystal Flex-Skim on the pool tank, and chemical-resistant Fix MT-3 for the tiling layer.",
-    heroImage: "/images/Marina Residences — Watertight Basement & Pool.png",
+    heroImage: "/images/marina-residences-watertight-basement-and-pool.png",
     gallery: [],
     applicator: { name: "Acme Waterproofing Co.", website: "https://example.com" },
     architect: { name: "Urbana Studio" },
@@ -32,7 +32,7 @@ export const referenceProjects: ReferenceProject[] = [
       "Continuous 24-hour concrete pours in tropical climate with stringent strength requirements (≥ 50 N/mm² @ 28 days) and abrasion resistance for reach-stacker traffic.",
     solution:
       "PCE-based Plastorix-500 superplasticiser for 35% water reduction, Retanta WS-50 for extended workability in 38 °C ambient, and Cure-E25 to prevent plastic shrinkage on freshly placed slabs.",
-    heroImage: "/images/Chittagong Port — Container Terminal Floor.png",
+    heroImage: "/images/chittagong-port-container-terminal-floor.png",
     gallery: [],
     architect: { name: "DPI Engineering Group" },
   },
@@ -49,7 +49,7 @@ export const referenceProjects: ReferenceProject[] = [
       "Negative-side waterproofing of cast-in-situ diaphragm walls with active water ingress at construction joints.",
     solution:
       "Crystalline Hydro-Guard 3X applied to dampened substrate after joint detailing with MicroCrete ME 55 D. Long-term performance verified under 4 bar hydrostatic head.",
-    heroImage: "/images/MRT Line-6 — Underground Station Waterproofing.png",
+    heroImage: "/images/mrt-line-6-underground-station-waterproofing.png",
     gallery: [],
   },
   {
@@ -65,7 +65,7 @@ export const referenceProjects: ReferenceProject[] = [
       "Production floor required ISO 7 cleanroom finish — seamless, chemical-resistant, and rated for 5 t/m² static loading from process equipment.",
     solution:
       "Structural repair with Restoration GP40 D, levelling with Crystal Flex-Skim, and a custom epoxy top coat applied during a 10-day plant shutdown.",
-    heroImage: "/images/NovaCare Pharma — Cleanroom Floor System.png",
+    heroImage: "/images/novacare-pharma-cleanroom-floor-system.png",
     gallery: [],
   },
   {
@@ -80,7 +80,7 @@ export const referenceProjects: ReferenceProject[] = [
       "Precision grouting of 84 bridge bearings with strict tolerances (±2 mm levelling), and structural reinforcement of approach piers exposed to riverine erosion.",
     solution:
       "PG70 precision grout achieving 80 N/mm² for the bearing seats; MicroCrete ME 55 D pumped into reinforced jackets for the approach piers.",
-    heroImage: "/images/Padma Bridge — Bearing Grouting & Repair.png",
+    heroImage: "/images/padma-bridge-bearing-grouting-and-repair.png",
     gallery: [],
   },
   {
@@ -96,7 +96,7 @@ export const referenceProjects: ReferenceProject[] = [
       "Renovation of seven operating theatres within an active hospital — required low-VOC products, fast turnaround per room, and antimicrobial surfaces.",
     solution:
       "Crystal Flex-Skim as a vapour-permeable underlayer, Fix MT-3 for hygienic large-format porcelain installation. Room-by-room handover in 5-day cycles.",
-    heroImage: "/images/Central Hospital — Operating Theatre Renovation.png",
+    heroImage: "/images/central-hospital-operating-theatre-renovation.png",
     gallery: [],
   },
 ];

@@ -89,7 +89,7 @@ export const newsPosts: NewsPost[] = [
 <p>Full project documentation is available on request — including the QA logs, batch MTCs, and bearing-level survey data.</p>
 `,
     publishedAt: "2025-08-22",
-    coverImage: "/images/Padma Bridge — Bearing Grouting & Repair.png",
+    coverImage: "/images/padma-bridge-bearing-grouting-and-repair.png",
     author: { name: "Imran Karim", role: "Director, Technical Service" },
     category: "Project",
     readMinutes: 6,

@@ -9,16 +9,10 @@ export default function SiteLayout({
 }>) {
   return (
     <div className="flex flex-col min-h-screen">
-      <div className="print:hidden">
-        <Header />
-      </div>
+      <Header />
       <main className="flex-1">{children}</main>
-      <div className="print:hidden">
-        <Footer />
-      </div>
-      <div className="print:hidden">
-        <FloatingWhatsApp />
-      </div>
+      <Footer />
+      <FloatingWhatsApp />
     </div>
   );
 }

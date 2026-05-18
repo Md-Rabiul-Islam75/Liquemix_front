@@ -147,8 +147,17 @@ export default function AboutPage() {
         variant="dark"
       />
 
-      {/* In-page nav (anchor links to each section) */}
-      <nav className="sticky top-20 z-30 bg-white-base/95 backdrop-blur-md border-b border-neutral-100">
+      {/* In-page nav (anchor links to each section).
+          Non-sticky and visually glued to the bottom of the dark hero —
+          the chips travel with the banner so they don't obscure section
+          titles during scroll. The main site header at the very top stays
+          sticky on its own. */}
+      <nav className="relative bg-primary-800 text-white-base border-t border-white/15">
+        {/* Brand accent stripe — ties the nav to the LiqueMix color triad */}
+        <span
+          aria-hidden
+          className="absolute left-0 right-0 top-0 h-0.5 bg-gradient-to-r from-primary-400 via-secondary-500 to-accent-500"
+        />
         <div className="container-page flex items-center gap-1 overflow-x-auto scrollbar-hide py-3 text-sm font-semibold">
           {[
             ["values", "Corporate Values"],
@@ -161,7 +170,7 @@ export default function AboutPage() {
             <a
               key={id}
               href={`#${id}`}
-              className="shrink-0 px-3 py-1.5 rounded-full text-neutral-600 hover:text-primary-700 hover:bg-primary-50 transition-colors"
+              className="shrink-0 px-3 py-1.5 rounded-full text-white/80 hover:text-accent-300 hover:bg-white/10 transition-colors"
             >
               {label}
             </a>
@@ -170,7 +179,7 @@ export default function AboutPage() {
       </nav>
 
       {/* Values */}
-      <section id="values" className="section scroll-mt-32">
+      <section id="values" className="section scroll-mt-24 md:scroll-mt-32">
         <div className="container-page">
           <div className="max-w-3xl">
             <span className="eyebrow">
@@ -206,7 +215,7 @@ export default function AboutPage() {
       </section>
 
       {/* Story / Timeline */}
-      <section id="story" className="section pt-0 scroll-mt-32">
+      <section id="story" className="section pt-0 scroll-mt-24 md:scroll-mt-32">
         <div className="container-page">
           <div className="max-w-3xl">
             <span className="eyebrow !text-secondary-600">
@@ -221,26 +230,52 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <ol className="mt-12 relative border-l-2 border-secondary-200 pl-6 md:pl-8 space-y-10">
-            {TIMELINE.map((t) => (
-              <li key={t.year} className="relative">
-                <span className="absolute -left-[34px] md:-left-[42px] top-0 inline-flex items-center justify-center w-12 h-12 rounded-full bg-secondary-500 text-white-base text-xs font-bold shadow-[0_8px_24px_-8px_rgba(245,124,0,0.45)]">
-                  {t.year}
-                </span>
-                <h3 className="text-lg md:text-xl font-bold text-neutral-900">
-                  {t.title}
-                </h3>
-                <p className="mt-1.5 text-sm md:text-base text-neutral-600 max-w-2xl leading-relaxed">
-                  {t.body}
-                </p>
-              </li>
-            ))}
+          {/* Timeline — flex layout with a dedicated badge column. Each
+              badge sits naturally inside the container's left padding (no
+              negative offsets) and the vertical connector line passes
+              cleanly through the centre of every circle. */}
+          <ol className="mt-12">
+            {TIMELINE.map((t, i) => {
+              const isLast = i === TIMELINE.length - 1;
+              return (
+                <li
+                  key={t.year}
+                  className={`relative flex gap-5 md:gap-6 ${isLast ? "" : "pb-10"}`}
+                >
+                  {/* Badge + connecting line column */}
+                  <div className="relative shrink-0">
+                    {/* Line: spans the full height of the badge column;
+                        the badge sits on top of it via z-index, so visually
+                        the line appears to thread through each circle. */}
+                    {!isLast && (
+                      <span
+                        aria-hidden
+                        className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-0.5 bg-secondary-200"
+                      />
+                    )}
+                    <span className="relative z-10 inline-flex items-center justify-center w-12 h-12 rounded-full bg-secondary-500 text-white-base text-xs font-bold shadow-[0_8px_24px_-8px_rgba(245,124,0,0.45)]">
+                      {t.year}
+                    </span>
+                  </div>
+
+                  {/* Content column */}
+                  <div className="flex-1 min-w-0 pt-2.5">
+                    <h3 className="text-lg md:text-xl font-bold text-neutral-900">
+                      {t.title}
+                    </h3>
+                    <p className="mt-1.5 text-sm md:text-base text-neutral-600 max-w-2xl leading-relaxed">
+                      {t.body}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
           </ol>
         </div>
       </section>
 
       {/* Management */}
-      <section id="management" className="section pt-0 scroll-mt-32">
+      <section id="management" className="section pt-0 scroll-mt-24 md:scroll-mt-32">
         <div className="container-page">
           <div className="max-w-3xl">
             <span className="eyebrow !text-accent-700">
@@ -286,7 +321,7 @@ export default function AboutPage() {
       </section>
 
       {/* Quality */}
-      <section id="quality" className="section pt-0 scroll-mt-32">
+      <section id="quality" className="section pt-0 scroll-mt-24 md:scroll-mt-32">
         <div className="container-page">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             <div className="lg:col-span-5">
@@ -338,7 +373,7 @@ export default function AboutPage() {
       </section>
 
       {/* Sustainability */}
-      <section id="sustainability" className="section pt-0 scroll-mt-32">
+      <section id="sustainability" className="section pt-0 scroll-mt-24 md:scroll-mt-32">
         <div className="container-page">
           <div className="rounded-3xl overflow-hidden relative p-8 md:p-14 text-white-base"
             style={{
@@ -393,7 +428,7 @@ export default function AboutPage() {
       </section>
 
       {/* Careers */}
-      <section id="careers" className="section pt-0 scroll-mt-32">
+      <section id="careers" className="section pt-0 scroll-mt-24 md:scroll-mt-32">
         <div className="container-page">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
             <div className="lg:col-span-5">

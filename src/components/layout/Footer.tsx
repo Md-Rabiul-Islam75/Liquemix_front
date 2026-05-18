@@ -5,7 +5,7 @@ import { segments } from "@/data/segments";
 
 export default function Footer() {
   return (
-    <footer className="bg-neutral-900 text-neutral-300 mt-24">
+    <footer className="bg-neutral-900 text-neutral-300 mt-24 print:hidden">
       {/* CTA strip */}
       <div className="brand-gradient">
         <div className="container-page py-12 md:py-16 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 text-white-base">

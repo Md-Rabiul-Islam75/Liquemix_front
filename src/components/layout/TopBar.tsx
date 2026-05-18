@@ -10,7 +10,7 @@ export default function TopBar() {
           Construction Chemical & Industrial Solutions
         </p>
         <div className="flex items-center gap-5">
-          <Link href="/downloads" className="text-neutral-300 hover:text-white-base transition-colors">
+          <Link href="/service/downloads" className="text-neutral-300 hover:text-white-base transition-colors">
             Downloads
           </Link>
           <Link href="/references" className="text-neutral-300 hover:text-white-base transition-colors">

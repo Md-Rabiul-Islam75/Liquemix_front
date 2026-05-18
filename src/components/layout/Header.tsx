@@ -88,7 +88,7 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white-base/95 backdrop-blur-md border-b border-neutral-100">
+    <header className="sticky top-0 z-50 bg-white-base/95 backdrop-blur-md border-b border-neutral-100 print:hidden">
       <TopBar />
 
       <div className="container-page flex items-center justify-between h-20">

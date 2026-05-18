@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FiArrowUpRight, FiMessageCircle, FiFile, FiCheck } from "react-icons/fi";
+import { FiArrowUpRight, FiMessageCircle, FiFile, FiCheck, FiMapPin } from "react-icons/fi";
 
 import PageHeader from "@/components/common/PageHeader";
 import ProductCard from "@/components/product/ProductCard";
@@ -225,28 +226,25 @@ export default async function SolutionDetailPage({ params }: Props) {
               </Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {usedInProjects.slice(0, 6).map((p, i) => (
+              {usedInProjects.slice(0, 6).map((p) => (
                 <Link
                   key={p.id}
                   href={`/references/${p.slug}`}
-                  className="group relative aspect-[4/5] rounded-2xl overflow-hidden flex flex-col justify-end"
-                  style={{
-                    background: [
-                      "linear-gradient(135deg, #072454, #1565c0)",
-                      "linear-gradient(135deg, #5c2e00, #f57c00)",
-                      "linear-gradient(135deg, #0e3d1a, #2fa84f)",
-                      "linear-gradient(135deg, #0a3674, #3f88d6)",
-                      "linear-gradient(135deg, #8a4500, #fb8c25)",
-                      "linear-gradient(135deg, #5c3e00, #ffb300)",
-                    ][i % 6],
-                  }}
+                  className="group relative aspect-[4/5] rounded-2xl overflow-hidden flex flex-col justify-end bg-neutral-800"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/30 to-transparent" />
+                  <Image
+                    src={encodeURI(p.heroImage)}
+                    alt={p.title}
+                    fill
+                    sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/40 to-transparent" />
                   <div className="relative p-5">
-                    <p className="text-[11px] uppercase tracking-wider text-accent-300">
-                      {p.location.city}, {p.location.country}
+                    <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-accent-300">
+                      <FiMapPin /> {p.location.city}, {p.location.country}
                     </p>
-                    <h3 className="mt-1 text-base font-bold leading-tight">
+                    <h3 className="mt-2 text-base font-bold leading-tight text-white-base">
                       {p.title}
                     </h3>
                     <FiArrowUpRight className="mt-3 text-lg text-accent-400 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />

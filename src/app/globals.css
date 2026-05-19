@@ -464,6 +464,19 @@ body {
   }
 }
 
+/* ---------- Admin form inputs ----------
+ * Single utility applied to every admin form control so inputs, selects,
+ * and textareas share one focus / border / typography contract. */
+.admin-input {
+  @apply w-full h-10 px-3 rounded-lg border border-neutral-200 text-sm text-neutral-900
+         bg-white-base placeholder:text-neutral-400
+         focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100
+         disabled:bg-neutral-50 disabled:text-neutral-500;
+}
+textarea.admin-input {
+  @apply h-auto py-2.5 leading-relaxed;
+}
+
 /* ---------- Header / Navigation ---------- */
 .nav-link {
   @apply relative inline-flex items-center gap-1 px-3 py-2 text-sm font-semibold text-neutral-700

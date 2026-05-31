@@ -1,19 +1,42 @@
-import type { Metadata } from "next";
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { FiArrowRight, FiLock, FiMail } from "react-icons/fi";
-
-export const metadata: Metadata = {
-  title: "Sign in",
-};
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { FiAlertCircle, FiArrowRight, FiLock, FiMail } from "react-icons/fi";
+import { adminLogin } from "@/lib/adminApi";
 
 /**
- * Admin login page — currently a visual stub. The Submit button links
- * straight to /admin so the static demo is navigable. When the backend
- * lands, swap the <form> action to POST /admin/login and wire up the
- * existing JWT scaffolding in src/redux/slices/api/authAPISlice.ts.
+ * Admin login — posts to /api/v1/auth/admin/login, stores the access
+ * token in localStorage via adminApi.setToken(), then bounces to the
+ * dashboard (or to ?next=... if present).
  */
 export default function AdminLoginPage() {
+  const router = useRouter();
+  const params = useSearchParams();
+  const next = params.get("next") || "/admin";
+
+  const [email, setEmail] = useState("admin@liquemix.local");
+  const [password, setPassword] = useState("Admin@1234");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSubmitting(true);
+    try {
+      await adminLogin(email, password);
+      router.push(next);
+      router.refresh();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Sign-in failed.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div className="min-h-screen flex">
       {/* Left — brand panel */}
@@ -74,7 +97,6 @@ export default function AdminLoginPage() {
       {/* Right — form */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-10 bg-white-base">
         <div className="w-full max-w-sm">
-          {/* Mobile-only logo */}
           <Link href="/" className="lg:hidden flex items-center gap-2.5 mb-8">
             <Image
               src="/logo/LiqueMix.png"
@@ -94,7 +116,14 @@ export default function AdminLoginPage() {
             Sign in with your LiqueMix admin credentials.
           </p>
 
-          <form action="/admin" className="mt-8 space-y-4">
+          {error && (
+            <div className="mt-6 flex items-start gap-2 p-3 rounded-lg bg-error-50 border border-error-300 text-error-600 text-sm">
+              <FiAlertCircle className="text-base mt-0.5 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={onSubmit} className="mt-6 space-y-4">
             <div>
               <label
                 htmlFor="email"
@@ -107,10 +136,10 @@ export default function AdminLoginPage() {
                 <input
                   id="email"
                   type="email"
-                  name="email"
                   required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@liquemix.com"
-                  defaultValue="tanvir@liquemix.com"
                   className="w-full h-11 pl-10 pr-3 rounded-lg border border-neutral-200 text-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
                 />
               </div>
@@ -136,10 +165,10 @@ export default function AdminLoginPage() {
                 <input
                   id="password"
                   type="password"
-                  name="password"
                   required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  defaultValue="demo-password"
                   className="w-full h-11 pl-10 pr-3 rounded-lg border border-neutral-200 text-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
                 />
               </div>
@@ -156,9 +185,10 @@ export default function AdminLoginPage() {
 
             <button
               type="submit"
-              className="w-full h-11 inline-flex items-center justify-center gap-2 rounded-lg bg-primary-500 text-white-base font-semibold hover:bg-primary-600 transition-colors shadow-[0_8px_24px_-8px_rgba(21,101,192,0.45)]"
+              disabled={submitting}
+              className="w-full h-11 inline-flex items-center justify-center gap-2 rounded-lg bg-primary-500 text-white-base font-semibold hover:bg-primary-600 transition-colors shadow-[0_8px_24px_-8px_rgba(21,101,192,0.45)] disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Sign in <FiArrowRight />
+              {submitting ? "Signing in…" : <>Sign in <FiArrowRight /></>}
             </button>
           </form>
 

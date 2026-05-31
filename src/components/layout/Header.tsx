@@ -26,7 +26,7 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [hoveredSegment, setHoveredSegment] = useState<string | null>(
-    segments[0]?.id ?? null
+    segments[0]?.id != null ? String(segments[0].id) : null
   );
 
   // Hover-intent timer: lets the mouse cross the gap between a nav button
@@ -84,7 +84,7 @@ export default function Header() {
   const closeAll = () => {
     cancelClose();
     setOpenMenu(null);
-    setHoveredSegment(segments[0]?.id ?? null);
+    setHoveredSegment(segments[0]?.id != null ? String(segments[0].id) : null);
   };
 
   return (
@@ -188,9 +188,9 @@ export default function Header() {
                     <li key={seg.id}>
                       <button
                         type="button"
-                        onMouseEnter={() => setHoveredSegment(seg.id)}
+                        onMouseEnter={() => setHoveredSegment(String(seg.id))}
                         className={`w-full flex items-center justify-between text-left px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
-                          hoveredSegment === seg.id
+                          hoveredSegment === String(seg.id)
                             ? "bg-white-base text-primary-700 shadow-sm"
                             : "text-neutral-700 hover:text-primary-600"
                         }`}
@@ -212,7 +212,7 @@ export default function Header() {
               <div className="col-span-6 p-6">
                 {hoveredSegment &&
                   (() => {
-                    const seg = segments.find((s) => s.id === hoveredSegment);
+                    const seg = segments.find((s) => String(s.id) === hoveredSegment);
                     const cats = getRootCategoriesBySegment(hoveredSegment);
                     return (
                       <div>

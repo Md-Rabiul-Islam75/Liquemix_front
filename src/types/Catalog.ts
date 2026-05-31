@@ -4,32 +4,35 @@
  * is a single-import change in src/data/*.
  */
 
+/** Backend uses numeric primary keys; mock data uses strings. Widen so both work. */
+export type EntityId = string | number;
+
 export type SegmentColor = "blue" | "orange" | "yellow" | "green";
 
 export interface Segment {
-  id: string;
+  id: EntityId;
   slug: string;
   name: string;
   tagline: string;
   description: string;
   color: SegmentColor;
-  heroImage: string;
-  icon: string;
+  heroImage?: string;
+  icon?: string;
   productCount: number;
   solutionCount: number;
 }
 
 export interface Category {
-  id: string;
+  id: EntityId;
   slug: string;
   name: string;
-  parentId: string | null;
-  segmentId: string;
+  parentId: EntityId | null;
+  segmentId: EntityId;
   description?: string;
   image?: string;
   menuOrder: number;
   isActive: boolean;
-  productIds?: string[];
+  productIds?: EntityId[];
   children?: Category[];
 }
 
@@ -76,14 +79,20 @@ export interface ProductVideo {
 }
 
 export interface Product {
-  id: string;
+  id: EntityId;
   sku: string;
   slug: string;
   name: string;
   shortDescription: string;
   longDescription?: string;
-  segmentId: string;
-  categoryIds: string[];
+  segmentId: EntityId;
+  /** Pre-resolved segment fields shipped by the backend so consumers can
+   *  build product URLs, label chips, and tint with the segment colour
+   *  without a separate lookup. Optional because mock data omits them. */
+  segmentSlug?: string;
+  segmentName?: string;
+  segmentColor?: SegmentColor;
+  categoryIds: EntityId[];
   applicationAreas: string[];
   advantages: string[];
   consumption?: { value: string; unit: string };
@@ -91,7 +100,7 @@ export interface Product {
   documents: ProductDocument[];
   images: ProductImage[];
   videos?: ProductVideo[];
-  relatedProductIds?: string[];
+  relatedProductIds?: EntityId[];
   isNew?: boolean;
   isFeatured?: boolean;
   publishedAt: string;

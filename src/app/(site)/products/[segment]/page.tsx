@@ -33,8 +33,8 @@ export default async function SegmentPage({ params, searchParams }: Props) {
   const segment = getSegmentBySlug(slug);
   if (!segment) notFound();
 
-  const allInSegment = getProductsBySegment(segment.id);
-  const categories = getRootCategoriesBySegment(segment.id);
+  const allInSegment = getProductsBySegment(String(segment.id));
+  const categories = getRootCategoriesBySegment(String(segment.id));
 
   const categorySlug = sp.category;
   const q = (sp.q ?? "").trim().toLowerCase();

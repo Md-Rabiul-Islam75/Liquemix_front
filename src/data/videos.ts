@@ -170,3 +170,17 @@ export const VIDEO_CATEGORIES: Video["category"][] = [
   "Tutorial",
   "System Solution",
 ];
+
+// ─── Live fetcher ─────────────────────────────────────────────────────
+import { apiGetOr } from "@/lib/api";
+
+export async function fetchVideos(opts: {
+  category?: string;
+  segmentId?: string | number;
+} = {}): Promise<Video[]> {
+  const qs = new URLSearchParams();
+  if (opts.category) qs.set("category", opts.category);
+  if (opts.segmentId != null) qs.set("segmentId", String(opts.segmentId));
+  const path = `/api/v1/content/videos${qs.toString() ? `?${qs}` : ""}`;
+  return apiGetOr<Video[]>(path, videos);
+}

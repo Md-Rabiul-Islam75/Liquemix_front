@@ -27,7 +27,7 @@ export default async function ReferencesPage({ searchParams }: Props) {
   const sp = await searchParams;
 
   // Build filter option lists from data
-  const segmentOptions = segments.map((s) => ({ value: s.id, label: s.name }));
+  const segmentOptions = segments.map((s) => ({ value: String(s.id), label: s.name }));
   const projectTypes = Array.from(
     new Set(referenceProjects.map((r) => r.projectType))
   )

@@ -34,15 +34,20 @@ interface Node extends Omit<Category, "children"> {
 }
 
 function buildTree(flat: Category[], productsByCategoryId: Record<string, number>): Node[] {
+  // Use string keys so number and string IDs unify cleanly in the map.
   const map = new Map<string, Node>();
   flat.forEach((c) =>
-    map.set(c.id, { ...c, children: [], productCount: productsByCategoryId[c.id] ?? 0 })
+    map.set(
+      String(c.id),
+      { ...c, children: [], productCount: productsByCategoryId[String(c.id)] ?? 0 }
+    )
   );
   const roots: Node[] = [];
   flat.forEach((c) => {
-    const node = map.get(c.id)!;
-    if (c.parentId && map.has(c.parentId)) {
-      map.get(c.parentId)!.children.push(node);
+    const node = map.get(String(c.id))!;
+    const parentKey = c.parentId != null ? String(c.parentId) : null;
+    if (parentKey && map.has(parentKey)) {
+      map.get(parentKey)!.children.push(node);
     } else {
       roots.push(node);
     }
@@ -72,10 +77,10 @@ export default function CategoryTree({
   categories: Category[];
   productsByCategoryId: Record<string, number>;
 }) {
-  const [expanded, setExpanded] = useState<Set<string>>(
+  const [expanded, setExpanded] = useState<Set<string | number>>(
     new Set(categories.map((c) => c.id))
   );
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | number | null>(null);
   const [query, setQuery] = useState("");
 
   const tree = useMemo(
@@ -90,7 +95,7 @@ export default function CategoryTree({
     ? categories.find((c) => c.id === selected.parentId)
     : null;
 
-  const toggle = (id: string) => {
+  const toggle = (id: string | number) => {
     setExpanded((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -273,10 +278,10 @@ function TreeNode({
 }: {
   node: Node;
   depth: number;
-  expanded: Set<string>;
-  onToggle: (id: string) => void;
-  selectedId: string | null;
-  onSelect: (id: string) => void;
+  expanded: Set<string | number>;
+  onToggle: (id: string | number) => void;
+  selectedId: string | number | null;
+  onSelect: (id: string | number) => void;
   matches: (n: Node) => boolean;
   query: string;
 }) {

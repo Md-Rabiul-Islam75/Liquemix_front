@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   FiAlertCircle,
   FiArrowLeft,
-  FiCheckCircle,
   FiLogIn,
   FiPlus,
   FiSave,
@@ -15,7 +14,17 @@ import {
   FiX,
 } from "react-icons/fi";
 import AdminPageHeader from "@/components/admin/PageHeader";
+import ProductImageGallery, {
+  type ProductImage,
+} from "@/components/admin/ProductImageGallery";
+import ProductVideosEditor, {
+  type ProductVideo,
+} from "@/components/admin/ProductVideosEditor";
+import ProductDocumentsEditor, {
+  type ProductDocument,
+} from "@/components/admin/ProductDocumentsEditor";
 import { adminGet, adminPost, getToken } from "@/lib/adminApi";
+import { ErrorToast, SuccessToast } from "@/helpers/ToastHelper";
 
 type SegmentLite = {
   id: number;
@@ -91,11 +100,12 @@ export default function NewProductPage() {
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<number>>(
     new Set()
   );
+  const [images, setImages] = useState<ProductImage[]>([]);
+  const [videos, setVideos] = useState<ProductVideo[]>([]);
+  const [docs, setDocs] = useState<ProductDocument[]>([]);
 
-  // ─── Submission feedback ──────────────────────────────────────────
+  // ─── Submission state — feedback goes to a toast.
   const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitOk, setSubmitOk] = useState<CreatedProduct | null>(null);
 
   // ─── Reload categories whenever segment changes ───────────────────
   useEffect(() => {
@@ -159,8 +169,6 @@ export default function NewProductPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
-    setSubmitError(null);
-    setSubmitOk(null);
     setSubmitting(true);
     try {
       const created = await adminPost<CreatedProduct>(
@@ -185,24 +193,35 @@ export default function NewProductPage() {
                   unit: consumptionUnit.trim() || null,
                 }
               : null,
-          images: [],
+          images,
           packaging: [],
-          documents: [],
-          videos: [],
+          documents: docs,
+          videos,
           isFeatured,
           isNew,
           status,
         }
       );
-      setSubmitOk(created);
-      // Bounce to the edit page after a short delay so the user sees the toast.
+      if (status === "published") {
+        SuccessToast(
+          "Created & published",
+          `${created.name} is now live on the public site.`
+        );
+      } else {
+        SuccessToast(
+          "Draft created",
+          `${created.name} saved as a draft.`
+        );
+      }
+      // Brief pause so the toast is visible before navigating away.
       setTimeout(() => {
         router.push(`/admin/products/${created.id}`);
         router.refresh();
-      }, 800);
+      }, 600);
     } catch (err) {
-      setSubmitError(
-        err instanceof Error ? err.message : "Failed to create product."
+      ErrorToast(
+        "Couldn't create product",
+        err instanceof Error ? err.message : "Unknown error."
       );
     } finally {
       setSubmitting(false);
@@ -266,28 +285,6 @@ export default function NewProductPage() {
         <div className="mb-4 flex items-start gap-2 p-3 rounded-lg bg-accent-50 border border-accent-300 text-accent-800 text-sm">
           <FiAlertCircle className="text-base mt-0.5 shrink-0" />
           <span>{refError}</span>
-        </div>
-      )}
-
-      {submitError && (
-        <div className="mb-4 flex items-start gap-2 p-3 rounded-lg bg-error-50 border border-error-300 text-error-500 text-sm">
-          <FiAlertCircle className="text-base mt-0.5 shrink-0" />
-          <span>{submitError}</span>
-        </div>
-      )}
-
-      {submitOk && (
-        <div className="mb-4 flex items-start gap-2 p-3 rounded-lg bg-success-50 border border-success-500 text-success-700 text-sm">
-          <FiCheckCircle className="text-base mt-0.5 shrink-0" />
-          <div>
-            <p className="font-semibold">
-              Product created — {submitOk.name}
-            </p>
-            <p className="text-xs text-success-700/80">
-              ID {submitOk.id} · slug{" "}
-              <code className="font-mono">{submitOk.slug}</code>. Redirecting…
-            </p>
-          </div>
         </div>
       )}
 
@@ -406,6 +403,39 @@ export default function NewProductPage() {
               setItems={setAdvantages}
               placeholder="e.g. Crack-bridging up to 2 mm"
             />
+          </section>
+
+          <section className="rounded-2xl bg-white-base border border-neutral-100 p-5 md:p-6">
+            <h2 className="text-base font-bold text-neutral-900 mb-1">
+              Images
+            </h2>
+            <p className="text-xs text-neutral-500 mb-4">
+              Paste an image URL (or a local path like{" "}
+              <code className="font-mono">/dummy_products_images/RD-SK50.jpg</code>
+              ). The first image becomes the primary on the public site.
+            </p>
+            <ProductImageGallery images={images} onChange={setImages} />
+          </section>
+
+          <section className="rounded-2xl bg-white-base border border-neutral-100 p-5 md:p-6">
+            <h2 className="text-base font-bold text-neutral-900 mb-1">
+              Videos
+            </h2>
+            <p className="text-xs text-neutral-500 mb-4">
+              Paste any YouTube URL — the ID is extracted automatically.
+            </p>
+            <ProductVideosEditor videos={videos} onChange={setVideos} />
+          </section>
+
+          <section className="rounded-2xl bg-white-base border border-neutral-100 p-5 md:p-6">
+            <h2 className="text-base font-bold text-neutral-900 mb-1">
+              Documents
+            </h2>
+            <p className="text-xs text-neutral-500 mb-4">
+              TDS, MSDS, MTC, brochures. Pick from the in-project library or
+              upload a new PDF.
+            </p>
+            <ProductDocumentsEditor documents={docs} onChange={setDocs} />
           </section>
 
           <section className="rounded-2xl bg-white-base border border-neutral-100 p-5 md:p-6">

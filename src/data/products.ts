@@ -470,3 +470,34 @@ export function getRelatedProducts(productId: string): Product[] {
     .map((id) => products.find((p) => p.id === id))
     .filter((p): p is Product => p !== undefined);
 }
+
+// ─── Live fetchers ────────────────────────────────────────────────────
+// Public reads from the backend. Fall back to the mock array when the
+// API is unreachable so the public site keeps rendering during dev.
+import { apiGetOr } from "@/lib/api";
+
+export async function fetchFeaturedProducts(limit = 6): Promise<Product[]> {
+  return apiGetOr<Product[]>(
+    `/api/v1/catalog/products/featured?limit=${limit}`,
+    products.filter((p) => p.isFeatured).slice(0, limit)
+  );
+}
+
+export async function fetchNewProducts(limit = 4): Promise<Product[]> {
+  return apiGetOr<Product[]>(
+    `/api/v1/catalog/products/new?limit=${limit}`,
+    products.filter((p) => p.isNew).slice(0, limit)
+  );
+}
+
+/**
+ * Look up a product by slug. Tries the live API first; if the API has
+ * no such row (404 / non-success), falls back to the seeded mock so the
+ * public site keeps rendering for the demo seed during dev.
+ */
+export async function fetchProductBySlug(slug: string): Promise<Product | undefined> {
+  return apiGetOr<Product | undefined>(
+    `/api/v1/catalog/products/${encodeURIComponent(slug)}`,
+    products.find((p) => p.slug === slug)
+  );
+}

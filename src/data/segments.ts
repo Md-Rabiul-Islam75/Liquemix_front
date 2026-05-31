@@ -59,10 +59,27 @@ export const segments: Segment[] = [
   },
 ];
 
-export function getSegmentById(id: string): Segment | undefined {
-  return segments.find((s) => s.id === id);
+import { apiGetOr } from "@/lib/api";
+
+export function getSegmentById(id: string | number): Segment | undefined {
+  return segments.find((s) => String(s.id) === String(id));
 }
 
 export function getSegmentBySlug(slug: string): Segment | undefined {
   return segments.find((s) => s.slug === slug);
+}
+
+/**
+ * Live segments from the backend. Falls back to the seeded mock array if
+ * the API is unreachable so the public site keeps rendering during dev.
+ */
+export async function fetchSegments(): Promise<Segment[]> {
+  return apiGetOr<Segment[]>("/api/v1/catalog/segments", segments);
+}
+
+export async function fetchSegmentBySlug(slug: string): Promise<Segment | undefined> {
+  return apiGetOr<Segment | undefined>(
+    `/api/v1/catalog/segments/${encodeURIComponent(slug)}`,
+    segments.find((s) => s.slug === slug)
+  );
 }

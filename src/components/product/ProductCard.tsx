@@ -28,11 +28,22 @@ const SEGMENT_ACCENT: Record<string, { bar: string; chip: string; tint: string }
 };
 
 export default function ProductCard({ product }: { product: Product }) {
-  const segment = getSegmentById(product.segmentId);
-  const accent = SEGMENT_ACCENT[segment?.color ?? "blue"];
-  const tds = product.documents.find((d) => d.type === "TDS");
+  // Prefer the fields the backend embeds on the product; fall back to a
+  // mock-segment lookup so cards built from mock data still work.
+  const fallbackSegment = getSegmentById(product.segmentId);
+  const segmentSlug = product.segmentSlug ?? fallbackSegment?.slug;
+  const segmentName = product.segmentName ?? fallbackSegment?.name ?? "";
+  const segmentColor = product.segmentColor ?? fallbackSegment?.color ?? "blue";
+  const accent = SEGMENT_ACCENT[segmentColor];
+  const tds = (product.documents ?? []).find((d) => d.type === "TDS");
   const primaryImage =
-    product.images.find((img) => img.isPrimary) ?? product.images[0];
+    (product.images ?? []).find((img) => img.isPrimary) ?? product.images?.[0];
+
+  // Without a segment slug there's no valid product URL — render the card
+  // pointing at the catalog index instead of a broken /products/undefined/… path.
+  const detailHref = segmentSlug
+    ? `/products/${segmentSlug}/${product.slug}`
+    : "/products";
 
   return (
     <article className="group card-product">
@@ -44,7 +55,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
       {/* Image area */}
       <Link
-        href={`/products/${segment?.slug}/${product.slug}`}
+        href={detailHref}
         className={`relative block aspect-[4/3] bg-gradient-to-br ${accent.tint} overflow-hidden`}
       >
         {primaryImage ? (
@@ -79,10 +90,10 @@ export default function ProductCard({ product }: { product: Product }) {
 
       {/* Body */}
       <div className="p-5 flex flex-col flex-1">
-        <span className={accent.chip + " w-fit"}>{segment?.name.split(" ")[0]}</span>
+        <span className={accent.chip + " w-fit"}>{segmentName.split(" ")[0]}</span>
         <h3 className="mt-3 text-lg font-bold text-neutral-900 leading-snug">
           <Link
-            href={`/products/${segment?.slug}/${product.slug}`}
+            href={detailHref}
             className="hover:text-primary-600 transition-colors"
           >
             {product.name}
@@ -94,7 +105,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
         <div className="mt-5 pt-4 flex items-center justify-between border-t border-neutral-100">
           <Link
-            href={`/products/${segment?.slug}/${product.slug}`}
+            href={detailHref}
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 hover:text-primary-700"
           >
             Details <FiArrowUpRight />

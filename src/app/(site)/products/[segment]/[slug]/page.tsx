@@ -20,8 +20,12 @@ import VideoCard from "@/components/video/VideoCard";
 import EnquireOptions, { whatsappUrl, buildEnquiryMessage } from "@/components/contact/EnquireOptions";
 import { FaWhatsapp } from "react-icons/fa";
 
-import { products, getProductBySlug, getRelatedProducts } from "@/data/products";
-import { getSegmentBySlug, getSegmentById } from "@/data/segments";
+import {
+  products,
+  fetchProductBySlug,
+  getRelatedProducts,
+} from "@/data/products";
+import { fetchSegmentBySlug, getSegmentById } from "@/data/segments";
 import { getCategoryById } from "@/data/categories";
 import { referenceProjects } from "@/data/references";
 import { getVideosByProduct } from "@/data/videos";
@@ -31,6 +35,10 @@ type Props = {
   params: Promise<{ segment: string; slug: string }>;
 };
 
+/**
+ * Pre-build only the seed-mock paths. Anything created later via the
+ * admin gets server-rendered on demand (dynamicParams default = true).
+ */
 export async function generateStaticParams() {
   return products
     .map((p) => {
@@ -43,7 +51,8 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  if (!slug || slug === "undefined") return { title: "Not found" };
+  const product = await fetchProductBySlug(slug);
   if (!product) return { title: "Not found" };
   return {
     title: `${product.name} — ${product.shortDescription}`,
@@ -74,10 +83,30 @@ const PANEL_VARIANT: Record<SegmentColor, string> = {
 
 export default async function ProductDetailPage({ params }: Props) {
   const { segment: segmentSlug, slug } = await params;
-  const segment = getSegmentBySlug(segmentSlug);
-  const product = getProductBySlug(slug);
 
-  if (!segment || !product || product.segmentId !== segment.id) {
+  // Fail fast on literal "undefined" or empty path params — almost
+  // always a stale link in the calling code, never a real lookup. This
+  // avoids spamming the backend with /api/v1/catalog/segments/undefined.
+  if (
+    !segmentSlug ||
+    !slug ||
+    segmentSlug === "undefined" ||
+    slug === "undefined"
+  ) {
+    notFound();
+  }
+
+  const [segment, product] = await Promise.all([
+    fetchSegmentBySlug(segmentSlug),
+    fetchProductBySlug(slug),
+  ]);
+
+  if (!segment || !product) {
+    notFound();
+  }
+
+  // Mock IDs are strings; backend IDs are numbers. Compare as strings.
+  if (String(product.segmentId) !== String(segment.id)) {
     notFound();
   }
 
@@ -86,14 +115,14 @@ export default async function ProductDetailPage({ params }: Props) {
   const segBar = SEGMENT_BAR[segColor];
 
   const productCategories = product.categoryIds
-    .map((id) => getCategoryById(id))
+    .map((id) => getCategoryById(String(id)))
     .filter((c): c is NonNullable<typeof c> => c !== undefined);
   const primaryCategory = productCategories[0];
 
-  const related = getRelatedProducts(product.id);
-  const videos = getVideosByProduct(product.id);
+  const related = getRelatedProducts(String(product.id));
+  const videos = getVideosByProduct(String(product.id));
   const usedInProjects = referenceProjects.filter((r) =>
-    r.productsUsed.includes(product.id)
+    r.productsUsed.includes(String(product.id))
   );
 
   return (

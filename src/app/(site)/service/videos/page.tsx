@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import PageHeader from "@/components/common/PageHeader";
 import VideoCard from "@/components/video/VideoCard";
 import VideoCategoryTabs from "@/components/service/VideoCategoryTabs";
-import { videos, VIDEO_CATEGORIES } from "@/data/videos";
+import { fetchVideos, VIDEO_CATEGORIES } from "@/data/videos";
 import type { Video } from "@/types/Catalog";
 
 export const metadata: Metadata = {
@@ -19,14 +19,17 @@ export default async function VideosPage({ searchParams }: Props) {
   const sp = await searchParams;
   const category = sp.category as Video["category"] | undefined;
 
+  // Fetch the full library once; counts and the visible list derive from it.
+  const all = await fetchVideos();
+
   const counts = VIDEO_CATEGORIES.reduce<Record<string, number>>((acc, c) => {
-    acc[c] = videos.filter((v) => v.category === c).length;
+    acc[c] = all.filter((v) => v.category === c).length;
     return acc;
   }, {});
 
   const list = category
-    ? videos.filter((v) => v.category === category)
-    : videos;
+    ? all.filter((v) => v.category === category)
+    : all;
 
   return (
     <>

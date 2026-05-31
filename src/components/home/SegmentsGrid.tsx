@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FiArrowUpRight } from "react-icons/fi";
-import { segments } from "@/data/segments";
+import { fetchSegments } from "@/data/segments";
 import type { SegmentColor } from "@/types/Catalog";
 
 const COLOR_CLASSES: Record<
@@ -29,7 +29,8 @@ const COLOR_CLASSES: Record<
   },
 };
 
-export default function SegmentsGrid() {
+export default async function SegmentsGrid() {
+  const segments = await fetchSegments();
   return (
     <section className="section">
       <div className="container-page">

@@ -49,8 +49,8 @@ export default function ProductsHomePage() {
         <div className="container-page">
           <div className="space-y-8">
             {segments.map((seg, i) => {
-              const cats = getRootCategoriesBySegment(seg.id);
-              const products = getProductsBySegment(seg.id);
+              const cats = getRootCategoriesBySegment(String(seg.id));
+              const products = getProductsBySegment(String(seg.id));
               const isLight = seg.color === "yellow";
               return (
                 <div

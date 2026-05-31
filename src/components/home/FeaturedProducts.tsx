@@ -1,12 +1,21 @@
 import Link from "next/link";
 import { FiArrowRight } from "react-icons/fi";
-import { getFeaturedProducts, getNewProducts } from "@/data/products";
+import { fetchFeaturedProducts, fetchNewProducts } from "@/data/products";
 import ProductCard from "@/components/product/ProductCard";
 
-export default function FeaturedProducts() {
-  const featured = getFeaturedProducts(4);
-  const fresh = getNewProducts(2);
-  const list = [...featured, ...fresh].slice(0, 6);
+export default async function FeaturedProducts() {
+  const [featured, fresh] = await Promise.all([
+    fetchFeaturedProducts(4),
+    fetchNewProducts(2),
+  ]);
+  // Dedup by id in case the same product appears in both feeds.
+  const seen = new Set<string>();
+  const list = [...featured, ...fresh].filter((p) => {
+    const key = String(p.id);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, 6);
 
   return (
     <section className="section bg-neutral-50">

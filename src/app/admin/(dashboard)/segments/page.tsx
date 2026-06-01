@@ -1,20 +1,38 @@
+"use client";
+
 import Link from "next/link";
-import { FiArrowUpRight, FiEdit, FiLock } from "react-icons/fi";
+import { useEffect, useState } from "react";
+import {
+  FiArrowUpRight,
+  FiEdit,
+  FiLock,
+  FiLogIn,
+} from "react-icons/fi";
 import AdminPageHeader from "@/components/admin/PageHeader";
-import { segments } from "@/data/segments";
-import { products } from "@/data/products";
-import { systemSolutions } from "@/data/solutions";
+import { adminGet, getToken } from "@/lib/adminApi";
 
-export const metadata = { title: "Segments" };
+type SegmentResponse = {
+  id: number;
+  slug: string;
+  name: string;
+  tagline: string;
+  description: string;
+  color: "blue" | "orange" | "yellow" | "green";
+  heroImage?: string | null;
+  icon?: string | null;
+  displayOrder?: number;
+  productCount: number;
+  solutionCount: number;
+};
 
-const COLOR_DOT: Record<string, string> = {
+const COLOR_DOT: Record<SegmentResponse["color"], string> = {
   blue: "bg-primary-500",
   orange: "bg-secondary-500",
   yellow: "bg-accent-500",
   green: "bg-success-500",
 };
 
-const COLOR_BAR: Record<string, string> = {
+const COLOR_BAR: Record<SegmentResponse["color"], string> = {
   blue: "from-primary-500 to-primary-700",
   orange: "from-secondary-500 to-secondary-700",
   yellow: "from-accent-500 to-accent-700",
@@ -22,33 +40,80 @@ const COLOR_BAR: Record<string, string> = {
 };
 
 /**
- * Segments — the 4 brand pillars. Mostly read-only at the structural
- * level (renaming or adding a 5th segment is a design decision, not an
- * admin action), but editors can still update copy, hero image, icon.
+ * Segments — the 4 brand pillars. Structurally fixed (no create/delete),
+ * but editors can update copy, hero image, icon, and reorder. Counts come
+ * from the backend so they reflect published reality, not mock data.
  */
 export default function AdminSegmentsPage() {
+  const [hasToken, setHasToken] = useState<boolean | null>(null);
+  useEffect(() => {
+    setHasToken(getToken() != null);
+  }, []);
+
+  const [segments, setSegments] = useState<SegmentResponse[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (hasToken !== true) return;
+    (async () => {
+      try {
+        const list = await adminGet<SegmentResponse[]>(
+          "/api/v1/admin/catalog/segments"
+        );
+        setSegments(list);
+        setLoaded(true);
+      } catch (e) {
+        setLoadError(
+          e instanceof Error ? e.message : "Failed to load segments."
+        );
+        setLoaded(true);
+      }
+    })();
+  }, [hasToken]);
+
+  if (hasToken === false) {
+    return (
+      <>
+        <AdminPageHeader
+          eyebrow="Catalog"
+          title="Sign-in required"
+          description="The admin API rejects unauthenticated calls."
+        />
+        <Link
+          href="/admin/login?next=/admin/segments"
+          className="inline-flex items-center gap-1.5 h-10 px-5 rounded-lg bg-primary-500 text-white-base text-sm font-semibold hover:bg-primary-600"
+        >
+          <FiLogIn /> Go to sign in
+        </Link>
+      </>
+    );
+  }
+
   return (
     <>
       <AdminPageHeader
         eyebrow="Catalog"
         title="Segments"
-        description="The four brand pillars. Structurally fixed — copy and hero imagery are editable."
+        description="The four brand pillars. Structurally fixed — copy and hero imagery are editable. Counts reflect published rows."
         actions={
           <span className="inline-flex items-center gap-1.5 px-3 h-10 rounded-lg bg-neutral-100 text-xs font-semibold text-neutral-600">
-            <FiLock /> Locked — 4 segments
+            <FiLock /> Locked — {segments.length || 4} segments
           </span>
         }
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        {segments.map((s) => {
-          const productCount = products.filter(
-            (p) => p.segmentId === s.id
-          ).length;
-          const solutionCount = systemSolutions.filter(
-            (sol) => sol.segmentId === s.id
-          ).length;
-          return (
+      {!loaded ? (
+        <div className="rounded-2xl border border-neutral-100 bg-white-base p-12 text-center text-sm text-neutral-500">
+          Loading segments…
+        </div>
+      ) : loadError ? (
+        <div className="rounded-2xl border border-error-300 bg-error-50 p-6 text-sm text-error-500">
+          {loadError}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          {segments.map((s) => (
             <article
               key={s.id}
               className="relative rounded-2xl bg-white-base border border-neutral-100 overflow-hidden hover:border-primary-200 hover:shadow-soft transition-all"
@@ -59,9 +124,7 @@ export default function AdminSegmentsPage() {
               />
               <div className="p-5">
                 <div className="flex items-center justify-between">
-                  <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase bg-neutral-100 text-neutral-700`}
-                  >
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase bg-neutral-100 text-neutral-700">
                     <span
                       className={`block w-1.5 h-1.5 rounded-full ${COLOR_DOT[s.color]}`}
                     />
@@ -82,8 +145,8 @@ export default function AdminSegmentsPage() {
                   {s.description}
                 </p>
                 <dl className="mt-4 grid grid-cols-3 gap-2 text-xs">
-                  <Stat label="Products" value={productCount} />
-                  <Stat label="Solutions" value={solutionCount} />
+                  <Stat label="Products" value={s.productCount} />
+                  <Stat label="Solutions" value={s.solutionCount} />
                   <Stat
                     label="Slug"
                     value={
@@ -95,7 +158,7 @@ export default function AdminSegmentsPage() {
                 </dl>
                 <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between">
                   <Link
-                    href={`/admin/categories#${s.id}`}
+                    href={`/admin/categories?segment=${s.id}`}
                     className="text-xs font-semibold text-primary-600 hover:text-primary-700"
                   >
                     Manage categories →
@@ -110,9 +173,9 @@ export default function AdminSegmentsPage() {
                 </div>
               </div>
             </article>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </>
   );
 }

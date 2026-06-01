@@ -3,7 +3,7 @@ import Link from "next/link";
 import { FiArrowUpRight, FiLayers } from "react-icons/fi";
 import PageHeader from "@/components/common/PageHeader";
 import { systemSolutions } from "@/data/solutions";
-import { segments } from "@/data/segments";
+import { fetchSegments } from "@/data/segments";
 
 export const metadata: Metadata = {
   title: "System Solutions",
@@ -11,7 +11,8 @@ export const metadata: Metadata = {
     "Engineered multi-product systems for waterproofing, flooring, concrete repair, and tile installation. Each system maps real products to a real construction challenge.",
 };
 
-export default function SolutionsIndexPage() {
+export default async function SolutionsIndexPage() {
+  const segments = await fetchSegments();
   return (
     <>
       <PageHeader
@@ -45,7 +46,7 @@ export default function SolutionsIndexPage() {
           <div className="space-y-12">
             {segments.map((seg) => {
               const list = systemSolutions.filter(
-                (s) => s.segmentId === seg.id
+                (s) => String(s.segmentId) === String(seg.id)
               );
               if (!list.length) return null;
               return (

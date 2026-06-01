@@ -83,3 +83,16 @@ export async function fetchSegmentBySlug(slug: string): Promise<Segment | undefi
     segments.find((s) => s.slug === slug)
   );
 }
+
+/**
+ * Convenience: live segments indexed by stringified id, for pages that
+ * need to do many `getSegmentById`-style lookups (e.g. a list of products
+ * each linking to its segment landing page). One fetch + O(1) lookups.
+ *
+ * Mock IDs are strings ("seg-waterproofing"), backend IDs are numbers —
+ * the map key is always stringified so both sources interoperate.
+ */
+export async function fetchSegmentsMap(): Promise<Map<string, Segment>> {
+  const list = await fetchSegments();
+  return new Map(list.map((s) => [String(s.id), s]));
+}

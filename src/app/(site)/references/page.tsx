@@ -5,7 +5,7 @@ import { FiArrowUpRight, FiMapPin } from "react-icons/fi";
 import PageHeader from "@/components/common/PageHeader";
 import ReferenceFilters from "@/components/reference/ReferenceFilters";
 import { referenceProjects } from "@/data/references";
-import { segments } from "@/data/segments";
+import { fetchSegments } from "@/data/segments";
 import { products } from "@/data/products";
 
 export const metadata: Metadata = {
@@ -27,6 +27,7 @@ export default async function ReferencesPage({ searchParams }: Props) {
   const sp = await searchParams;
 
   // Build filter option lists from data
+  const segments = await fetchSegments();
   const segmentOptions = segments.map((s) => ({ value: String(s.id), label: s.name }));
   const projectTypes = Array.from(
     new Set(referenceProjects.map((r) => r.projectType))
@@ -46,7 +47,7 @@ export default async function ReferencesPage({ searchParams }: Props) {
   let filtered = [...referenceProjects];
   if (sp.segment) {
     const productIdsInSegment = products
-      .filter((p) => p.segmentId === sp.segment)
+      .filter((p) => String(p.segmentId) === String(sp.segment))
       .map((p) => p.id);
     filtered = filtered.filter((r) =>
       r.productsUsed.some((pid) => productIdsInSegment.includes(pid))

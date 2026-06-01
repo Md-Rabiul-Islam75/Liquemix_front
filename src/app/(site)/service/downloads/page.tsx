@@ -6,7 +6,7 @@ import {
   standaloneDocuments,
   DOWNLOAD_CATEGORIES,
 } from "@/data/downloads";
-import { getSegmentById } from "@/data/segments";
+import { fetchSegmentsMap } from "@/data/segments";
 
 export const metadata: Metadata = {
   title: "Downloads — Technical document library",
@@ -21,6 +21,8 @@ type Props = {
 export default async function DownloadsPage({ searchParams }: Props) {
   const sp = await searchParams;
   const category = sp.category;
+
+  const segMap = await fetchSegmentsMap();
 
   const counts = DOWNLOAD_CATEGORIES.reduce<Record<string, number>>(
     (acc, c) => {
@@ -84,7 +86,7 @@ export default async function DownloadsPage({ searchParams }: Props) {
                   <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {g.docs.map((d) => {
                       const seg = d.segmentId
-                        ? getSegmentById(d.segmentId)
+                        ? segMap.get(String(d.segmentId))
                         : null;
                       return (
                         <li key={d.id}>

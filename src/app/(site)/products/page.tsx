@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { FiArrowUpRight } from "react-icons/fi";
 import PageHeader from "@/components/common/PageHeader";
-import { segments } from "@/data/segments";
+import { fetchSegments } from "@/data/segments";
 import { getRootCategoriesBySegment } from "@/data/categories";
 import { getProductsBySegment } from "@/data/products";
 import type { SegmentColor } from "@/types/Catalog";
@@ -34,7 +34,8 @@ const SEGMENT_SHADOW: Record<SegmentColor, string> = {
   green: "shadow-[var(--shadow-segment-green)]",
 };
 
-export default function ProductsHomePage() {
+export default async function ProductsHomePage() {
+  const segments = await fetchSegments();
   return (
     <>
       <PageHeader

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import PageHeader from "@/components/common/PageHeader";
 import ProductCard from "@/components/product/ProductCard";
 import ProductFilters from "@/components/product/ProductFilters";
-import { segments, getSegmentBySlug } from "@/data/segments";
+import { segments, fetchSegmentBySlug } from "@/data/segments";
 import { getRootCategoriesBySegment, getCategoryBySlug } from "@/data/categories";
 import { getProductsBySegment } from "@/data/products";
 
@@ -18,7 +18,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { segment: slug } = await params;
-  const segment = getSegmentBySlug(slug);
+  const segment = await fetchSegmentBySlug(slug);
   if (!segment) return { title: "Not found" };
   return {
     title: segment.name,
@@ -30,7 +30,7 @@ export default async function SegmentPage({ params, searchParams }: Props) {
   const { segment: slug } = await params;
   const sp = await searchParams;
 
-  const segment = getSegmentBySlug(slug);
+  const segment = await fetchSegmentBySlug(slug);
   if (!segment) notFound();
 
   const allInSegment = getProductsBySegment(String(segment.id));

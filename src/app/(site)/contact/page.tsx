@@ -12,7 +12,7 @@ import EnquireOptions, {
   LIQUEMIX_CONTACT,
 } from "@/components/contact/EnquireOptions";
 import { products } from "@/data/products";
-import { getSegmentById } from "@/data/segments";
+import { fetchSegmentsMap } from "@/data/segments";
 
 export const metadata: Metadata = {
   title: "Contact LiqueMix",
@@ -34,7 +34,10 @@ export default async function ContactPage({ searchParams }: Props) {
   const product = productSku
     ? products.find((p) => p.sku === productSku)
     : undefined;
-  const segment = product ? getSegmentById(product.segmentId) : undefined;
+  const segMap = product ? await fetchSegmentsMap() : null;
+  const segment = product
+    ? segMap?.get(String(product.segmentId))
+    : undefined;
   const productUrl =
     product && segment
       ? `https://liquemix.com/products/${segment.slug}/${product.slug}`

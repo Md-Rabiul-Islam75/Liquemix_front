@@ -8,7 +8,7 @@ import PageHeader from "@/components/common/PageHeader";
 import ProductCard from "@/components/product/ProductCard";
 
 import { systemSolutions, getSolutionBySlug } from "@/data/solutions";
-import { getSegmentById } from "@/data/segments";
+import { fetchSegmentsMap } from "@/data/segments";
 import { products, getProductBySlug } from "@/data/products";
 import { referenceProjects } from "@/data/references";
 import type { SegmentColor } from "@/types/Catalog";
@@ -41,7 +41,8 @@ export default async function SolutionDetailPage({ params }: Props) {
   const solution = getSolutionBySlug(slug);
   if (!solution) notFound();
 
-  const segment = getSegmentById(solution.segmentId);
+  const segMap = await fetchSegmentsMap();
+  const segment = segMap.get(String(solution.segmentId));
   const productList = solution.productIds
     .map((id) => products.find((p) => p.id === id))
     .filter((p): p is NonNullable<typeof p> => p !== undefined);
@@ -51,7 +52,11 @@ export default async function SolutionDetailPage({ params }: Props) {
   );
 
   const otherSolutions = systemSolutions
-    .filter((s) => s.id !== solution.id && s.segmentId === solution.segmentId)
+    .filter(
+      (s) =>
+        s.id !== solution.id &&
+        String(s.segmentId) === String(solution.segmentId)
+    )
     .slice(0, 3);
 
   return (

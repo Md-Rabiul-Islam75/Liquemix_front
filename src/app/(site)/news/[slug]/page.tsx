@@ -15,7 +15,7 @@ import PageHeader from "@/components/common/PageHeader";
 import ProductCard from "@/components/product/ProductCard";
 import { newsPosts, getNewsBySlug, getRelatedNews } from "@/data/news";
 import { products } from "@/data/products";
-import { getSegmentById } from "@/data/segments";
+import { fetchSegmentsMap } from "@/data/segments";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -64,6 +64,7 @@ export default async function NewsDetailPage({ params }: Props) {
   const relatedProducts = (post.relatedProductIds ?? [])
     .map((id) => products.find((p) => p.id === id))
     .filter((p): p is NonNullable<typeof p> => p !== undefined);
+  const segMap = relatedProducts.length > 0 ? await fetchSegmentsMap() : null;
 
   return (
     <>
@@ -198,7 +199,7 @@ export default async function NewsDetailPage({ params }: Props) {
                 </p>
                 <ul className="space-y-2">
                   {relatedProducts.map((p) => {
-                    const seg = getSegmentById(p.segmentId);
+                    const seg = segMap?.get(String(p.segmentId));
                     return (
                       <li key={p.id}>
                         <Link

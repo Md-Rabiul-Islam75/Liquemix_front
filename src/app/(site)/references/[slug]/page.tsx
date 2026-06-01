@@ -18,7 +18,7 @@ import ProductCard from "@/components/product/ProductCard";
 
 import { referenceProjects, getReferenceBySlug } from "@/data/references";
 import { products } from "@/data/products";
-import { getSegmentById } from "@/data/segments";
+import { fetchSegmentsMap } from "@/data/segments";
 import type { SegmentColor } from "@/types/Catalog";
 
 const PANEL_VARIANT: Record<SegmentColor, string> = {
@@ -53,9 +53,11 @@ export default async function ReferenceDetailPage({ params }: Props) {
     .map((id) => products.find((p) => p.id === id))
     .filter((p): p is NonNullable<typeof p> => p !== undefined);
 
+  const segMap = await fetchSegmentsMap();
+
   // Pick a hero gradient based on the first product's segment
   const firstSegment = usedProducts[0]
-    ? getSegmentById(usedProducts[0].segmentId)
+    ? segMap.get(String(usedProducts[0].segmentId))
     : null;
   const heroBg =
     firstSegment?.color === "orange"
@@ -123,7 +125,7 @@ export default async function ReferenceDetailPage({ params }: Props) {
                   <p className="brand-panel__eyebrow mb-3">Products used</p>
                   <ul className="space-y-1.5">
                     {usedProducts.map((p) => {
-                      const seg = getSegmentById(p.segmentId);
+                      const seg = segMap.get(String(p.segmentId));
                       return (
                         <li key={p.id}>
                           <Link

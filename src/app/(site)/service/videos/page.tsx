@@ -3,7 +3,35 @@ import PageHeader from "@/components/common/PageHeader";
 import VideoCard from "@/components/video/VideoCard";
 import VideoCategoryTabs from "@/components/service/VideoCategoryTabs";
 import { fetchVideos, VIDEO_CATEGORIES } from "@/data/videos";
-import type { Video } from "@/types/Catalog";
+import { fetchAllPublishedProducts } from "@/data/products";
+import type { Product, Video } from "@/types/Catalog";
+
+/**
+ * Pull every video attached to a product (the lean ProductVideo shape)
+ * and lift it into the Video shape that the listing + card expect.
+ * Category defaults to "Product Demo" — that's where product-page
+ * embeds belong by default. The user can promote individual videos to
+ * other categories via the standalone /admin/videos manager.
+ */
+function liftProductVideos(allProducts: Product[]): Video[] {
+  const out: Video[] = [];
+  for (const p of allProducts) {
+    if (!p.videos || p.videos.length === 0) continue;
+    for (const v of p.videos) {
+      out.push({
+        id: `prod-${p.id}-${v.youtubeId}`,
+        title: v.title,
+        description: `Featured on ${p.name}.`,
+        youtubeId: v.youtubeId,
+        category: "Product Demo",
+        segmentId: p.segmentId != null ? String(p.segmentId) : undefined,
+        relatedProductIds: [String(p.id)],
+        publishedAt: p.publishedAt ?? "",
+      });
+    }
+  }
+  return out;
+}
 
 export const metadata: Metadata = {
   title: "Videos — Product demos and application techniques",
@@ -19,8 +47,22 @@ export default async function VideosPage({ searchParams }: Props) {
   const sp = await searchParams;
   const category = sp.category as Video["category"] | undefined;
 
-  // Fetch the full library once; counts and the visible list derive from it.
-  const all = await fetchVideos();
+  // Two sources of videos surface on this page:
+  //   1. Standalone library entries managed under /admin/videos
+  //   2. Videos attached to products via the product editor
+  // Both fetched in parallel; deduped by youtubeId so a single video
+  // never appears twice if it lives in both places.
+  const [standalone, allProducts] = await Promise.all([
+    fetchVideos(),
+    fetchAllPublishedProducts(),
+  ]);
+  const fromProducts = liftProductVideos(allProducts);
+  const seen = new Set<string>();
+  const all = [...standalone, ...fromProducts].filter((v) => {
+    if (seen.has(v.youtubeId)) return false;
+    seen.add(v.youtubeId);
+    return true;
+  });
 
   const counts = VIDEO_CATEGORIES.reduce<Record<string, number>>((acc, c) => {
     acc[c] = all.filter((v) => v.category === c).length;

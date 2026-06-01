@@ -8,6 +8,7 @@ import {
   FiVideo,
   FiX,
 } from "react-icons/fi";
+import { SuccessToast } from "@/helpers/ToastHelper";
 
 export type ProductVideo = {
   title: string;
@@ -70,6 +71,15 @@ export default function ProductVideosEditor({
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  /** Most recently added YouTube ID — drives the green "just added" pill
+   *  shown inside the paste zone for a few seconds. */
+  const [justAdded, setJustAdded] = useState<string | null>(null);
+  useEffect(() => {
+    if (!justAdded) return;
+    const t = setTimeout(() => setJustAdded(null), 4500);
+    return () => clearTimeout(t);
+  }, [justAdded]);
+
   const previewId = extractYoutubeId(draft);
   const isDuplicate =
     previewId != null && videos.some((v) => v.youtubeId === previewId);
@@ -79,16 +89,19 @@ export default function ProductVideosEditor({
   useEffect(() => {
     if (!previewId || isDuplicate) return;
     const t = setTimeout(() => {
+      const title = `YouTube video ${videos.length + 1}`;
       onChange([
         ...videos,
         {
-          title: `YouTube video ${videos.length + 1}`,
+          title,
           youtubeId: previewId,
           thumbnail: `https://i.ytimg.com/vi/${previewId}/hqdefault.jpg`,
         },
       ]);
       setDraft("");
       setError(null);
+      setJustAdded(previewId);
+      SuccessToast("Video added", `${title} — ID ${previewId}`);
       inputRef.current?.focus();
     }, 250);
     return () => clearTimeout(t);
@@ -226,6 +239,29 @@ export default function ProductVideosEditor({
               />
             </div>
             <p className="text-xs text-success-700">Adding to the list…</p>
+          </div>
+        )}
+
+        {/* Inline "just added" confirmation — clears after a few seconds.
+            Hidden the moment a new draft is being typed so it doesn't
+            fight with the live preview above. */}
+        {justAdded && !draft && (
+          <div className="mt-4 inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-success-50 border border-success-200 text-success-700">
+            <FiCheckCircle className="shrink-0" />
+            <span className="text-xs font-bold uppercase tracking-wider">
+              Added
+            </span>
+            <div className="relative w-16 h-10 shrink-0 rounded-md overflow-hidden bg-neutral-900">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://i.ytimg.com/vi/${justAdded}/hqdefault.jpg`}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            </div>
+            <span className="font-mono text-[11px] font-semibold">
+              {justAdded}
+            </span>
           </div>
         )}
       </div>

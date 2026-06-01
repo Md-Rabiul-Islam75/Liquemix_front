@@ -501,3 +501,21 @@ export async function fetchProductBySlug(slug: string): Promise<Product | undefi
     products.find((p) => p.slug === slug)
   );
 }
+
+/**
+ * Fetch every published product. Used by aggregation pages (e.g.
+ * /service/videos) that need to scan all products' embedded media
+ * collections — not for the catalog listing, which paginates.
+ *
+ * Uses a single large page size; the backend caps at 100 per request.
+ * If we ever need >100 we'll switch this to a real loop. For now the
+ * fallback is the local mock so dev keeps working with the API down.
+ */
+export async function fetchAllPublishedProducts(): Promise<Product[]> {
+  type Paged = { items: Product[] };
+  const paged = await apiGetOr<Paged>(
+    `/api/v1/catalog/products?page=1&size=100`,
+    { items: products }
+  );
+  return paged.items ?? [];
+}

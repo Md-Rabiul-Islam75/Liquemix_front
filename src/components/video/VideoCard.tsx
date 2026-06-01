@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FiPlay, FiClock } from "react-icons/fi";
+import { FiPlay, FiClock, FiExternalLink } from "react-icons/fi";
 import type { Video } from "@/types/Catalog";
 
 function formatDuration(s?: number) {
@@ -34,13 +34,29 @@ export default function VideoCard({
     <article className={`group flex flex-col ${compact ? "" : "rounded-2xl overflow-hidden bg-white-base border border-neutral-100 shadow-soft hover:shadow-primary transition-shadow"}`}>
       <div className={`relative aspect-video bg-neutral-900 ${compact ? "rounded-xl overflow-hidden" : ""}`}>
         {playing ? (
-          <iframe
-            src={`https://www.youtube-nocookie.com/embed/${video.youtubeId}?autoplay=1&rel=0`}
-            title={video.title}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="absolute inset-0 w-full h-full"
-          />
+          <>
+            <iframe
+              src={`https://www.youtube.com/embed/${video.youtubeId}?autoplay=1&rel=0`}
+              title={video.title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="absolute inset-0 w-full h-full"
+            />
+            {/* Fallback when the uploader disables embedding / the video is
+                region-locked / private. The iframe will show YouTube's own
+                error, and this badge gives the viewer a way through to the
+                YouTube page where it usually plays fine. */}
+            <a
+              href={`https://www.youtube.com/watch?v=${video.youtubeId}`}
+              target="_blank"
+              rel="noreferrer"
+              className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-neutral-900/85 hover:bg-neutral-900 text-white-base text-[11px] font-semibold backdrop-blur"
+              title="If the player shows an error, open it on YouTube"
+            >
+              <FiExternalLink className="text-[10px]" />
+              Open on YouTube
+            </a>
+          </>
         ) : (
           <button
             type="button"

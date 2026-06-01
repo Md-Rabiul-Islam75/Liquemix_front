@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   FiBookOpen,
   FiCheckCircle,
@@ -11,6 +11,7 @@ import {
   FiX,
 } from "react-icons/fi";
 import { DOCUMENT_LIBRARY, findInLibrary } from "@/data/documentLibrary";
+import { SuccessToast } from "@/helpers/ToastHelper";
 
 export type DocumentType =
   | "TDS"
@@ -97,6 +98,16 @@ export default function ProductDocumentsEditor({
    *  the library next. Per-card dropdown still wins after the fact. */
   const [defaultType, setDefaultType] = useState<DocumentType>("TDS");
 
+  /** File names from the most recent upload — surfaces inline near the
+   *  upload zone so the user gets immediate visual confirmation. Cleared
+   *  after a few seconds. */
+  const [justAdded, setJustAdded] = useState<string[]>([]);
+  useEffect(() => {
+    if (justAdded.length === 0) return;
+    const t = setTimeout(() => setJustAdded([]), 4500);
+    return () => clearTimeout(t);
+  }, [justAdded]);
+
   // Which library entries are already on this product → grey them out
   const usedLibraryUrls = new Set(documents.map((d) => d.url));
 
@@ -106,15 +117,19 @@ export default function ProductDocumentsEditor({
   }
 
   async function onInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
+    // Materialise into a real File[] BEFORE clearing the input — clearing
+    // input.value also drains input.files, which would otherwise leave us
+    // with an empty FileList by the time addFiles() reads it.
+    const files = e.target.files ? Array.from(e.target.files) : [];
     e.target.value = "";
-    if (!files || files.length === 0) return;
+    if (files.length === 0) return;
     await addFiles(files);
   }
 
   async function addFiles(files: FileList | File[]) {
     setError(null);
     const accepted: ProductDocument[] = [];
+    const acceptedNames: string[] = [];
     for (const file of Array.from(files)) {
       if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
         setError(`"${file.name}" is not a PDF.`);
@@ -139,13 +154,27 @@ export default function ProductDocumentsEditor({
           fileSizeKb: Math.round(file.size / 1024),
           uploadedAt: todayIso(),
         });
+        acceptedNames.push(file.name);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Could not read file.");
       } finally {
         setBusy(false);
       }
     }
-    if (accepted.length > 0) onChange([...documents, ...accepted]);
+    if (accepted.length > 0) {
+      onChange([...documents, ...accepted]);
+      setJustAdded(acceptedNames);
+      const typeLabel =
+        DOCUMENT_TYPES.find((t) => t.value === defaultType)?.label ?? defaultType;
+      if (acceptedNames.length === 1) {
+        SuccessToast("PDF added", `${acceptedNames[0]} — ${typeLabel}`);
+      } else {
+        SuccessToast(
+          `${acceptedNames.length} PDFs added`,
+          `Added as ${typeLabel}`
+        );
+      }
+    }
   }
 
   // ─── Library pick flow ────────────────────────────────────────────
@@ -378,6 +407,31 @@ export default function ProductDocumentsEditor({
         <p className="mt-1 text-xs text-neutral-500">
           Click to pick a file from your computer.
         </p>
+
+        {/* Inline confirmation — surfaces which filename(s) were just
+            attached so the user has immediate visual feedback. Auto
+            clears after a few seconds (see effect above). */}
+        {justAdded.length > 0 && (
+          <div
+            className="mt-3 inline-flex flex-wrap items-center justify-center gap-2 px-3 py-2 rounded-lg bg-success-50 border border-success-200 text-success-700 max-w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <FiCheckCircle className="shrink-0" />
+            <span className="text-xs font-bold uppercase tracking-wider">
+              Added
+            </span>
+            {justAdded.map((name) => (
+              <span
+                key={name}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white-base text-[11px] font-semibold text-success-700 border border-success-200 max-w-[18rem] truncate"
+                title={name}
+              >
+                <FiFile className="shrink-0" />
+                <span className="truncate">{name}</span>
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* "Add as ..." type selector — defaults to TDS, can be changed
             to MSDS / MTC / COO / Brochure / EPD / Drawing / etc. before

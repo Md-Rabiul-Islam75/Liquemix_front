@@ -29,7 +29,24 @@ import { fetchSegmentBySlug, getSegmentById } from "@/data/segments";
 import { getCategoryById } from "@/data/categories";
 import { referenceProjects } from "@/data/references";
 import { getVideosByProduct } from "@/data/videos";
-import type { SegmentColor } from "@/types/Catalog";
+import type { ProductVideo, SegmentColor, Video } from "@/types/Catalog";
+
+/**
+ * Lift an admin-attached `ProductVideo` (lean: title + youtubeId) into
+ * the full `Video` shape that VideoCard expects. Category defaults to
+ * "Product Demo" because that's the most common case for a product-page
+ * embed; the user can change it from the standalone Videos manager.
+ */
+function productVideoToVideo(v: ProductVideo, productId: string | number): Video {
+  return {
+    id: `prod-${productId}-${v.youtubeId}`,
+    title: v.title,
+    youtubeId: v.youtubeId,
+    category: "Product Demo",
+    relatedProductIds: [String(productId)],
+    publishedAt: "",
+  };
+}
 
 type Props = {
   params: Promise<{ segment: string; slug: string }>;
@@ -120,7 +137,20 @@ export default async function ProductDetailPage({ params }: Props) {
   const primaryCategory = productCategories[0];
 
   const related = getRelatedProducts(String(product.id));
-  const videos = getVideosByProduct(String(product.id));
+  // Two sources of videos:
+  //  1. Admin-attached on the product itself (product.videos)
+  //  2. Standalone videos in the library that reference this product
+  // Merge both, then dedupe by youtubeId so a single video appears once.
+  const attached = (product.videos ?? []).map((v) =>
+    productVideoToVideo(v, product.id)
+  );
+  const standalone = getVideosByProduct(String(product.id));
+  const seenYt = new Set<string>();
+  const videos = [...attached, ...standalone].filter((v) => {
+    if (seenYt.has(v.youtubeId)) return false;
+    seenYt.add(v.youtubeId);
+    return true;
+  });
   const usedInProjects = referenceProjects.filter((r) =>
     r.productsUsed.includes(String(product.id))
   );

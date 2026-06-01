@@ -4,7 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { FiAlertCircle, FiArrowRight, FiLock, FiMail } from "react-icons/fi";
+import {
+  FiAlertCircle,
+  FiArrowRight,
+  FiEye,
+  FiEyeOff,
+  FiLock,
+  FiMail,
+} from "react-icons/fi";
 import { adminLogin } from "@/lib/adminApi";
 
 /**
@@ -19,6 +26,7 @@ export default function AdminLoginPage() {
 
   const [email, setEmail] = useState("admin@liquemix.local");
   const [password, setPassword] = useState("Admin@1234");
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -164,13 +172,21 @@ export default function AdminLoginPage() {
                 <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
                 <input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full h-11 pl-10 pr-3 rounded-lg border border-neutral-200 text-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                  className="w-full h-11 pl-10 pr-10 rounded-lg border border-neutral-200 text-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-8 h-8 rounded-md text-neutral-400 hover:text-primary-600 hover:bg-primary-50"
+                >
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
               </div>
             </div>
 

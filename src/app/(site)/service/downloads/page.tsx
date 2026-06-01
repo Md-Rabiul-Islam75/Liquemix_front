@@ -92,7 +92,12 @@ export default async function DownloadsPage({ searchParams }: Props) {
                         <li key={d.id}>
                           <a
                             href={d.url}
-                            download
+                            download={`${d.title
+                              .trim()
+                              .replace(/\.pdf$/i, "")
+                              .replace(/[\\/:*?"<>|]/g, "")
+                              .replace(/\s+/g, " ")
+                              .slice(0, 120)}.pdf`}
                             className="group flex items-start gap-3 p-4 rounded-xl bg-white-base border border-neutral-100 hover:border-primary-200 hover:shadow-soft transition-all"
                           >
                             <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary-50 text-primary-600 shrink-0">

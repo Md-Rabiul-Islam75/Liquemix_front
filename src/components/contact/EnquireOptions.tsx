@@ -1,32 +1,30 @@
+"use client";
+
 import Link from "next/link";
 import { FaWhatsapp, FaLinkedinIn, FaFacebookF } from "react-icons/fa";
 import { FiMail, FiPhone, FiArrowUpRight } from "react-icons/fi";
+import { DEFAULT_SETTINGS, type SiteSettings } from "@/data/settings";
+import { useSettings } from "@/components/providers/SettingsProvider";
 
 /**
- * Centralised LiqueMix contact endpoints. Update these in one place — every
- * page that imports `EnquireOptions` picks up the change.
+ * @deprecated Use `useSettings()` or `fetchSiteSettings()` instead.
  *
- * NOTE: replace the placeholder numbers/handles with the live ones before
- * launch. Country code 880 = Bangladesh.
+ * Backwards-compat alias for the old hard-coded contact constants. Kept
+ * so anything importing `LIQUEMIX_CONTACT` continues to compile during
+ * the migration to live settings; new code should consume the live
+ * value via the SettingsProvider context.
  */
-export const LIQUEMIX_CONTACT = {
-  whatsappNumber: "8801000000000",                   // 88 01000-000000
-  phoneDisplay: "+880 1000-000000",
-  phoneTel: "+8801000000000",
-  emailGeneral: "info@liquemix.com",
-  emailSales: "sales@liquemix.com",
-  emailTechnical: "support@liquemix.com",
-  linkedin: "https://linkedin.com/company/liquemix",
-  facebook: "https://facebook.com/liquemix",
-  wechat: "#",                                       // WeChat QR code modal — out of scope for v1
-} as const;
+export const LIQUEMIX_CONTACT = DEFAULT_SETTINGS;
 
 /**
  * Builds a WhatsApp click-to-chat URL with a prefilled message body.
  * Reference: https://faq.whatsapp.com/5913398998672934
  */
-export function whatsappUrl(message: string): string {
-  const u = new URL(`https://wa.me/${LIQUEMIX_CONTACT.whatsappNumber}`);
+export function whatsappUrl(
+  message: string,
+  settings: SiteSettings = DEFAULT_SETTINGS
+): string {
+  const u = new URL(`https://wa.me/${settings.whatsappNumber}`);
   u.searchParams.set("text", message);
   return u.toString();
 }
@@ -77,8 +75,9 @@ export default function EnquireOptions({
   /** "grid" for landing pages, "list" for sidebars. */
   layout?: "grid" | "list";
 }) {
+  const settings = useSettings();
   const message = buildEnquiryMessage(context);
-  const wa = whatsappUrl(message);
+  const wa = whatsappUrl(message, settings);
 
   const channels = [
     {
@@ -95,8 +94,8 @@ export default function EnquireOptions({
       key: "email-sales",
       icon: <FiMail />,
       label: "Email Sales",
-      hint: LIQUEMIX_CONTACT.emailSales,
-      href: `mailto:${LIQUEMIX_CONTACT.emailSales}?subject=${encodeURIComponent(
+      hint: settings.emailSales,
+      href: `mailto:${settings.emailSales}?subject=${encodeURIComponent(
         context?.productName
           ? `Enquiry: ${context.productName}`
           : "LiqueMix project enquiry"
@@ -109,8 +108,8 @@ export default function EnquireOptions({
       key: "email-tech",
       icon: <FiMail />,
       label: "Email Technical",
-      hint: LIQUEMIX_CONTACT.emailTechnical,
-      href: `mailto:${LIQUEMIX_CONTACT.emailTechnical}?subject=${encodeURIComponent(
+      hint: settings.emailTechnical,
+      href: `mailto:${settings.emailTechnical}?subject=${encodeURIComponent(
         context?.productName
           ? `Technical: ${context.productName}`
           : "LiqueMix technical question"
@@ -123,8 +122,8 @@ export default function EnquireOptions({
       key: "phone",
       icon: <FiPhone />,
       label: "Phone",
-      hint: LIQUEMIX_CONTACT.phoneDisplay,
-      href: `tel:${LIQUEMIX_CONTACT.phoneTel}`,
+      hint: settings.phoneDisplay,
+      href: `tel:${settings.phoneTel}`,
       bg: "bg-secondary-500",
       external: false,
       primary: false,
@@ -134,7 +133,7 @@ export default function EnquireOptions({
       icon: <FaLinkedinIn />,
       label: "LinkedIn",
       hint: "Follow updates and DM the team.",
-      href: LIQUEMIX_CONTACT.linkedin,
+      href: settings.linkedinUrl,
       bg: "bg-[#0a66c2]",
       external: true,
       primary: false,
@@ -144,7 +143,7 @@ export default function EnquireOptions({
       icon: <FaFacebookF />,
       label: "Facebook",
       hint: "Messenger reaches sales directly.",
-      href: LIQUEMIX_CONTACT.facebook,
+      href: settings.facebookUrl,
       bg: "bg-[#1877f2]",
       external: true,
       primary: false,

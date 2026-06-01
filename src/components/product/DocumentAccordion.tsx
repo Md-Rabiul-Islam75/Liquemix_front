@@ -40,6 +40,24 @@ const ORDER: DocumentType[] = [
   "COO",
 ];
 
+/**
+ * Browser fallback when a download link has no explicit filename is
+ * usually "download.pdf" — especially for data URLs (admin uploads
+ * land as base64 data URLs in v1) and cross-origin assets. Convert the
+ * editor-friendly title into a safe filename so the saved file is
+ * recognisable: strip filesystem-hostile characters, keep spaces, and
+ * always end in .pdf.
+ */
+function safeFilename(title: string, fallback = "document"): string {
+  const base = (title || fallback)
+    .trim()
+    .replace(/\.pdf$/i, "")
+    .replace(/[\\/:*?"<>|]/g, "")
+    .replace(/\s+/g, " ")
+    .slice(0, 120);
+  return `${base || fallback}.pdf`;
+}
+
 export default function DocumentAccordion({
   documents,
 }: {
@@ -125,7 +143,7 @@ function AccordionRow({
             <li key={`${doc.url}-${idx}`}>
               <a
                 href={doc.url}
-                download
+                download={safeFilename(doc.title)}
                 className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
               >
                 <span className="flex items-center gap-3 min-w-0">

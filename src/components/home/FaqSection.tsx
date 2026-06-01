@@ -11,6 +11,7 @@ import {
 } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
 import { whatsappUrl, buildEnquiryMessage } from "@/components/contact/EnquireOptions";
+import { useSettings } from "@/components/providers/SettingsProvider";
 
 const FAQS: { question: string; answer: string; tag: string }[] = [
   {
@@ -53,6 +54,7 @@ const FAQS: { question: string; answer: string; tag: string }[] = [
 ];
 
 export default function FaqSection() {
+  const settings = useSettings();
   const [openIdx, setOpenIdx] = useState<number | null>(0);
 
   return (
@@ -75,7 +77,7 @@ export default function FaqSection() {
 
             <div className="mt-8 lg:sticky lg:top-28 space-y-3">
               <a
-                href={whatsappUrl(buildEnquiryMessage())}
+                href={whatsappUrl(buildEnquiryMessage(), settings)}
                 target="_blank"
                 rel="noreferrer noopener"
                 className="w-full inline-flex items-center justify-center gap-2 h-12 px-6 rounded-[10px] bg-[#25D366] text-white-base font-semibold shadow-[0_8px_24px_-8px_rgba(37,211,102,0.45)] hover:bg-[#1ea355] transition-colors"

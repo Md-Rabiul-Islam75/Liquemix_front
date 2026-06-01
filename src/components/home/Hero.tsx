@@ -3,8 +3,17 @@ import Link from "next/link";
 import { FiArrowRight, FiArrowUpRight, FiPlay } from "react-icons/fi";
 import { getProductBySlug } from "@/data/products";
 import { getSegmentById } from "@/data/segments";
+import { fetchSiteSettings } from "@/data/settings";
 
-export default function Hero() {
+export default async function Hero() {
+  const settings = await fetchSiteSettings();
+  // Headline is editable in admin as a single multi-line string. Split
+  // on the first line break so the brand-gradient still wraps the first
+  // line and the second line gets the muted treatment.
+  const [headlineLine1, ...headlineRest] = (settings.heroHeadline ?? "").split(
+    /\r?\n/
+  );
+  const headlineLine2 = headlineRest.join(" ");
   const hydroGuard = getProductBySlug("lique-hydro-guard-3x");
   const fixMt3 = getProductBySlug("lique-fix-mt-3");
   const hydroImage = hydroGuard?.images.find((i) => i.isPrimary) ?? hydroGuard?.images[0];
@@ -47,22 +56,23 @@ export default function Hero() {
         <div className="lg:col-span-7">
           <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur border border-white/15 text-xs font-semibold tracking-[0.18em] uppercase text-accent-300">
             <span className="block w-1.5 h-1.5 rounded-full bg-accent-400 animate-pulse" />
-            Construction Chemicals · Engineered Systems
+            {settings.heroEyebrow}
           </span>
 
           <h1 className="mt-5 sm:mt-6 text-[2rem] sm:text-4xl md:text-6xl lg:text-7xl font-bold leading-[1.08] tracking-tight text-balance">
-            Build on{" "}
             <span className="relative inline-block">
-              <span className="brand-gradient-text">simple systems.</span>
+              <span className="brand-gradient-text">{headlineLine1}</span>
             </span>
-            <br />
-            <span className="text-white/90">Engineered for the real world.</span>
+            {headlineLine2 && (
+              <>
+                <br />
+                <span className="text-white/90">{headlineLine2}</span>
+              </>
+            )}
           </h1>
 
           <p className="mt-6 text-lg md:text-xl text-white/75 max-w-2xl text-balance">
-            From basement waterproofing to industrial flooring — LiqueMix
-            delivers complete engineered systems with full technical
-            documentation, applicator support, and a guaranteed service life.
+            {settings.heroSubtitle}
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-4">

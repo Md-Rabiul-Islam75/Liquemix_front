@@ -8,11 +8,10 @@ import {
 } from "react-icons/fi";
 
 import PageHeader from "@/components/common/PageHeader";
-import EnquireOptions, {
-  LIQUEMIX_CONTACT,
-} from "@/components/contact/EnquireOptions";
+import EnquireOptions from "@/components/contact/EnquireOptions";
 import { products } from "@/data/products";
 import { fetchSegmentsMap } from "@/data/segments";
+import { fetchSiteSettings } from "@/data/settings";
 
 export const metadata: Metadata = {
   title: "Contact LiqueMix",
@@ -34,7 +33,10 @@ export default async function ContactPage({ searchParams }: Props) {
   const product = productSku
     ? products.find((p) => p.sku === productSku)
     : undefined;
-  const segMap = product ? await fetchSegmentsMap() : null;
+  const [settings, segMap] = await Promise.all([
+    fetchSiteSettings(),
+    product ? fetchSegmentsMap() : Promise.resolve(null),
+  ]);
   const segment = product
     ? segMap?.get(String(product.segmentId))
     : undefined;
@@ -139,12 +141,8 @@ export default async function ContactPage({ searchParams }: Props) {
                   <p className="flex items-center gap-2 text-[11px] font-bold tracking-wider uppercase text-neutral-500 mb-1">
                     <FiMapPin className="text-primary-500" /> Address
                   </p>
-                  <p className="text-neutral-800">
-                    Plot 42, Dhaka EPZ
-                    <br />
-                    Savar, Dhaka 1349
-                    <br />
-                    Bangladesh
+                  <p className="text-neutral-800 whitespace-pre-line">
+                    {settings.officeAddress}
                   </p>
                 </div>
                 <div>
@@ -153,10 +151,10 @@ export default async function ContactPage({ searchParams }: Props) {
                   </p>
                   <p className="text-neutral-800">
                     <a
-                      href={`tel:${LIQUEMIX_CONTACT.phoneTel}`}
+                      href={`tel:${settings.phoneTel}`}
                       className="hover:text-primary-600"
                     >
-                      {LIQUEMIX_CONTACT.phoneDisplay}
+                      {settings.phoneDisplay}
                     </a>
                   </p>
                 </div>
@@ -165,12 +163,10 @@ export default async function ContactPage({ searchParams }: Props) {
                     <FiClock className="text-primary-500" /> Business hours
                   </p>
                   <p className="text-neutral-800">
-                    Sun–Thu · 9:00 – 18:00
-                    <br />
-                    Fri–Sat · Closed
+                    {settings.businessDays} · {settings.businessHours}
                     <br />
                     <span className="text-xs text-neutral-500">
-                      (Bangladesh Standard Time, GMT+6)
+                      Reply SLA: {settings.replySla}
                     </span>
                   </p>
                 </div>
@@ -181,28 +177,28 @@ export default async function ContactPage({ searchParams }: Props) {
                   <ul className="space-y-1">
                     <li>
                       <a
-                        href={`mailto:${LIQUEMIX_CONTACT.emailSales}`}
+                        href={`mailto:${settings.emailSales}`}
                         className="text-primary-600 hover:text-primary-700"
                       >
-                        {LIQUEMIX_CONTACT.emailSales}
+                        {settings.emailSales}
                       </a>{" "}
                       <span className="text-xs text-neutral-500">— sales</span>
                     </li>
                     <li>
                       <a
-                        href={`mailto:${LIQUEMIX_CONTACT.emailTechnical}`}
+                        href={`mailto:${settings.emailTechnical}`}
                         className="text-primary-600 hover:text-primary-700"
                       >
-                        {LIQUEMIX_CONTACT.emailTechnical}
+                        {settings.emailTechnical}
                       </a>{" "}
                       <span className="text-xs text-neutral-500">— technical</span>
                     </li>
                     <li>
                       <a
-                        href={`mailto:${LIQUEMIX_CONTACT.emailGeneral}`}
+                        href={`mailto:${settings.emailGeneral}`}
                         className="text-primary-600 hover:text-primary-700"
                       >
-                        {LIQUEMIX_CONTACT.emailGeneral}
+                        {settings.emailGeneral}
                       </a>{" "}
                       <span className="text-xs text-neutral-500">— general</span>
                     </li>
@@ -230,14 +226,11 @@ export default async function ContactPage({ searchParams }: Props) {
               />
               <div className="relative">
                 <FiMapPin className="text-3xl text-accent-400 mb-3" />
-                <p className="text-lg font-bold leading-tight">
-                  Plot 42, Dhaka EPZ
-                </p>
-                <p className="text-sm text-white/80 mt-1">
-                  Savar, Dhaka 1349 · Bangladesh
+                <p className="text-lg font-bold leading-tight whitespace-pre-line">
+                  {settings.officeAddress}
                 </p>
                 <a
-                  href="https://maps.google.com/?q=Dhaka+EPZ+Savar+Bangladesh"
+                  href={settings.mapLink}
                   target="_blank"
                   rel="noreferrer noopener"
                   className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent-300 hover:text-accent-200 mt-5"

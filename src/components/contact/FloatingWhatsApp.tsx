@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { FaWhatsapp } from "react-icons/fa";
 import { FiX } from "react-icons/fi";
-import { LIQUEMIX_CONTACT, whatsappUrl, buildEnquiryMessage } from "./EnquireOptions";
+import { whatsappUrl, buildEnquiryMessage } from "./EnquireOptions";
+import { useSettings } from "@/components/providers/SettingsProvider";
 
 /**
  * Site-wide floating WhatsApp button. Appears after the user scrolls past
@@ -11,6 +12,7 @@ import { LIQUEMIX_CONTACT, whatsappUrl, buildEnquiryMessage } from "./EnquireOpt
  * Tooltip expands on hover (lg+) to nudge towards Enquire.
  */
 export default function FloatingWhatsApp() {
+  const settings = useSettings();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -23,7 +25,7 @@ export default function FloatingWhatsApp() {
   const [dismissed, setDismissed] = useState(false);
   if (dismissed) return null;
 
-  const href = whatsappUrl(buildEnquiryMessage());
+  const href = whatsappUrl(buildEnquiryMessage(), settings);
 
   return (
     <div
@@ -39,12 +41,12 @@ export default function FloatingWhatsApp() {
         href={href}
         target="_blank"
         rel="noreferrer noopener"
-        aria-label={`Enquire on WhatsApp at ${LIQUEMIX_CONTACT.phoneDisplay}`}
+        aria-label={`Enquire on WhatsApp at ${settings.phoneDisplay}`}
         className="hidden lg:flex group items-center gap-2 px-4 h-12 rounded-full bg-white-base shadow-[0_10px_30px_-10px_rgba(15,19,32,0.25)] border border-neutral-100 text-sm font-semibold text-neutral-800 hover:text-[#25D366] transition-colors"
       >
         <span>Chat with us on WhatsApp</span>
         <span className="text-[11px] text-neutral-400 group-hover:text-[#25D366]">
-          {LIQUEMIX_CONTACT.phoneDisplay}
+          {settings.phoneDisplay}
         </span>
       </a>
 

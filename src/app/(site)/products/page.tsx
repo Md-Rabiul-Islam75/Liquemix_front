@@ -4,7 +4,7 @@ import { FiArrowUpRight } from "react-icons/fi";
 import PageHeader from "@/components/common/PageHeader";
 import { fetchSegments } from "@/data/segments";
 import { fetchCategoriesBySegment } from "@/data/categories";
-import { getProductsBySegment } from "@/data/products";
+import { fetchAllPublishedProducts } from "@/data/products";
 import type { Category, SegmentColor } from "@/types/Catalog";
 
 export const metadata: Metadata = {
@@ -37,7 +37,19 @@ const SEGMENT_SHADOW: Record<SegmentColor, string> = {
 type RootWithDescendantCount = Category & { descendantCount: number };
 
 export default async function ProductsHomePage() {
-  const segments = await fetchSegments();
+  const [segments, allPublished] = await Promise.all([
+    fetchSegments(),
+    fetchAllPublishedProducts(),
+  ]);
+  // Group live products by segment so each card's "N products" count
+  // matches the segment landing page (single source of truth — both
+  // surfaces now read the same fetched array).
+  const productsBySegmentId = new Map<string, typeof allPublished>();
+  for (const p of allPublished) {
+    const key = String(p.segmentId);
+    if (!productsBySegmentId.has(key)) productsBySegmentId.set(key, []);
+    productsBySegmentId.get(key)!.push(p);
+  }
   // Fetch each segment's full category list in parallel. We surface
   // only roots in the panel grid (the catalogue index is a landing
   // page, not a full taxonomy view), but we annotate each root with a
@@ -80,7 +92,7 @@ export default async function ProductsHomePage() {
           <div className="space-y-8">
             {segments.map((seg, i) => {
               const cats = rootCategoriesBySegmentId.get(String(seg.id)) ?? [];
-              const products = getProductsBySegment(String(seg.id));
+              const products = productsBySegmentId.get(String(seg.id)) ?? [];
               const isLight = seg.color === "yellow";
               return (
                 <div

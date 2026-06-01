@@ -1,201 +1,356 @@
-import { FiMail, FiPhone, FiSave } from "react-icons/fi";
-import AdminPageHeader from "@/components/admin/PageHeader";
+"use client";
 
-export const metadata = { title: "Site settings" };
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { FiLogIn, FiMail, FiPhone, FiSave } from "react-icons/fi";
+import AdminPageHeader from "@/components/admin/PageHeader";
+import { adminGet, adminPut, getToken } from "@/lib/adminApi";
+import { ErrorToast, SuccessToast } from "@/helpers/ToastHelper";
+import { DEFAULT_SETTINGS, type SiteSettings } from "@/data/settings";
 
 export default function AdminSettingsPage() {
+  const [hasToken, setHasToken] = useState<boolean | null>(null);
+  useEffect(() => {
+    setHasToken(getToken() != null);
+  }, []);
+
+  const [form, setForm] = useState<SiteSettings>(DEFAULT_SETTINGS);
+  const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (hasToken !== true) return;
+    (async () => {
+      try {
+        const live = await adminGet<Partial<SiteSettings>>(
+          "/api/v1/admin/site/settings"
+        );
+        // Merge over defaults so any nulls from a freshly-seeded row
+        // become sensible strings in the form.
+        const merged: SiteSettings = { ...DEFAULT_SETTINGS };
+        for (const key of Object.keys(merged) as (keyof SiteSettings)[]) {
+          const v = live?.[key];
+          if (typeof v === "string") merged[key] = v;
+        }
+        setForm(merged);
+      } catch (e) {
+        setLoadError(
+          e instanceof Error ? e.message : "Failed to load settings."
+        );
+      } finally {
+        setLoaded(true);
+      }
+    })();
+  }, [hasToken]);
+
+  function set<K extends keyof SiteSettings>(key: K, value: SiteSettings[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function onSave() {
+    setSubmitting(true);
+    try {
+      const updated = await adminPut<SiteSettings>(
+        "/api/v1/admin/site/settings",
+        form
+      );
+      // The PUT response carries the row back; fold it into the form so
+      // any server-side trims are reflected.
+      const merged: SiteSettings = { ...form };
+      for (const key of Object.keys(merged) as (keyof SiteSettings)[]) {
+        const v = updated?.[key];
+        if (typeof v === "string") merged[key] = v;
+      }
+      setForm(merged);
+      SuccessToast(
+        "Settings saved",
+        "The public site now reflects your changes."
+      );
+    } catch (e) {
+      ErrorToast(
+        "Save failed",
+        e instanceof Error ? e.message : "Unknown error."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function onDiscard() {
+    if (!window.confirm("Discard changes? The form will reload from the API.")) return;
+    setLoaded(false);
+    setHasToken(getToken() != null); // re-trigger the load effect
+  }
+
+  if (hasToken === false) {
+    return (
+      <>
+        <AdminPageHeader
+          eyebrow="Settings"
+          title="Sign-in required"
+          description="The admin API rejects unauthenticated calls."
+        />
+        <Link
+          href="/admin/login?next=/admin/settings"
+          className="inline-flex items-center gap-1.5 h-10 px-5 rounded-lg bg-primary-500 text-white-base text-sm font-semibold hover:bg-primary-600"
+        >
+          <FiLogIn /> Go to sign in
+        </Link>
+      </>
+    );
+  }
+
   return (
     <>
       <AdminPageHeader
         eyebrow="Settings"
         title="Site settings"
-        description="Global settings the public site reads from — contact channels, social URLs, homepage hero copy."
+        description="Global settings the public site reads from — contact channels, social URLs, homepage hero copy, business hours."
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Contact channels */}
-        <section className="lg:col-span-2 rounded-2xl bg-white-base border border-neutral-100 p-5 md:p-6">
-          <h2 className="text-base font-bold text-neutral-900 mb-1">
-            Contact channels
-          </h2>
-          <p className="text-xs text-neutral-500 mb-5">
-            Used by the floating WhatsApp button, /contact page, and product
-            enquiry deep-links.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="WhatsApp number">
-              <input
-                type="text"
-                defaultValue="8801000000000"
-                className="admin-input font-mono"
-              />
-            </Field>
-            <Field label="Phone (display)">
-              <input
-                type="text"
-                defaultValue="+880 1000-000000"
-                className="admin-input"
-              />
-            </Field>
-            <Field label="Email — sales" className="sm:col-span-2">
-              <input
-                type="email"
-                defaultValue="sales@liquemix.com"
-                className="admin-input"
-              />
-            </Field>
-            <Field label="Email — technical">
-              <input
-                type="email"
-                defaultValue="support@liquemix.com"
-                className="admin-input"
-              />
-            </Field>
-            <Field label="Email — general">
-              <input
-                type="email"
-                defaultValue="info@liquemix.com"
-                className="admin-input"
-              />
-            </Field>
-          </div>
-        </section>
+      {!loaded ? (
+        <div className="rounded-2xl border border-neutral-100 bg-white-base p-12 text-center text-sm text-neutral-500">
+          Loading settings…
+        </div>
+      ) : loadError ? (
+        <div className="rounded-2xl border border-error-300 bg-error-50 p-6 text-sm text-error-500">
+          {loadError}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-24">
+          {/* Contact channels */}
+          <section className="lg:col-span-2 rounded-2xl bg-white-base border border-neutral-100 p-5 md:p-6">
+            <h2 className="text-base font-bold text-neutral-900 mb-1">
+              Contact channels
+            </h2>
+            <p className="text-xs text-neutral-500 mb-5">
+              Used by the floating WhatsApp button, /contact page, and
+              product enquiry deep-links.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="WhatsApp number">
+                <input
+                  type="text"
+                  value={form.whatsappNumber}
+                  onChange={(e) => set("whatsappNumber", e.target.value)}
+                  className="admin-input font-mono"
+                  maxLength={40}
+                />
+              </Field>
+              <Field label="Phone (display)">
+                <input
+                  type="text"
+                  value={form.phoneDisplay}
+                  onChange={(e) => set("phoneDisplay", e.target.value)}
+                  className="admin-input"
+                  maxLength={60}
+                />
+              </Field>
+              <Field label="Phone (tel: link)">
+                <input
+                  type="text"
+                  value={form.phoneTel}
+                  onChange={(e) => set("phoneTel", e.target.value)}
+                  className="admin-input font-mono"
+                  maxLength={60}
+                />
+              </Field>
+              <Field label="Email — sales">
+                <input
+                  type="email"
+                  value={form.emailSales}
+                  onChange={(e) => set("emailSales", e.target.value)}
+                  className="admin-input"
+                  maxLength={200}
+                />
+              </Field>
+              <Field label="Email — technical">
+                <input
+                  type="email"
+                  value={form.emailTechnical}
+                  onChange={(e) => set("emailTechnical", e.target.value)}
+                  className="admin-input"
+                  maxLength={200}
+                />
+              </Field>
+              <Field label="Email — general">
+                <input
+                  type="email"
+                  value={form.emailGeneral}
+                  onChange={(e) => set("emailGeneral", e.target.value)}
+                  className="admin-input"
+                  maxLength={200}
+                />
+              </Field>
+            </div>
+          </section>
 
-        {/* Social */}
-        <section className="rounded-2xl bg-white-base border border-neutral-100 p-5 md:p-6">
-          <h2 className="text-base font-bold text-neutral-900 mb-1">
-            Social URLs
-          </h2>
-          <p className="text-xs text-neutral-500 mb-5">
-            Linked from the footer and the contact page.
-          </p>
-          <div className="space-y-3">
-            <Field label="LinkedIn">
-              <input
-                type="url"
-                defaultValue="https://linkedin.com/company/liquemix"
-                className="admin-input"
-              />
-            </Field>
-            <Field label="Facebook">
-              <input
-                type="url"
-                defaultValue="https://facebook.com/liquemix"
-                className="admin-input"
-              />
-            </Field>
-            <Field label="WeChat handle">
-              <input
-                type="text"
-                defaultValue="liquemix_bd"
-                className="admin-input"
-              />
-            </Field>
-          </div>
-        </section>
+          {/* Social */}
+          <section className="rounded-2xl bg-white-base border border-neutral-100 p-5 md:p-6">
+            <h2 className="text-base font-bold text-neutral-900 mb-1">
+              Social URLs
+            </h2>
+            <p className="text-xs text-neutral-500 mb-5">
+              Linked from the footer and the contact page.
+            </p>
+            <div className="space-y-3">
+              <Field label="LinkedIn">
+                <input
+                  type="url"
+                  value={form.linkedinUrl}
+                  onChange={(e) => set("linkedinUrl", e.target.value)}
+                  className="admin-input"
+                  maxLength={500}
+                />
+              </Field>
+              <Field label="Facebook">
+                <input
+                  type="url"
+                  value={form.facebookUrl}
+                  onChange={(e) => set("facebookUrl", e.target.value)}
+                  className="admin-input"
+                  maxLength={500}
+                />
+              </Field>
+              <Field label="WeChat handle">
+                <input
+                  type="text"
+                  value={form.wechatHandle}
+                  onChange={(e) => set("wechatHandle", e.target.value)}
+                  className="admin-input"
+                  maxLength={120}
+                />
+              </Field>
+            </div>
+          </section>
 
-        {/* Hero copy */}
-        <section className="lg:col-span-3 rounded-2xl bg-white-base border border-neutral-100 p-5 md:p-6">
-          <h2 className="text-base font-bold text-neutral-900 mb-1">
-            Homepage hero
-          </h2>
-          <p className="text-xs text-neutral-500 mb-5">
-            The first thing every visitor sees on the public site.
-          </p>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Field label="Eyebrow">
-              <input
-                type="text"
-                defaultValue="Construction Chemicals · Engineered Systems"
-                className="admin-input"
-              />
-            </Field>
-            <Field label="Headline (two lines)">
-              <textarea
-                rows={2}
-                defaultValue={"Build on simple systems.\nEngineered for the real world."}
-                className="admin-input resize-none"
-              />
-            </Field>
-            <Field label="Subtitle" className="lg:col-span-2">
-              <textarea
-                rows={3}
-                defaultValue="From basement waterproofing to industrial flooring — LiqueMix delivers complete engineered systems with full technical documentation, applicator support, and a guaranteed service life."
-                className="admin-input resize-none"
-              />
-            </Field>
-          </div>
-        </section>
+          {/* Hero copy */}
+          <section className="lg:col-span-3 rounded-2xl bg-white-base border border-neutral-100 p-5 md:p-6">
+            <h2 className="text-base font-bold text-neutral-900 mb-1">
+              Homepage hero
+            </h2>
+            <p className="text-xs text-neutral-500 mb-5">
+              The first thing every visitor sees on the public site.
+              Headline is split across two lines on a line-break.
+            </p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <Field label="Eyebrow">
+                <input
+                  type="text"
+                  value={form.heroEyebrow}
+                  onChange={(e) => set("heroEyebrow", e.target.value)}
+                  className="admin-input"
+                  maxLength={240}
+                />
+              </Field>
+              <Field label="Headline (two lines, separated by Enter)">
+                <textarea
+                  rows={2}
+                  value={form.heroHeadline}
+                  onChange={(e) => set("heroHeadline", e.target.value)}
+                  className="admin-input resize-none"
+                  maxLength={400}
+                />
+              </Field>
+              <Field label="Subtitle" className="lg:col-span-2">
+                <textarea
+                  rows={3}
+                  value={form.heroSubtitle}
+                  onChange={(e) => set("heroSubtitle", e.target.value)}
+                  className="admin-input resize-none"
+                />
+              </Field>
+            </div>
+          </section>
 
-        {/* SLA / business hours */}
-        <section className="lg:col-span-3 rounded-2xl bg-white-base border border-neutral-100 p-5 md:p-6">
-          <h2 className="text-base font-bold text-neutral-900 mb-1">
-            Operations
-          </h2>
-          <p className="text-xs text-neutral-500 mb-5">
-            Office address, business hours, reply SLA — surfaced on /contact.
+          {/* Operations */}
+          <section className="lg:col-span-3 rounded-2xl bg-white-base border border-neutral-100 p-5 md:p-6">
+            <h2 className="text-base font-bold text-neutral-900 mb-1">
+              Operations
+            </h2>
+            <p className="text-xs text-neutral-500 mb-5">
+              Office address, business hours, reply SLA — surfaced on /contact.
+            </p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <Field label="Office address" className="lg:col-span-2">
+                <textarea
+                  rows={3}
+                  value={form.officeAddress}
+                  onChange={(e) => set("officeAddress", e.target.value)}
+                  className="admin-input resize-none"
+                />
+              </Field>
+              <Field label="Reply SLA">
+                <input
+                  type="text"
+                  value={form.replySla}
+                  onChange={(e) => set("replySla", e.target.value)}
+                  className="admin-input"
+                  maxLength={120}
+                />
+              </Field>
+              <Field label="Business days">
+                <input
+                  type="text"
+                  value={form.businessDays}
+                  onChange={(e) => set("businessDays", e.target.value)}
+                  className="admin-input"
+                  maxLength={120}
+                />
+              </Field>
+              <Field label="Business hours">
+                <input
+                  type="text"
+                  value={form.businessHours}
+                  onChange={(e) => set("businessHours", e.target.value)}
+                  className="admin-input"
+                  maxLength={120}
+                />
+              </Field>
+              <Field label="Map link">
+                <input
+                  type="url"
+                  value={form.mapLink}
+                  onChange={(e) => set("mapLink", e.target.value)}
+                  className="admin-input"
+                  maxLength={600}
+                />
+              </Field>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* Floating save bar */}
+      <div className="fixed bottom-0 left-0 lg:left-64 right-0 z-20 border-t border-neutral-200 bg-white-base/95 backdrop-blur-md">
+        <div className="px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-3">
+          <p className="text-xs text-neutral-500 hidden sm:inline-flex items-center gap-1.5">
+            <FiMail className="text-neutral-400" /> Settings power every
+            contact surface — header, footer, floating WhatsApp, product
+            enquiry, /contact.
+            <FiPhone className="text-neutral-400" />
           </p>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <Field label="Office address" className="lg:col-span-2">
-              <textarea
-                rows={3}
-                defaultValue="Plot 42, Dhaka EPZ\nSavar, Dhaka 1349\nBangladesh"
-                className="admin-input resize-none"
-              />
-            </Field>
-            <Field label="Reply SLA">
-              <input
-                type="text"
-                defaultValue="< 4 business hours"
-                className="admin-input"
-              />
-            </Field>
-            <Field label="Business days">
-              <input
-                type="text"
-                defaultValue="Sunday–Thursday"
-                className="admin-input"
-              />
-            </Field>
-            <Field label="Business hours">
-              <input
-                type="text"
-                defaultValue="9:00–18:00 (GMT+6)"
-                className="admin-input"
-              />
-            </Field>
-            <Field label="Map link">
-              <input
-                type="url"
-                defaultValue="https://maps.google.com/?q=Dhaka+EPZ+Savar"
-                className="admin-input"
-              />
-            </Field>
+          <div className="flex items-center gap-2 ml-auto">
+            <button
+              type="button"
+              onClick={onDiscard}
+              disabled={submitting || !loaded}
+              className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg border border-neutral-200 bg-white-base text-sm font-semibold text-neutral-700 hover:border-error-300 hover:text-error-500 disabled:opacity-50"
+            >
+              Discard
+            </button>
+            <button
+              type="button"
+              onClick={onSave}
+              disabled={submitting || !loaded}
+              className="inline-flex items-center gap-1.5 h-10 px-5 rounded-lg bg-primary-500 text-white-base text-sm font-semibold hover:bg-primary-600 transition-colors shadow-[0_8px_24px_-8px_rgba(21,101,192,0.45)] disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <FiSave /> {submitting ? "Saving…" : "Save settings"}
+            </button>
           </div>
-        </section>
+        </div>
       </div>
-
-      {/* Save bar */}
-      <div className="mt-8 flex items-center justify-end gap-3">
-        <button
-          type="button"
-          className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg border border-neutral-200 bg-white-base text-sm font-semibold text-neutral-700"
-        >
-          Discard
-        </button>
-        <button
-          type="button"
-          className="inline-flex items-center gap-1.5 h-10 px-5 rounded-lg bg-primary-500 text-white-base text-sm font-semibold hover:bg-primary-600 shadow-[0_8px_24px_-8px_rgba(21,101,192,0.45)]"
-        >
-          <FiSave /> Save settings
-        </button>
-      </div>
-
-      <p className="mt-6 text-xs text-neutral-500 inline-flex items-center gap-1.5">
-        <FiMail className="text-neutral-400" /> Settings power every contact
-        surface — header, footer, floating WhatsApp, product enquiry, /contact.
-        <FiPhone className="text-neutral-400" />
-      </p>
     </>
   );
 }

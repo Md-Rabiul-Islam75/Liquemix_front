@@ -5,7 +5,38 @@ import ProductCard from "@/components/product/ProductCard";
 import ProductFilters from "@/components/product/ProductFilters";
 import { segments, fetchSegmentBySlug } from "@/data/segments";
 import { fetchCategoriesBySegment } from "@/data/categories";
-import { getProductsBySegment } from "@/data/products";
+import { fetchAllPublishedProducts } from "@/data/products";
+import type { Category, EntityId } from "@/types/Catalog";
+
+/**
+ * Build the set of "allowed" category ids for a filter click: the
+ * clicked category itself plus every descendant. Standard B2B catalog
+ * UX — clicking a parent surfaces products attached to any sub or
+ * tertiary category beneath it, so editors don't have to double-tag
+ * every product. Leaf clicks naturally collapse to a one-element set
+ * (just the leaf), preserving strict filtering for explicit picks.
+ */
+function descendantIdSet(allCats: Category[], rootId: EntityId): Set<string> {
+  const childrenOf = new Map<string, Category[]>();
+  for (const c of allCats) {
+    const key = c.parentId != null ? String(c.parentId) : "__root__";
+    if (!childrenOf.has(key)) childrenOf.set(key, []);
+    childrenOf.get(key)!.push(c);
+  }
+  const out = new Set<string>([String(rootId)]);
+  const stack: string[] = [String(rootId)];
+  while (stack.length) {
+    const id = stack.pop()!;
+    for (const kid of childrenOf.get(id) ?? []) {
+      const sid = String(kid.id);
+      if (!out.has(sid)) {
+        out.add(sid);
+        stack.push(sid);
+      }
+    }
+  }
+  return out;
+}
 
 type Props = {
   params: Promise<{ segment: string }>;
@@ -33,7 +64,15 @@ export default async function SegmentPage({ params, searchParams }: Props) {
   const segment = await fetchSegmentBySlug(slug);
   if (!segment) notFound();
 
-  const allInSegment = getProductsBySegment(String(segment.id));
+  // Live products. The old getProductsBySegment() only filtered the
+  // local mock, so admin-created products were invisible here even
+  // though the segment card already counted them via seg.productCount.
+  // Fetch the live list and filter by segmentId (stringified for the
+  // mock/string vs backend/number id drift).
+  const allPublished = await fetchAllPublishedProducts();
+  const allInSegment = allPublished.filter(
+    (p) => String(p.segmentId) === String(segment.id)
+  );
 
   // Full live list. The sidebar's ProductFilters now renders the whole
   // hierarchy with depth indentation, so a sub-category like "Tile
@@ -48,7 +87,15 @@ export default async function SegmentPage({ params, searchParams }: Props) {
   let filtered = allInSegment;
   if (categorySlug) {
     const cat = allCats.find((c) => c.slug === categorySlug);
-    if (cat) filtered = filtered.filter((p) => p.categoryIds.includes(cat.id));
+    if (cat) {
+      // Descendant-inclusive: clicking "Tile Grouts & Joint Fillers"
+      // also surfaces anything tagged into "Tile Grouts Subfield".
+      // Clicking the subfield itself collapses to just its own id.
+      const allowedIds = descendantIdSet(allCats, cat.id);
+      filtered = filtered.filter((p) =>
+        p.categoryIds.some((id) => allowedIds.has(String(id)))
+      );
+    }
   }
   if (q) {
     filtered = filtered.filter(

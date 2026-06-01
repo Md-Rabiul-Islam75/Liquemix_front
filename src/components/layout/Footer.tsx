@@ -1,9 +1,19 @@
 import Link from "next/link";
 import Image from "next/image";
 import { FaWhatsapp, FaLinkedinIn, FaFacebookF, FaWeixin } from "react-icons/fa";
-import { segments } from "@/data/segments";
+import { segments as fallbackSegments, fetchSegments } from "@/data/segments";
+import { fetchSiteSettings } from "@/data/settings";
 
-export default function Footer() {
+export default async function Footer() {
+  // Footer renders inside the (site) layout server tree; we re-fetch
+  // here (rather than pulling from context) so the segments column
+  // always reflects the live segment list, not just the mock.
+  const [settings, fetchedSegments] = await Promise.all([
+    fetchSiteSettings(),
+    fetchSegments().catch(() => fallbackSegments),
+  ]);
+  const segments = fetchedSegments.length > 0 ? fetchedSegments : fallbackSegments;
+  const waHref = `https://wa.me/${settings.whatsappNumber}`;
   return (
     <footer className="bg-neutral-900 text-neutral-300 mt-24 print:hidden">
       {/* CTA strip */}
@@ -20,7 +30,7 @@ export default function Footer() {
           </div>
           <div className="flex gap-3 shrink-0">
             <Link
-              href="https://wa.me/8801000000000"
+              href={waHref}
               className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-[10px] bg-white-base text-primary-700 font-semibold shadow-lg hover:bg-accent-50 transition-colors"
             >
               <FaWhatsapp className="text-lg" /> WhatsApp
@@ -49,10 +59,10 @@ export default function Footer() {
           </p>
           <div className="mt-6 flex items-center gap-3">
             {[
-              { icon: <FaWhatsapp />, href: "https://wa.me/8801000000000", label: "WhatsApp" },
-              { icon: <FaLinkedinIn />, href: "https://linkedin.com", label: "LinkedIn" },
-              { icon: <FaFacebookF />, href: "https://facebook.com", label: "Facebook" },
-              { icon: <FaWeixin />, href: "#", label: "WeChat" },
+              { icon: <FaWhatsapp />, href: waHref, label: "WhatsApp" },
+              { icon: <FaLinkedinIn />, href: settings.linkedinUrl, label: "LinkedIn" },
+              { icon: <FaFacebookF />, href: settings.facebookUrl, label: "Facebook" },
+              { icon: <FaWeixin />, href: "#", label: `WeChat: ${settings.wechatHandle}` },
             ].map((s) => (
               <a
                 key={s.label}
@@ -129,14 +139,21 @@ export default function Footer() {
           <p className="text-xs font-semibold tracking-[0.18em] uppercase text-white-base mb-4">
             Reach us
           </p>
-          <address className="not-italic text-sm text-neutral-400 leading-relaxed">
-            LiqueMix HQ<br />
-            Dhaka, Bangladesh<br />
-            <a href="mailto:info@liquemix.com" className="text-accent-400 hover:underline">
-              info@liquemix.com
-            </a><br />
-            <a href="mailto:support@liquemix.com" className="hover:text-accent-400">
-              support@liquemix.com
+          <address className="not-italic text-sm text-neutral-400 leading-relaxed whitespace-pre-line">
+            {settings.officeAddress}
+            {"\n"}
+            <a
+              href={`mailto:${settings.emailGeneral}`}
+              className="text-accent-400 hover:underline"
+            >
+              {settings.emailGeneral}
+            </a>
+            <br />
+            <a
+              href={`mailto:${settings.emailTechnical}`}
+              className="hover:text-accent-400"
+            >
+              {settings.emailTechnical}
             </a>
           </address>
         </div>

@@ -141,6 +141,10 @@ export function adminPut<T>(path: string, body: unknown): Promise<T> {
   return call<T>(path, { method: "PUT", body: JSON.stringify(body) });
 }
 
+export function adminPatch<T>(path: string, body: unknown): Promise<T> {
+  return call<T>(path, { method: "PATCH", body: JSON.stringify(body) });
+}
+
 export function adminDelete<T>(path: string): Promise<T> {
   return call<T>(path, { method: "DELETE" });
 }

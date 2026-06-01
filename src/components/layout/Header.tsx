@@ -5,9 +5,13 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { FiSearch, FiMenu, FiX, FiChevronDown } from "react-icons/fi";
-import { segments } from "@/data/segments";
-import { getRootCategoriesBySegment } from "@/data/categories";
+import {
+  segments as fallbackSegments,
+  fetchSegments,
+} from "@/data/segments";
+import { fetchCategoriesBySegment } from "@/data/categories";
 import { systemSolutions } from "@/data/solutions";
+import type { Category, Segment } from "@/types/Catalog";
 import ProductSearchModal from "@/components/search/ProductSearchModal";
 import TopBar from "./TopBar";
 
@@ -25,8 +29,19 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  // Live segments + categories. Seed with the mock list so the very
+  // first paint has hover targets; the effect below replaces it with
+  // backend data once mounted. Note: we store the full flat list per
+  // segment (not just roots) so the mega-menu can render sub-categories
+  // beneath their parents — the customer needs to see depth, not just
+  // the top of the tree.
+  const [segments, setSegments] = useState<Segment[]>(fallbackSegments);
+  const [allCatsBySegment, setAllCatsBySegment] = useState<
+    Record<string, Category[]>
+  >({});
   const [hoveredSegment, setHoveredSegment] = useState<string | null>(
-    segments[0]?.id != null ? String(segments[0].id) : null
+    fallbackSegments[0]?.id != null ? String(fallbackSegments[0].id) : null
   );
 
   // Hover-intent timer: lets the mouse cross the gap between a nav button
@@ -37,6 +52,38 @@ export default function Header() {
     setMounted(true);
     return () => {
       if (closeTimer.current) clearTimeout(closeTimer.current);
+    };
+  }, []);
+
+  // Fetch live segments + every segment's flat category list once at
+  // mount. Mega-menu only needs root categories (parentId === null) but
+  // we cache the full list per segment for future sub-category panels.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const segs = await fetchSegments();
+        if (cancelled) return;
+        setSegments(segs);
+        if (segs[0]?.id != null) setHoveredSegment(String(segs[0].id));
+        const allCats = await Promise.all(
+          segs.map((s) => fetchCategoriesBySegment(s.id))
+        );
+        if (cancelled) return;
+        const byId: Record<string, Category[]> = {};
+        segs.forEach((s, i) => {
+          // Keep the full flat list (active only) so the mega-menu can
+          // build root + sub + tertiary panels. Sorting is per-sibling
+          // and is done at render time once the tree is assembled.
+          byId[String(s.id)] = allCats[i].filter((c) => c.isActive !== false);
+        });
+        setAllCatsBySegment(byId);
+      } catch {
+        // Fall back to mock arrays already seeded; mega-menu still renders.
+      }
+    })();
+    return () => {
+      cancelled = true;
     };
   }, []);
 
@@ -213,7 +260,21 @@ export default function Header() {
                 {hoveredSegment &&
                   (() => {
                     const seg = segments.find((s) => String(s.id) === hoveredSegment);
-                    const cats = getRootCategoriesBySegment(hoveredSegment);
+                    const flat = allCatsBySegment[hoveredSegment] ?? [];
+                    // Build the tree once per hover-target. Each root
+                    // carries its children + grandchildren so the menu
+                    // can show arbitrary depth without further fetches.
+                    const childrenOf = new Map<number | string | null, Category[]>();
+                    for (const c of flat) {
+                      const key = c.parentId ?? null;
+                      if (!childrenOf.has(key)) childrenOf.set(key, []);
+                      childrenOf.get(key)!.push(c);
+                    }
+                    for (const list of childrenOf.values()) {
+                      list.sort((a, b) => a.menuOrder - b.menuOrder);
+                    }
+                    const roots = childrenOf.get(null) ?? [];
+
                     return (
                       <div>
                         <div className="flex items-baseline justify-between mb-4">
@@ -228,18 +289,55 @@ export default function Header() {
                             View all →
                           </Link>
                         </div>
-                        <ul className="grid grid-cols-2 gap-x-6 gap-y-1">
-                          {cats.map((cat) => (
-                            <li key={cat.id}>
-                              <Link
-                                href={`/products/${seg?.slug}/${cat.slug}`}
-                                onClick={closeAll}
-                                className="block py-2 text-sm text-neutral-700 hover:text-primary-600 transition-colors"
-                              >
-                                {cat.name}
-                              </Link>
-                            </li>
-                          ))}
+                        <ul className="grid grid-cols-2 gap-x-8 gap-y-4">
+                          {roots.map((root) => {
+                            const subs = childrenOf.get(root.id) ?? [];
+                            return (
+                              <li key={root.id}>
+                                <Link
+                                  href={`/products/${seg?.slug}?category=${root.slug}`}
+                                  onClick={closeAll}
+                                  className="block text-sm font-bold text-neutral-900 hover:text-primary-600 transition-colors"
+                                >
+                                  {root.name}
+                                </Link>
+                                {subs.length > 0 && (
+                                  <ul className="mt-1.5 space-y-0.5 border-l border-neutral-200 pl-3 ml-0.5">
+                                    {subs.map((sub) => {
+                                      const tertiaries =
+                                        childrenOf.get(sub.id) ?? [];
+                                      return (
+                                        <li key={sub.id}>
+                                          <Link
+                                            href={`/products/${seg?.slug}?category=${sub.slug}`}
+                                            onClick={closeAll}
+                                            className="block py-1 text-[13px] text-neutral-600 hover:text-primary-600 transition-colors"
+                                          >
+                                            {sub.name}
+                                          </Link>
+                                          {tertiaries.length > 0 && (
+                                            <ul className="space-y-0.5 border-l border-neutral-100 pl-3 ml-0.5">
+                                              {tertiaries.map((t) => (
+                                                <li key={t.id}>
+                                                  <Link
+                                                    href={`/products/${seg?.slug}?category=${t.slug}`}
+                                                    onClick={closeAll}
+                                                    className="block py-0.5 text-[12px] text-neutral-500 hover:text-primary-600 transition-colors"
+                                                  >
+                                                    {t.name}
+                                                  </Link>
+                                                </li>
+                                              ))}
+                                            </ul>
+                                          )}
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+                                )}
+                              </li>
+                            );
+                          })}
                         </ul>
                       </div>
                     );

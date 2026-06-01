@@ -218,3 +218,80 @@ export function getRootCategoriesBySegment(segmentId: string): Category[] {
     .filter((c) => c.segmentId === segmentId && c.parentId === null)
     .sort((a, b) => a.menuOrder - b.menuOrder);
 }
+
+// ─── Live fetchers ────────────────────────────────────────────────────
+import { apiGetOr } from "@/lib/api";
+
+/**
+ * Live flat list of categories under a segment, ordered by menuOrder.
+ * Falls back to the mock array filtered for the segment when the API is
+ * unreachable so the public site keeps rendering during dev.
+ */
+export async function fetchCategoriesBySegment(
+  segmentId: string | number
+): Promise<Category[]> {
+  return apiGetOr<Category[]>(
+    `/api/v1/catalog/categories?segmentId=${encodeURIComponent(String(segmentId))}`,
+    categories.filter((c) => String(c.segmentId) === String(segmentId))
+  );
+}
+
+/**
+ * Live nested tree of categories under a segment. Each node carries its
+ * children inline so consumers can render arbitrary depth without a
+ * second round trip. Mega-menu and the admin tree both use this.
+ */
+export async function fetchCategoryTree(
+  segmentId: string | number
+): Promise<Category[]> {
+  return apiGetOr<Category[]>(
+    `/api/v1/catalog/categories?segmentId=${encodeURIComponent(String(segmentId))}&tree=true`,
+    buildMockTree(String(segmentId))
+  );
+}
+
+/**
+ * Live single-category lookup by slug. Slugs are unique per segment but
+ * not necessarily globally — callers that already know the segment
+ * should prefer the flat list and lookup locally.
+ */
+export async function fetchCategoryBySlug(
+  slug: string
+): Promise<Category | undefined> {
+  // No dedicated endpoint yet — fetch all segments' categories is too
+  // expensive. v1 path: walk the mock to seed a default, and let any
+  // page with a segment context use the segment-scoped helpers.
+  return categories.find((c) => c.slug === slug);
+}
+
+/**
+ * Convenience: live category list indexed by slug, scoped to a segment.
+ * Lets consumers translate a `?category=adhesive` URL parameter into an
+ * id without a per-slug round trip.
+ */
+export async function fetchCategoriesBySegmentMap(
+  segmentId: string | number
+): Promise<Map<string, Category>> {
+  const list = await fetchCategoriesBySegment(segmentId);
+  return new Map(list.map((c) => [c.slug, c]));
+}
+
+/** Build the nested mock tree for the fallback path. */
+function buildMockTree(segmentId: string): Category[] {
+  const inSegment = categories.filter(
+    (c) => String(c.segmentId) === segmentId
+  );
+  const byParent = new Map<string | null, Category[]>();
+  for (const c of inSegment) {
+    const key = c.parentId != null ? String(c.parentId) : null;
+    if (!byParent.has(key)) byParent.set(key, []);
+    byParent.get(key)!.push(c);
+  }
+  const attach = (parentKey: string | null): Category[] => {
+    const kids = (byParent.get(parentKey) ?? []).sort(
+      (a, b) => a.menuOrder - b.menuOrder
+    );
+    return kids.map((k) => ({ ...k, children: attach(String(k.id)) }));
+  };
+  return attach(null);
+}

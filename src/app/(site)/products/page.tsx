@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 import { FiArrowUpRight } from "react-icons/fi";
 import PageHeader from "@/components/common/PageHeader";
 import { fetchSegments } from "@/data/segments";
-import { getRootCategoriesBySegment } from "@/data/categories";
+import { fetchCategoriesBySegment } from "@/data/categories";
 import { getProductsBySegment } from "@/data/products";
-import type { SegmentColor } from "@/types/Catalog";
+import type { Category, SegmentColor } from "@/types/Catalog";
 
 export const metadata: Metadata = {
   title: "Products — Construction-chemical catalogue",
@@ -34,8 +34,37 @@ const SEGMENT_SHADOW: Record<SegmentColor, string> = {
   green: "shadow-[var(--shadow-segment-green)]",
 };
 
+type RootWithDescendantCount = Category & { descendantCount: number };
+
 export default async function ProductsHomePage() {
   const segments = await fetchSegments();
+  // Fetch each segment's full category list in parallel. We surface
+  // only roots in the panel grid (the catalogue index is a landing
+  // page, not a full taxonomy view), but we annotate each root with a
+  // descendant count so customers see that deeper levels exist and
+  // know to drill into the segment page.
+  const categoriesPerSegment = await Promise.all(
+    segments.map((s) => fetchCategoriesBySegment(s.id))
+  );
+  const rootCategoriesBySegmentId = new Map<string, RootWithDescendantCount[]>(
+    segments.map((s, i) => {
+      const all = categoriesPerSegment[i].filter((c) => c.isActive !== false);
+      const childrenOf = new Map<string | number | null, Category[]>();
+      for (const c of all) {
+        const key = c.parentId ?? null;
+        if (!childrenOf.has(key)) childrenOf.set(key, []);
+        childrenOf.get(key)!.push(c);
+      }
+      const countDescendants = (id: string | number): number => {
+        const kids = childrenOf.get(id) ?? [];
+        return kids.reduce((sum, k) => sum + 1 + countDescendants(k.id), 0);
+      };
+      const roots = (childrenOf.get(null) ?? [])
+        .sort((a, b) => a.menuOrder - b.menuOrder)
+        .map((r) => ({ ...r, descendantCount: countDescendants(r.id) }));
+      return [String(s.id), roots];
+    })
+  );
   return (
     <>
       <PageHeader
@@ -50,7 +79,7 @@ export default async function ProductsHomePage() {
         <div className="container-page">
           <div className="space-y-8">
             {segments.map((seg, i) => {
-              const cats = getRootCategoriesBySegment(String(seg.id));
+              const cats = rootCategoriesBySegmentId.get(String(seg.id)) ?? [];
               const products = getProductsBySegment(String(seg.id));
               const isLight = seg.color === "yellow";
               return (
@@ -118,6 +147,16 @@ export default async function ProductsHomePage() {
                               <span className="flex items-center gap-2.5 min-w-0">
                                 <span className="brand-panel-dot" />
                                 <span className="truncate">{cat.name}</span>
+                                {cat.descendantCount > 0 && (
+                                  <span
+                                    className="inline-flex items-center px-1.5 h-4 rounded-full bg-neutral-100 text-[10px] font-bold text-neutral-500 shrink-0"
+                                    title={`${cat.descendantCount} sub-categor${
+                                      cat.descendantCount === 1 ? "y" : "ies"
+                                    } — open the segment page to drill in`}
+                                  >
+                                    +{cat.descendantCount}
+                                  </span>
+                                )}
                               </span>
                               <FiArrowUpRight className="text-neutral-400 group-hover/cat:translate-x-0.5 group-hover/cat:-translate-y-0.5 transition-transform shrink-0" />
                             </Link>

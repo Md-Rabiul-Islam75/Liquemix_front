@@ -26,7 +26,7 @@ import {
   getRelatedProducts,
 } from "@/data/products";
 import { fetchSegmentBySlug, getSegmentById } from "@/data/segments";
-import { getCategoryById } from "@/data/categories";
+import { fetchCategoriesBySegment } from "@/data/categories";
 import { referenceProjects } from "@/data/references";
 import { getVideosByProduct } from "@/data/videos";
 import type { ProductVideo, SegmentColor, Video } from "@/types/Catalog";
@@ -131,8 +131,16 @@ export default async function ProductDetailPage({ params }: Props) {
   const heroTint = SEGMENT_HERO[segColor];
   const segBar = SEGMENT_BAR[segColor];
 
+  // Pull every category in this product's segment once, then resolve
+  // categoryIds → Category objects. A product can have 1, 2, or 3
+  // categories (root + sub + tertiary); they all live in the same flat
+  // list and the lookup is O(1).
+  const allCatsInSegment = await fetchCategoriesBySegment(segment.id);
+  const catById = new Map(
+    allCatsInSegment.map((c) => [String(c.id), c])
+  );
   const productCategories = product.categoryIds
-    .map((id) => getCategoryById(String(id)))
+    .map((id) => catById.get(String(id)))
     .filter((c): c is NonNullable<typeof c> => c !== undefined);
   const primaryCategory = productCategories[0];
 

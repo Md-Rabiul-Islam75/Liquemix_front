@@ -1,9 +1,33 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { FiSearch, FiX, FiSliders, FiChevronDown } from "react-icons/fi";
-import type { Category } from "@/types/Catalog";
+import type { Category, EntityId } from "@/types/Catalog";
+
+/** Walk the flat list into a depth-aware ordered array so each row in
+ *  the sidebar knows how deeply to indent. */
+type DepthRow = Category & { depth: number };
+function flattenWithDepth(flat: Category[]): DepthRow[] {
+  const byParent = new Map<EntityId | null, Category[]>();
+  for (const c of flat) {
+    const key = c.parentId ?? null;
+    if (!byParent.has(key)) byParent.set(key, []);
+    byParent.get(key)!.push(c);
+  }
+  for (const list of byParent.values()) {
+    list.sort((a, b) => a.menuOrder - b.menuOrder);
+  }
+  const out: DepthRow[] = [];
+  const walk = (parent: EntityId | null, depth: number) => {
+    for (const c of byParent.get(parent) ?? []) {
+      out.push({ ...c, depth });
+      walk(c.id, depth + 1);
+    }
+  };
+  walk(null, 0);
+  return out;
+}
 
 export default function ProductFilters({
   categories,
@@ -23,6 +47,11 @@ export default function ProductFilters({
   const currentQ = params.get("q") ?? "";
   const [q, setQ] = useState(currentQ);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Build a depth-aware ordered list so sub-categories show indented
+  // under their parents. Active-only is handled by the page that hands
+  // us the list.
+  const rows = useMemo(() => flattenWithDepth(categories), [categories]);
 
   const updateParam = (key: string, value: string) => {
     const next = new URLSearchParams(params.toString());
@@ -106,18 +135,33 @@ export default function ProductFilters({
                 <span className={`text-xs ${!currentCategory ? "text-white/75" : "text-neutral-400"}`}>{total}</span>
               </button>
             </li>
-            {categories.map((cat) => (
+            {rows.map((cat) => (
               <li key={cat.id}>
                 <button
                   type="button"
                   onClick={() => updateParam("category", cat.slug)}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                  style={{
+                    paddingLeft: `${0.75 + cat.depth * 0.85}rem`,
+                  }}
+                  className={`w-full text-left pr-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-1.5 ${
                     currentCategory === cat.slug
                       ? "bg-primary-500 text-white-base font-semibold shadow-[0_4px_12px_-4px_rgba(21,101,192,0.4)]"
                       : "text-neutral-700 hover:bg-primary-50 hover:text-primary-700"
-                  }`}
+                  } ${cat.depth > 0 ? "text-[13px]" : "font-semibold"}`}
                 >
-                  {cat.name}
+                  {cat.depth > 0 && (
+                    <span
+                      className={`inline-block ${
+                        currentCategory === cat.slug
+                          ? "text-white/60"
+                          : "text-neutral-400"
+                      }`}
+                      aria-hidden
+                    >
+                      ↳
+                    </span>
+                  )}
+                  <span className="truncate">{cat.name}</span>
                 </button>
               </li>
             ))}

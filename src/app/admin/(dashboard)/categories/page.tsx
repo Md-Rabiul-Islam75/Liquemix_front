@@ -1,68 +1,114 @@
-import { FiInfo, FiPlus } from "react-icons/fi";
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { FiInfo, FiLogIn } from "react-icons/fi";
 import AdminPageHeader from "@/components/admin/PageHeader";
 import CategoryTree from "@/components/admin/CategoryTree";
-import { categories } from "@/data/categories";
-import { products } from "@/data/products";
-import { segments } from "@/data/segments";
-import Link from "next/link";
+import { adminGet, getToken } from "@/lib/adminApi";
 
-export const metadata = { title: "Categories" };
+type SegmentLite = {
+  id: number;
+  slug: string;
+  name: string;
+  color: "blue" | "orange" | "yellow" | "green";
+};
+
+const COLOR_DOT: Record<SegmentLite["color"], string> = {
+  blue: "bg-primary-500",
+  orange: "bg-secondary-500",
+  yellow: "bg-accent-500",
+  green: "bg-success-500",
+};
 
 /**
- * Categories page — the central UX problem from §4 of the design doc.
- * Renders one tree per segment so editors stay focused on a single
- * product family at a time (matches how the Schomburg taxonomy is
- * organised on the public site).
+ * Categories — central UX from ADMIN_PANEL_DESIGN.md §4. One live tree
+ * per segment so editors stay focused on a single product family. Each
+ * tree is self-contained (fetches its own data, handles its own CRUD)
+ * so a save in one segment doesn't refetch the others.
  */
 export default function AdminCategoriesPage() {
-  // Pre-compute product counts per category for the tree to use.
-  // Backend will replace this with a single aggregate query.
-  const productsByCategory: Record<string, number> = {};
-  products.forEach((p) => {
-    p.categoryIds.forEach((cid) => {
-      productsByCategory[cid] = (productsByCategory[cid] ?? 0) + 1;
-    });
-  });
+  const [hasToken, setHasToken] = useState<boolean | null>(null);
+  useEffect(() => {
+    setHasToken(getToken() != null);
+  }, []);
+
+  const [segments, setSegments] = useState<SegmentLite[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (hasToken !== true) return;
+    (async () => {
+      try {
+        const list = await adminGet<SegmentLite[]>(
+          "/api/v1/admin/catalog/segments"
+        );
+        setSegments(list);
+      } catch (e) {
+        setLoadError(
+          e instanceof Error ? e.message : "Failed to load segments."
+        );
+      } finally {
+        setLoaded(true);
+      }
+    })();
+  }, [hasToken]);
+
+  if (hasToken === false) {
+    return (
+      <>
+        <AdminPageHeader
+          eyebrow="Catalog"
+          title="Sign-in required"
+          description="The admin API rejects unauthenticated calls."
+        />
+        <Link
+          href="/admin/login?next=/admin/categories"
+          className="inline-flex items-center gap-1.5 h-10 px-5 rounded-lg bg-primary-500 text-white-base text-sm font-semibold hover:bg-primary-600"
+        >
+          <FiLogIn /> Go to sign in
+        </Link>
+      </>
+    );
+  }
 
   return (
     <>
       <AdminPageHeader
         eyebrow="Catalog"
         title="Categories"
-        description="Hierarchical taxonomy that organises the entire product catalog. Move, rename, and reorder freely — products attach to any node, branch or leaf."
-        actions={
-          <Link
-            href="#"
-            className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg bg-primary-500 text-white-base text-sm font-semibold hover:bg-primary-600 transition-colors"
-          >
-            <FiPlus /> New category
-          </Link>
-        }
+        description="Hierarchical taxonomy that organises the entire product catalog. Move, rename, and reorder freely — products can attach to one, two, or three categories at any depth."
       />
 
-      <div className="mb-4 flex items-start gap-3 p-4 rounded-xl bg-primary-50 border border-primary-100 text-sm text-primary-900">
+      <div className="mb-6 flex items-start gap-3 p-4 rounded-xl bg-primary-50 border border-primary-100 text-sm text-primary-900">
         <FiInfo className="text-base text-primary-600 shrink-0 mt-0.5" />
         <p>
-          The frontend already supports arbitrary depth via{" "}
-          <code className="bg-white-base px-1 rounded font-mono text-xs">
-            parentId
-          </code>
-          . Drag-and-drop reordering and the cycle-prevention guard land with
-          the backend — see{" "}
-          <span className="font-bold">ADMIN_PANEL_DESIGN.md §4</span>.
+          One tree per segment. Click any node to view or edit it; use the{" "}
+          <strong>+</strong> icon on a row (or the side panel) to add a child.
+          Move up/down reorders within siblings; changing the{" "}
+          <strong>Parent</strong> in the edit form reparents the node — cycles
+          are rejected server-side.
         </p>
       </div>
 
-      {segments.map((seg) => {
-        const segCats = categories.filter((c) => c.segmentId === seg.id);
-        return (
-          <section key={seg.id} className="mb-8">
+      {!loaded ? (
+        <div className="rounded-2xl border border-neutral-100 bg-white-base p-12 text-center text-sm text-neutral-500">
+          Loading segments…
+        </div>
+      ) : loadError ? (
+        <div className="rounded-2xl border border-error-300 bg-error-50 p-6 text-sm text-error-500">
+          {loadError}
+        </div>
+      ) : (
+        segments.map((seg) => (
+          <section key={seg.id} className="mb-10">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-bold text-neutral-900 tracking-wider uppercase">
-                {seg.name}{" "}
-                <span className="text-neutral-400 font-normal">
-                  ({segCats.length} categories)
-                </span>
+              <h2 className="flex items-center gap-2 text-sm font-bold text-neutral-900 tracking-wider uppercase">
+                <span
+                  className={`block w-2 h-2 rounded-full ${COLOR_DOT[seg.color]}`}
+                />
+                {seg.name}
               </h2>
               <Link
                 href={`/admin/products?segment=${seg.id}`}
@@ -71,13 +117,10 @@ export default function AdminCategoriesPage() {
                 View products in segment →
               </Link>
             </div>
-            <CategoryTree
-              categories={segCats}
-              productsByCategoryId={productsByCategory}
-            />
+            <CategoryTree segmentId={seg.id} segmentName={seg.name} />
           </section>
-        );
-      })}
+        ))
+      )}
     </>
   );
 }

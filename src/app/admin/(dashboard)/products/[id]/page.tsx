@@ -27,6 +27,7 @@ import ProductVideosEditor, {
 import ProductDocumentsEditor, {
   type ProductDocument,
 } from "@/components/admin/ProductDocumentsEditor";
+import CategoryPicker from "@/components/admin/CategoryPicker";
 import {
   adminGet,
   adminPost,
@@ -36,7 +37,15 @@ import {
 import { ErrorToast, SuccessToast } from "@/helpers/ToastHelper";
 
 type SegmentLite = { id: number; slug: string; name: string };
-type CategoryLite = { id: number; segmentId: number; slug: string; name: string };
+type CategoryLite = {
+  id: number;
+  segmentId: number;
+  slug: string;
+  name: string;
+  parentId: number | null;
+  menuOrder: number;
+  isActive?: boolean;
+};
 
 type ProductResponse = {
   id: number;
@@ -490,26 +499,17 @@ export default function AdminProductEditPage() {
                 .
               </p>
             ) : (
-              <ul className="space-y-1 max-h-72 overflow-y-auto pr-1">
-                {categories.map((c) => (
-                  <li key={c.id}>
-                    <label className="flex items-start gap-2 px-2 py-1.5 rounded-md hover:bg-neutral-50 text-sm text-neutral-700 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selectedCategoryIds.has(c.id)}
-                        onChange={() => toggleCategory(c.id)}
-                        className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-primary-500"
-                      />
-                      <span>
-                        {c.name}
-                        <span className="ml-1 text-[11px] text-neutral-400 font-mono">
-                          {c.slug}
-                        </span>
-                      </span>
-                    </label>
-                  </li>
-                ))}
-              </ul>
+              <>
+                <p className="text-[11px] text-neutral-500 mb-2">
+                  Tick any combination — root, sub, or tertiary. A product
+                  can belong to one, two, or three categories at any depth.
+                </p>
+                <CategoryPicker
+                  categories={categories}
+                  selectedIds={selectedCategoryIds}
+                  onToggle={toggleCategory}
+                />
+              </>
             )}
           </section>
 

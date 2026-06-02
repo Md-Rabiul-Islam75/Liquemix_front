@@ -17,7 +17,8 @@ import PackagingTable from "@/components/product/PackagingTable";
 import PrintButton from "@/components/product/PrintButton";
 import ProductCard from "@/components/product/ProductCard";
 import VideoCard from "@/components/video/VideoCard";
-import EnquireOptions, { whatsappUrl, buildEnquiryMessage } from "@/components/contact/EnquireOptions";
+import EnquireOptions from "@/components/contact/EnquireOptions";
+import { whatsappUrl, buildEnquiryMessage } from "@/lib/enquiry";
 import { FaWhatsapp } from "react-icons/fa";
 
 import {

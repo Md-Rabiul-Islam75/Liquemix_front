@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { FaWhatsapp } from "react-icons/fa";
 import { FiX } from "react-icons/fi";
-import { whatsappUrl, buildEnquiryMessage } from "./EnquireOptions";
+import { whatsappUrl, buildEnquiryMessage } from "@/lib/enquiry";
 import { useSettings } from "@/components/providers/SettingsProvider";
 
 /**

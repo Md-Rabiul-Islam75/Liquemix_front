@@ -3,69 +3,12 @@
 import Link from "next/link";
 import { FaWhatsapp, FaLinkedinIn, FaFacebookF } from "react-icons/fa";
 import { FiMail, FiPhone, FiArrowUpRight } from "react-icons/fi";
-import { DEFAULT_SETTINGS, type SiteSettings } from "@/data/settings";
 import { useSettings } from "@/components/providers/SettingsProvider";
-
-/**
- * @deprecated Use `useSettings()` or `fetchSiteSettings()` instead.
- *
- * Backwards-compat alias for the old hard-coded contact constants. Kept
- * so anything importing `LIQUEMIX_CONTACT` continues to compile during
- * the migration to live settings; new code should consume the live
- * value via the SettingsProvider context.
- */
-export const LIQUEMIX_CONTACT = DEFAULT_SETTINGS;
-
-/**
- * Builds a WhatsApp click-to-chat URL with a prefilled message body.
- * Reference: https://faq.whatsapp.com/5913398998672934
- */
-export function whatsappUrl(
-  message: string,
-  settings: SiteSettings = DEFAULT_SETTINGS
-): string {
-  const u = new URL(`https://wa.me/${settings.whatsappNumber}`);
-  u.searchParams.set("text", message);
-  return u.toString();
-}
-
-export type EnquireContext = {
-  /** Product name if the user clicked Enquire from a product detail page. */
-  productName?: string;
-  /** Product SKU for inclusion in the message body. */
-  productSku?: string;
-  /** Public URL of the product, so the LiqueMix engineer can open it immediately. */
-  productUrl?: string;
-};
-
-/**
- * Builds the default enquiry message body. Engineers reading the message see
- * exactly which product the visitor was on (name + SKU + link), so they can
- * answer with full context.
- */
-export function buildEnquiryMessage(ctx: EnquireContext = {}): string {
-  if (ctx.productName && ctx.productSku) {
-    const lines = [
-      `Hi LiqueMix, I'd like to enquire about ${ctx.productName} (SKU: ${ctx.productSku}).`,
-      "",
-      "Could you share:",
-      "  • Availability and lead time",
-      "  • Pricing for my project quantity",
-      "  • Application support / on-site demo",
-    ];
-    if (ctx.productUrl) {
-      lines.push("", `Product page: ${ctx.productUrl}`);
-    }
-    return lines.join("\n");
-  }
-  return [
-    "Hi LiqueMix, I'd like to talk to a technical engineer about an upcoming project.",
-    "",
-    "  • Project type:",
-    "  • Location:",
-    "  • Approximate quantity / area:",
-  ].join("\n");
-}
+import {
+  buildEnquiryMessage,
+  whatsappUrl,
+  type EnquireContext,
+} from "@/lib/enquiry";
 
 export default function EnquireOptions({
   context,

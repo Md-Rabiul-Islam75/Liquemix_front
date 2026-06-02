@@ -10,7 +10,7 @@ import {
   FiMessageCircle,
 } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
-import { whatsappUrl, buildEnquiryMessage } from "@/components/contact/EnquireOptions";
+import { whatsappUrl, buildEnquiryMessage } from "@/lib/enquiry";
 import { useSettings } from "@/components/providers/SettingsProvider";
 
 const FAQS: { question: string; answer: string; tag: string }[] = [

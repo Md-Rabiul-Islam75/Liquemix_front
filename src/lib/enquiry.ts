@@ -1,0 +1,60 @@
+import { DEFAULT_SETTINGS, type SiteSettings } from "@/data/settings";
+
+/**
+ * Pure helpers for building enquiry messages and WhatsApp click-to-chat
+ * URLs. Kept out of the EnquireOptions component file because that file
+ * is "use client" — and server components can't import from a client
+ * module, even when the import is a plain function. This file has no
+ * directive so both server and client trees can reach it.
+ */
+
+export type EnquireContext = {
+  /** Product name if the user clicked Enquire from a product detail page. */
+  productName?: string;
+  /** Product SKU for inclusion in the message body. */
+  productSku?: string;
+  /** Public URL of the product, so the LiqueMix engineer can open it immediately. */
+  productUrl?: string;
+};
+
+/**
+ * Builds the default enquiry message body. Engineers reading the message see
+ * exactly which product the visitor was on (name + SKU + link), so they can
+ * answer with full context.
+ */
+export function buildEnquiryMessage(ctx: EnquireContext = {}): string {
+  if (ctx.productName && ctx.productSku) {
+    const lines = [
+      `Hi LiqueMix, I'd like to enquire about ${ctx.productName} (SKU: ${ctx.productSku}).`,
+      "",
+      "Could you share:",
+      "  • Availability and lead time",
+      "  • Pricing for my project quantity",
+      "  • Application support / on-site demo",
+    ];
+    if (ctx.productUrl) {
+      lines.push("", `Product page: ${ctx.productUrl}`);
+    }
+    return lines.join("\n");
+  }
+  return [
+    "Hi LiqueMix, I'd like to talk to a technical engineer about an upcoming project.",
+    "",
+    "  • Project type:",
+    "  • Location:",
+    "  • Approximate quantity / area:",
+  ].join("\n");
+}
+
+/**
+ * Builds a WhatsApp click-to-chat URL with a prefilled message body.
+ * Reference: https://faq.whatsapp.com/5913398998672934
+ */
+export function whatsappUrl(
+  message: string,
+  settings: SiteSettings = DEFAULT_SETTINGS
+): string {
+  const u = new URL(`https://wa.me/${settings.whatsappNumber}`);
+  u.searchParams.set("text", message);
+  return u.toString();
+}

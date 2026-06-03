@@ -14,6 +14,7 @@ export default function PageHeader({
   description,
   breadcrumbs,
   variant = "default",
+  coverImage,
   children,
 }: {
   eyebrow?: string;
@@ -21,12 +22,46 @@ export default function PageHeader({
   description?: string;
   breadcrumbs?: BreadcrumbItem[];
   variant?: Variant;
+  /** Full-bleed background image (e.g. segment landing page banner). When
+   *  set, the header switches to dark-text-on-photo styling automatically
+   *  via a gradient overlay so the title stays legible. */
+  coverImage?: string;
   children?: React.ReactNode;
 }) {
-  const isDark = variant !== "default";
+  const hasCover = !!coverImage;
+  // Photo backgrounds need white text + a dark overlay regardless of
+  // the requested variant; everything else falls through to the variant.
+  const isDark = hasCover || variant !== "default";
   return (
-    <section className={`${VARIANT_CLASSES[variant]} relative overflow-hidden`}>
-      {variant === "gradient" && (
+    <section
+      className={`${
+        hasCover ? "bg-neutral-900 text-white-base" : VARIANT_CLASSES[variant]
+      } relative overflow-hidden`}
+    >
+      {hasCover && (
+        <>
+          <img
+            src={coverImage}
+            alt=""
+            aria-hidden
+            className="absolute inset-0 w-full h-full object-cover"
+            loading="eager"
+          />
+          {/* Dark gradient so the title + breadcrumbs stay readable on
+              any photo. Bottom-heavy so the lower content (CTA, copy)
+              has the strongest contrast. */}
+          <div
+            aria-hidden
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(7,19,32,0.65) 0%, rgba(7,19,32,0.55) 50%, rgba(7,19,32,0.8) 100%)",
+            }}
+          />
+        </>
+      )}
+
+      {variant === "gradient" && !hasCover && (
         <div
           aria-hidden
           className="absolute inset-0 opacity-30"

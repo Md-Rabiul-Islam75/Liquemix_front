@@ -27,7 +27,20 @@ const SEGMENT_ACCENT: Record<string, { bar: string; chip: string; tint: string }
   },
 };
 
-export default function ProductCard({ product }: { product: Product }) {
+/**
+ * Set `priority` on cards that render above the fold (e.g. the first
+ * row of FeaturedProducts on the homepage, or the first row of the
+ * segment catalog grid). Maps to next/image `priority`, which is
+ * `loading="eager"` + `fetchPriority="high"` — silences the Next.js
+ * LCP warning and gets the browser to preload the hero image.
+ */
+export default function ProductCard({
+  product,
+  priority = false,
+}: {
+  product: Product;
+  priority?: boolean;
+}) {
   // Prefer the fields the backend embeds on the product; fall back to a
   // mock-segment lookup so cards built from mock data still work.
   const fallbackSegment = getSegmentById(product.segmentId);
@@ -65,6 +78,7 @@ export default function ProductCard({ product }: { product: Product }) {
             fill
             sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
             className="object-contain p-6 transition-transform duration-500 group-hover:scale-105"
+            priority={priority}
           />
         ) : (
           /* Fallback for products without an image yet (admin-uploaded later). */

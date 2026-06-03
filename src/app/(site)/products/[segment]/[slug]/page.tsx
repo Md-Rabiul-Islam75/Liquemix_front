@@ -19,6 +19,7 @@ import ProductCard from "@/components/product/ProductCard";
 import VideoCard from "@/components/video/VideoCard";
 import EnquireOptions from "@/components/contact/EnquireOptions";
 import { whatsappUrl, buildEnquiryMessage } from "@/lib/enquiry";
+import { fetchSiteSettings } from "@/data/settings";
 import { FaWhatsapp } from "react-icons/fa";
 
 import {
@@ -114,9 +115,10 @@ export default async function ProductDetailPage({ params }: Props) {
     notFound();
   }
 
-  const [segment, product] = await Promise.all([
+  const [segment, product, settings] = await Promise.all([
     fetchSegmentBySlug(segmentSlug),
     fetchProductBySlug(slug),
+    fetchSiteSettings(),
   ]);
 
   if (!segment || !product) {
@@ -312,7 +314,8 @@ export default async function ProductDetailPage({ params }: Props) {
                     buildEnquiryMessage({
                       productName: product.name,
                       productSku: product.sku,
-                    })
+                    }),
+                    settings
                   )}
                   target="_blank"
                   rel="noreferrer noopener"

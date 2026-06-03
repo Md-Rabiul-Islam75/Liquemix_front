@@ -112,6 +112,7 @@ export default async function SegmentPage({ params, searchParams }: Props) {
         eyebrow="Products"
         title={segment.name}
         description={segment.description}
+        coverImage={segment.heroImage}
         breadcrumbs={[
           { label: "Home", href: "/" },
           { label: "Products", href: "/products" },
@@ -140,8 +141,8 @@ export default async function SegmentPage({ params, searchParams }: Props) {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                {filtered.map((p) => (
-                  <ProductCard key={p.id} product={p} />
+                {filtered.map((p, i) => (
+                  <ProductCard key={p.id} product={p} priority={i < 3} />
                 ))}
               </div>
             )}

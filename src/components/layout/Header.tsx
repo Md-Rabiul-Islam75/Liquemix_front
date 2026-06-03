@@ -10,8 +10,11 @@ import {
   fetchSegments,
 } from "@/data/segments";
 import { fetchCategoriesBySegment } from "@/data/categories";
-import { systemSolutions } from "@/data/solutions";
-import type { Category, Segment } from "@/types/Catalog";
+import {
+  systemSolutions as fallbackSolutions,
+  fetchSystemSolutions,
+} from "@/data/solutions";
+import type { Category, Segment, SystemSolution } from "@/types/Catalog";
 import ProductSearchModal from "@/components/search/ProductSearchModal";
 import TopBar from "./TopBar";
 
@@ -37,6 +40,8 @@ export default function Header() {
   // beneath their parents — the customer needs to see depth, not just
   // the top of the tree.
   const [segments, setSegments] = useState<Segment[]>(fallbackSegments);
+  const [solutions, setSolutions] =
+    useState<SystemSolution[]>(fallbackSolutions);
   const [allCatsBySegment, setAllCatsBySegment] = useState<
     Record<string, Category[]>
   >({});
@@ -62,9 +67,13 @@ export default function Header() {
     let cancelled = false;
     (async () => {
       try {
-        const segs = await fetchSegments();
+        const [segs, sols] = await Promise.all([
+          fetchSegments(),
+          fetchSystemSolutions(),
+        ]);
         if (cancelled) return;
         setSegments(segs);
+        setSolutions(sols);
         if (segs[0]?.id != null) setHoveredSegment(String(segs[0].id));
         const allCats = await Promise.all(
           segs.map((s) => fetchCategoriesBySegment(s.id))
@@ -389,7 +398,7 @@ export default function Header() {
                 </Link>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                {systemSolutions.map((sol) => (
+                {solutions.map((sol) => (
                   <Link
                     key={sol.id}
                     href={`/solutions/${sol.slug}`}

@@ -1,5 +1,15 @@
-import type { SystemSolution } from "@/types/Catalog";
+import { apiGetOr, ApiNotFoundError, apiGet } from "@/lib/api";
+import type {
+  SystemSolution,
+  SystemSolutionDownload,
+} from "@/types/Catalog";
 
+/**
+ * Engineered multi-product build-ups — the "System Solutions" nav item.
+ * The mock array is the static fallback used when the backend is
+ * unreachable or returns nothing; the V7 migration seeds the same four
+ * systems server-side so live ⇔ mock content matches.
+ */
 export const systemSolutions: SystemSolution[] = [
   {
     id: "sol-basement-flexible",
@@ -92,4 +102,72 @@ export const systemSolutions: SystemSolution[] = [
 
 export function getSolutionBySlug(slug: string): SystemSolution | undefined {
   return systemSolutions.find((s) => s.slug === slug);
+}
+
+// ─── Live fetchers ────────────────────────────────────────────────────
+// Pattern matches data/segments.ts and data/products.ts: try the backend
+// first, fall back to the mock above when the API is down or the row
+// doesn't exist. Server components and client components consume these
+// identically — server through async/await, client through React's
+// `use()` or via SettingsProvider-style hydration if ever needed.
+
+/** Backend → frontend shape coercion. The API returns coverage fields
+ *  like segmentSlug pre-resolved; mock falls back to bare ids. */
+function normalize(raw: Partial<SystemSolution> & { id: SystemSolution["id"] }): SystemSolution {
+  return {
+    id: raw.id,
+    slug: raw.slug ?? "",
+    name: raw.name ?? "",
+    description: raw.description ?? "",
+    segmentId: raw.segmentId ?? "",
+    segmentSlug: raw.segmentSlug,
+    segmentName: raw.segmentName,
+    segmentColor: raw.segmentColor,
+    applicationAreas: raw.applicationAreas ?? [],
+    layers: raw.layers ?? [],
+    productIds: raw.productIds ?? [],
+    downloads: (raw.downloads ?? []) as SystemSolutionDownload[],
+    technicalDrawingUrl: raw.technicalDrawingUrl,
+    heroImage: raw.heroImage ?? "",
+  };
+}
+
+export async function fetchSystemSolutions(): Promise<SystemSolution[]> {
+  const raw = await apiGetOr<Partial<SystemSolution>[] | null>(
+    "/api/v1/catalog/solutions",
+    null
+  );
+  if (!raw || raw.length === 0) return systemSolutions;
+  return raw.map((r) => normalize(r as never));
+}
+
+export async function fetchSolutionBySlug(
+  slug: string
+): Promise<SystemSolution | undefined> {
+  try {
+    const raw = await apiGet<Partial<SystemSolution>>(
+      `/api/v1/catalog/solutions/${encodeURIComponent(slug)}`
+    );
+    return normalize(raw as never);
+  } catch (e) {
+    if (e instanceof ApiNotFoundError) {
+      return getSolutionBySlug(slug);
+    }
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(
+        `[api] /api/v1/catalog/solutions/${slug} failed (${
+          e instanceof Error ? e.message : String(e)
+        }); using mock.`
+      );
+    }
+    return getSolutionBySlug(slug);
+  }
+}
+
+/** Convenience: only the systems in a given segment. */
+export async function fetchSolutionsBySegment(
+  segmentId: string | number
+): Promise<SystemSolution[]> {
+  const all = await fetchSystemSolutions();
+  return all.filter((s) => String(s.segmentId) === String(segmentId));
 }

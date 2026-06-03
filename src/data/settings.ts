@@ -84,13 +84,3 @@ export async function fetchSiteSettings(): Promise<SiteSettings> {
   );
   return fillDefaults(raw);
 }
-
-/** Build a wa.me URL with a prefilled message body. */
-export function whatsappUrl(
-  message: string,
-  settings: SiteSettings = DEFAULT_SETTINGS
-): string {
-  const u = new URL(`https://wa.me/${settings.whatsappNumber}`);
-  u.searchParams.set("text", message);
-  return u.toString();
-}

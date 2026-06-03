@@ -109,19 +109,41 @@ export interface Product {
 export interface SystemSolutionLayer {
   order: number;
   name: string;
-  productId?: string;
   description?: string;
+  productId?: EntityId;
+  productSlug?: string;
+  productName?: string;
+  productSegmentSlug?: string;
+}
+
+export type SystemSolutionDownloadKind =
+  | "tds"
+  | "installation"
+  | "warranty"
+  | "brochure"
+  | "document";
+
+export interface SystemSolutionDownload {
+  id?: EntityId;
+  title: string;
+  url: string;
+  kind: SystemSolutionDownloadKind;
+  displayOrder?: number;
 }
 
 export interface SystemSolution {
-  id: string;
+  id: EntityId;
   slug: string;
   name: string;
   description: string;
-  segmentId: string;
+  segmentId: EntityId;
+  segmentSlug?: string;
+  segmentName?: string;
+  segmentColor?: SegmentColor;
   applicationAreas: string[];
   layers: SystemSolutionLayer[];
-  productIds: string[];
+  productIds: EntityId[];
+  downloads?: SystemSolutionDownload[];
   technicalDrawingUrl?: string;
   heroImage: string;
 }

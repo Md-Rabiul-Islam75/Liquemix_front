@@ -41,12 +41,12 @@ export default function FloatingWhatsApp() {
         href={href}
         target="_blank"
         rel="noreferrer noopener"
-        aria-label={`Enquire on WhatsApp at ${settings.phoneDisplay}`}
+        aria-label={`Enquire on WhatsApp at +${settings.whatsappNumber}`}
         className="hidden lg:flex group items-center gap-2 px-4 h-12 rounded-full bg-white-base shadow-[0_10px_30px_-10px_rgba(15,19,32,0.25)] border border-neutral-100 text-sm font-semibold text-neutral-800 hover:text-[#25D366] transition-colors"
       >
         <span>Chat with us on WhatsApp</span>
         <span className="text-[11px] text-neutral-400 group-hover:text-[#25D366]">
-          {settings.phoneDisplay}
+          +{settings.whatsappNumber}
         </span>
       </a>
 

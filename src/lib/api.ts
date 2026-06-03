@@ -35,11 +35,36 @@ function isJunkPath(path: string): boolean {
   return /\/undefined(?=\/|$|\?)/.test(path);
 }
 
+/**
+ * Hard cap on how long any single backend call can hang. Node's default
+ * fetch has no timeout — if the backend wedges (Hibernate stuck on a
+ * locked row, GC pause, network partition), Next.js will keep awaiting
+ * the request forever and a page render can wait minutes. 15s is well
+ * above any healthy API call and well below "user thinks the site is
+ * broken". apiGetOr will fall through to the mock fallback on timeout.
+ */
+const REQUEST_TIMEOUT_MS = 15_000;
+
 export async function apiGet<T>(path: string): Promise<T> {
   if (isJunkPath(path)) {
     throw new ApiNotFoundError(path);
   }
-  const res = await fetch(`${BASE}${path}`, { cache: "no-store" });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      throw new Error(`API ${path} → timed out after ${REQUEST_TIMEOUT_MS}ms`);
+    }
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
   if (res.status === 404) {
     throw new ApiNotFoundError(path);
   }

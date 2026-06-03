@@ -1,9 +1,14 @@
 import Link from "next/link";
 import { FiArrowUpRight, FiLayers } from "react-icons/fi";
-import { systemSolutions } from "@/data/solutions";
-import { getSegmentById } from "@/data/segments";
+import { fetchSystemSolutions } from "@/data/solutions";
+import { fetchSegmentsMap } from "@/data/segments";
 
-export default function SolutionsSection() {
+export default async function SolutionsSection() {
+  const [solutions, segmentsMap] = await Promise.all([
+    fetchSystemSolutions(),
+    fetchSegmentsMap(),
+  ]);
+
   return (
     <section className="section">
       <div className="container-page">
@@ -27,8 +32,12 @@ export default function SolutionsSection() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {systemSolutions.map((sol, i) => {
-            const segment = getSegmentById(sol.segmentId);
+          {solutions.slice(0, 4).map((sol, i) => {
+            const segment =
+              segmentsMap.get(String(sol.segmentId)) ??
+              (sol.segmentName
+                ? { name: sol.segmentName, color: sol.segmentColor }
+                : undefined);
             return (
               <Link
                 key={sol.id}

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FiArrowUpRight, FiLayers } from "react-icons/fi";
 import PageHeader from "@/components/common/PageHeader";
-import { systemSolutions } from "@/data/solutions";
+import { fetchSystemSolutions } from "@/data/solutions";
 import { fetchSegments } from "@/data/segments";
 
 export const metadata: Metadata = {
@@ -12,7 +12,10 @@ export const metadata: Metadata = {
 };
 
 export default async function SolutionsIndexPage() {
-  const segments = await fetchSegments();
+  const [segments, systemSolutions] = await Promise.all([
+    fetchSegments(),
+    fetchSystemSolutions(),
+  ]);
   return (
     <>
       <PageHeader

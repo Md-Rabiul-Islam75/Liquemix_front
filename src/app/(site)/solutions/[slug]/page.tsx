@@ -7,7 +7,11 @@ import { FiArrowUpRight, FiMessageCircle, FiFile, FiCheck, FiMapPin } from "reac
 import PageHeader from "@/components/common/PageHeader";
 import ProductCard from "@/components/product/ProductCard";
 
-import { systemSolutions, getSolutionBySlug } from "@/data/solutions";
+import {
+  systemSolutions,
+  fetchSystemSolutions,
+  fetchSolutionBySlug,
+} from "@/data/solutions";
 import { fetchSegmentsMap } from "@/data/segments";
 import { products, getProductBySlug } from "@/data/products";
 import { referenceProjects } from "@/data/references";
@@ -20,15 +24,57 @@ const PANEL_VARIANT: Record<SegmentColor, string> = {
   green: "brand-panel-green",
 };
 
+/**
+ * Per-segment styling for the hero layer ladder. Replaces generic white
+ * with brand-tinted badges + text so each system instantly reads as
+ * belonging to its segment. Tints are saturated enough to survive on top
+ * of a product photo when a hero image is set.
+ */
+const LADDER_STYLE: Record<
+  SegmentColor,
+  { badgeBg: string; badgeText: string; nameText: string; gradient: string }
+> = {
+  blue: {
+    badgeBg: "bg-primary-500",
+    badgeText: "text-white-base",
+    nameText: "text-primary-100",
+    gradient:
+      "linear-gradient(to top, rgba(7,36,84,0.92) 0%, rgba(7,36,84,0.55) 55%, transparent 100%)",
+  },
+  orange: {
+    badgeBg: "bg-secondary-500",
+    badgeText: "text-white-base",
+    nameText: "text-secondary-100",
+    gradient:
+      "linear-gradient(to top, rgba(92,46,0,0.92) 0%, rgba(92,46,0,0.55) 55%, transparent 100%)",
+  },
+  yellow: {
+    badgeBg: "bg-accent-500",
+    badgeText: "text-neutral-900",
+    nameText: "text-accent-100",
+    gradient:
+      "linear-gradient(to top, rgba(92,62,0,0.92) 0%, rgba(92,62,0,0.55) 55%, transparent 100%)",
+  },
+  green: {
+    badgeBg: "bg-success-500",
+    badgeText: "text-white-base",
+    nameText: "text-success-50",
+    gradient:
+      "linear-gradient(to top, rgba(14,61,26,0.92) 0%, rgba(14,61,26,0.55) 55%, transparent 100%)",
+  },
+};
+
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
+  // Build-time static params come from the seeded mock; live-only slugs
+  // still work at request time because dynamicParams defaults to true.
   return systemSolutions.map((s) => ({ slug: s.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const sol = getSolutionBySlug(slug);
+  const sol = await fetchSolutionBySlug(slug);
   if (!sol) return { title: "Not found" };
   return {
     title: sol.name,
@@ -38,26 +84,33 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SolutionDetailPage({ params }: Props) {
   const { slug } = await params;
-  const solution = getSolutionBySlug(slug);
+  const [solution, segMap, allSolutions] = await Promise.all([
+    fetchSolutionBySlug(slug),
+    fetchSegmentsMap(),
+    fetchSystemSolutions(),
+  ]);
   if (!solution) notFound();
 
-  const segMap = await fetchSegmentsMap();
   const segment = segMap.get(String(solution.segmentId));
   const productList = solution.productIds
-    .map((id) => products.find((p) => p.id === id))
+    .map((id) => products.find((p) => String(p.id) === String(id)))
     .filter((p): p is NonNullable<typeof p> => p !== undefined);
 
   const usedInProjects = referenceProjects.filter((r) =>
-    solution.productIds.some((pid) => r.productsUsed.includes(pid))
+    solution.productIds.some((pid) =>
+      r.productsUsed.some((rpid) => String(rpid) === String(pid))
+    )
   );
 
-  const otherSolutions = systemSolutions
+  const otherSolutions = allSolutions
     .filter(
       (s) =>
-        s.id !== solution.id &&
+        String(s.id) !== String(solution.id) &&
         String(s.segmentId) === String(solution.segmentId)
     )
     .slice(0, 3);
+
+  const downloads = solution.downloads ?? [];
 
   return (
     <>
@@ -99,29 +152,69 @@ export default async function SolutionDetailPage({ params }: Props) {
                     : "linear-gradient(135deg, #0e3d1a 0%, #2fa84f 100%)",
               }}
             >
-              <div
-                aria-hidden
-                className="absolute inset-0 opacity-20"
-                style={{
-                  backgroundImage:
-                    "repeating-linear-gradient(45deg, rgba(255,255,255,0.4) 0, rgba(255,255,255,0.4) 1px, transparent 1px, transparent 18px)",
-                }}
-              />
+              {/* If a hero image is set, paint it across the whole panel
+                  (the gradient stays underneath as a fallback while the
+                  image loads, and shows through if the image fails). */}
+              {solution.heroImage && (
+                <img
+                  src={solution.heroImage}
+                  alt={solution.name}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  loading="lazy"
+                />
+              )}
+
+              {/* Diagonal hatch overlay — only when there is no photo,
+                  so the brand pattern isn't distracting on top of a real
+                  product shot. */}
+              {!solution.heroImage && (
+                <div
+                  aria-hidden
+                  className="absolute inset-0 opacity-20"
+                  style={{
+                    backgroundImage:
+                      "repeating-linear-gradient(45deg, rgba(255,255,255,0.4) 0, rgba(255,255,255,0.4) 1px, transparent 1px, transparent 18px)",
+                  }}
+                />
+              )}
+
+              {/* Bottom-anchored brand-toned gradient — gives the layer
+                  ladder legibility against either the brand background
+                  OR a busy product photo. Only applied when there's a
+                  hero image; without one, the existing brand gradient
+                  already provides the contrast. */}
+              {solution.heroImage && segment && (
+                <div
+                  aria-hidden
+                  className="absolute inset-x-0 bottom-0 h-2/3"
+                  style={{ background: LADDER_STYLE[segment.color].gradient }}
+                />
+              )}
+
               <div className="absolute inset-x-10 bottom-10 space-y-3">
-                {solution.layers.map((layer, li) => (
-                  <div
-                    key={layer.order}
-                    className="flex items-center gap-3 text-white-base"
-                    style={{ opacity: 1 - li * 0.12 }}
-                  >
-                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/15 backdrop-blur text-xs font-bold">
-                      {layer.order}
-                    </span>
-                    <span className="text-sm md:text-base font-semibold">
-                      {layer.name}
-                    </span>
-                  </div>
-                ))}
+                {solution.layers.map((layer, li) => {
+                  const tone = segment
+                    ? LADDER_STYLE[segment.color]
+                    : LADDER_STYLE.blue;
+                  return (
+                    <div
+                      key={layer.order}
+                      className="flex items-center gap-3"
+                      style={{ opacity: 1 - li * 0.1 }}
+                    >
+                      <span
+                        className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold shadow-[0_4px_12px_-4px_rgba(0,0,0,0.4)] ${tone.badgeBg} ${tone.badgeText}`}
+                      >
+                        {layer.order}
+                      </span>
+                      <span
+                        className={`text-sm md:text-base font-semibold ${tone.nameText}`}
+                      >
+                        {layer.name}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -161,11 +254,35 @@ export default async function SolutionDetailPage({ params }: Props) {
           </h2>
           <ol className="space-y-4">
             {solution.layers.map((layer) => {
-              const product = layer.productId
-                ? getProductBySlug(
-                    products.find((p) => p.id === layer.productId)?.slug ?? ""
-                  )
-                : null;
+              // Live API pre-resolves productSlug/productName/segmentSlug;
+              // mock fallback only has productId — look it up locally.
+              const liveLinked =
+                layer.productSlug && layer.productName
+                  ? {
+                      slug: layer.productSlug,
+                      name: layer.productName,
+                      segmentSlug:
+                        layer.productSegmentSlug ?? segment?.slug ?? "",
+                    }
+                  : null;
+              const mockLinked =
+                !liveLinked && layer.productId
+                  ? (() => {
+                      const found = products.find(
+                        (p) => String(p.id) === String(layer.productId)
+                      );
+                      if (!found) return null;
+                      const resolved = getProductBySlug(found.slug);
+                      return resolved
+                        ? {
+                            slug: resolved.slug,
+                            name: resolved.name,
+                            segmentSlug: segment?.slug ?? "",
+                          }
+                        : null;
+                    })()
+                  : null;
+              const linked = liveLinked ?? mockLinked;
               return (
                 <li
                   key={layer.order}
@@ -184,12 +301,12 @@ export default async function SolutionDetailPage({ params }: Props) {
                       </p>
                     )}
                   </div>
-                  {product && (
+                  {linked && (
                     <Link
-                      href={`/products/${segment?.slug}/${product.slug}`}
+                      href={`/products/${linked.segmentSlug}/${linked.slug}`}
                       className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 hover:text-primary-700 shrink-0"
                     >
-                      {product.name} <FiArrowUpRight />
+                      {linked.name} <FiArrowUpRight />
                     </Link>
                   )}
                 </li>
@@ -198,6 +315,42 @@ export default async function SolutionDetailPage({ params }: Props) {
           </ol>
         </div>
       </section>
+
+      {/* System downloads — TDS, installation guide, warranty, etc. */}
+      {downloads.length > 0 && (
+        <section className="section pt-0 bg-neutral-50">
+          <div className="container-page">
+            <h2 className="text-xl md:text-2xl font-bold text-neutral-900 mb-6">
+              Documents & downloads
+            </h2>
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {downloads.map((d) => (
+                <li key={`${d.kind}-${d.title}-${d.url}`}>
+                  <a
+                    href={d.url}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="group flex items-center gap-3 rounded-xl bg-white-base border border-neutral-100 p-4 hover:border-primary-200 hover:shadow-soft transition-all"
+                  >
+                    <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary-50 text-primary-600">
+                      <FiFile />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-neutral-900 leading-tight group-hover:text-primary-700">
+                        {d.title}
+                      </p>
+                      <p className="mt-0.5 text-[11px] font-semibold tracking-wider uppercase text-neutral-500">
+                        {d.kind}
+                      </p>
+                    </div>
+                    <FiArrowUpRight className="text-neutral-400 group-hover:text-primary-600" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       {/* Products in this system */}
       {productList.length > 0 && (

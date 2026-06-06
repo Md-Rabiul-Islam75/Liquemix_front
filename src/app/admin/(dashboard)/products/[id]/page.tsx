@@ -35,6 +35,7 @@ import {
   getToken,
 } from "@/lib/adminApi";
 import { ErrorToast, SuccessToast } from "@/helpers/ToastHelper";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
 
 type SegmentLite = { id: number; slug: string; name: string };
 type CategoryLite = {
@@ -117,6 +118,7 @@ export default function AdminProductEditPage() {
 
   // Submission state — feedback goes to a toast.
   const [submitting, setSubmitting] = useState<null | "draft" | "publish">(null);
+  const [discardOpen, setDiscardOpen] = useState(false);
 
   // Load product + segments
   useEffect(() => {
@@ -247,9 +249,7 @@ export default function AdminProductEditPage() {
   }
 
   function onDiscard() {
-    if (window.confirm("Discard changes and return to the products list?")) {
-      router.push("/admin/products");
-    }
+    router.push("/admin/products");
   }
 
   // ─── Render: gates ────────────────────────────────────────────────
@@ -542,7 +542,7 @@ export default function AdminProductEditPage() {
           <div className="flex items-center gap-2 ml-auto">
             <button
               type="button"
-              onClick={onDiscard}
+              onClick={() => setDiscardOpen(true)}
               disabled={submitting !== null}
               className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg border border-neutral-200 bg-white-base text-sm font-semibold text-neutral-700 hover:border-error-300 hover:text-error-500 disabled:opacity-60"
             >
@@ -567,6 +567,15 @@ export default function AdminProductEditPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={discardOpen}
+        title="Discard changes?"
+        message="You'll return to the products list and any unsaved edits will be lost."
+        confirmLabel="Discard changes"
+        onConfirm={onDiscard}
+        onCancel={() => setDiscardOpen(false)}
+      />
     </>
   );
 }

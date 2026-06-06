@@ -477,6 +477,31 @@ textarea.admin-input {
   @apply h-auto py-2.5 leading-relaxed;
 }
 
+/* ---------- Modal animations (ConfirmDialog, etc.) ---------- */
+@keyframes lqm-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes lqm-pop-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.lqm-fade-in { animation: lqm-fade-in 120ms ease-out; }
+.lqm-pop-in { animation: lqm-pop-in 150ms ease-out; }
+
+/* ---------- Rich text editor (RichTextEditor) ----------
+ * The contentEditable surface reuses the public `.prose-news` typography so
+ * the editor is true WYSIWYG — a heading or list looks exactly like it will
+ * on the published article. `.rte-content` only adds editor-specific bits:
+ * the empty placeholder, focus outline removal, and a first-child margin
+ * reset (otherwise a leading <h2>'s big top margin pushes everything down). */
+.rte-content:focus { @apply outline-none; }
+.rte-content:empty::before {
+  content: attr(data-placeholder);
+  @apply text-neutral-400 pointer-events-none;
+}
+.rte-content > :first-child { margin-top: 0 !important; }
+
 /* ---------- Header / Navigation ---------- */
 .nav-link {
   @apply relative inline-flex items-center gap-1 px-3 py-2 text-sm font-semibold text-neutral-700

@@ -24,6 +24,7 @@ import {
   adminPut,
 } from "@/lib/adminApi";
 import { ErrorToast, SuccessToast } from "@/helpers/ToastHelper";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
 import ImagePicker from "./ImagePicker";
 
 /**
@@ -81,6 +82,10 @@ export default function CategoryTree({
   const [query, setQuery] = useState("");
   const [editState, setEditState] = useState<EditState>({ mode: "view" });
   const [busy, setBusy] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<{
+    node: Node;
+    message: string;
+  } | null>(null);
 
   const reload = useCallback(async () => {
     try {
@@ -175,6 +180,15 @@ export default function CategoryTree({
   };
   const collapseAll = () => setExpanded(new Set());
 
+  // Expand / Collapse only do anything when the tree actually has nesting.
+  // With a flat list (every category at the top level) there's nothing to
+  // show or hide, so we disable the buttons rather than leave them looking
+  // clickable-but-dead.
+  const hasNesting = useMemo(
+    () => Array.from(flatById.values()).some((n) => n.children.length > 0),
+    [flatById]
+  );
+
   // ─── Move up / down within siblings ───────────────────────────────
   async function moveWithinSiblings(node: Node, direction: -1 | 1) {
     const parent = parentOf(node);
@@ -220,21 +234,29 @@ export default function CategoryTree({
   }
 
   // ─── Delete ───────────────────────────────────────────────────────
-  async function onDelete(node: Node) {
+  // Opens the confirm dialog with a context-aware warning. The actual
+  // delete runs in confirmDelete() once the user confirms.
+  function onDelete(node: Node) {
     const hasKids = node.children.length > 0;
     const directProducts = node.productCount ?? 0;
-    const msg = hasKids
-      ? `Delete "${node.name}"? It still has ${node.children.length} sub-categor${node.children.length === 1 ? "y" : "ies"}. The API will refuse — move them out first.`
+    const message = hasKids
+      ? `It still has ${node.children.length} sub-categor${node.children.length === 1 ? "y" : "ies"}. The API will refuse — move them out first.`
       : directProducts > 0
-        ? `Delete "${node.name}"? ${directProducts} product${directProducts === 1 ? " is" : "s are"} still attached. The API will refuse — reattach them first.`
-        : `Delete "${node.name}"? This cannot be undone via the UI.`;
-    if (!window.confirm(msg)) return;
+        ? `${directProducts} product${directProducts === 1 ? " is" : "s are"} still attached. The API will refuse — reattach them first.`
+        : "This cannot be undone via the UI.";
+    setPendingDelete({ node, message });
+  }
+
+  async function confirmDelete() {
+    const node = pendingDelete?.node;
+    if (!node) return;
     setBusy(true);
     try {
       await adminDelete(`/api/v1/admin/catalog/categories/${node.id}`);
       SuccessToast("Category deleted", node.name);
       setSelectedId(null);
       setEditState({ mode: "view" });
+      setPendingDelete(null);
       await reload();
     } catch (e) {
       ErrorToast(
@@ -264,14 +286,26 @@ export default function CategoryTree({
           <button
             type="button"
             onClick={expandAll}
-            className="hidden sm:inline-flex h-9 px-3 rounded-lg border border-neutral-200 text-xs font-semibold text-neutral-700 hover:border-primary-300"
+            disabled={!hasNesting}
+            title={
+              hasNesting
+                ? "Expand all sub-categories"
+                : "No sub-categories yet — add a child to build a tree"
+            }
+            className="hidden sm:inline-flex h-9 px-3 rounded-lg border border-neutral-200 text-xs font-semibold text-neutral-700 hover:border-primary-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-neutral-200"
           >
             Expand all
           </button>
           <button
             type="button"
             onClick={collapseAll}
-            className="hidden sm:inline-flex h-9 px-3 rounded-lg border border-neutral-200 text-xs font-semibold text-neutral-700 hover:border-primary-300"
+            disabled={!hasNesting}
+            title={
+              hasNesting
+                ? "Collapse all sub-categories"
+                : "No sub-categories yet — add a child to build a tree"
+            }
+            className="hidden sm:inline-flex h-9 px-3 rounded-lg border border-neutral-200 text-xs font-semibold text-neutral-700 hover:border-primary-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-neutral-200"
           >
             Collapse all
           </button>
@@ -403,6 +437,21 @@ export default function CategoryTree({
           )}
         </div>
       </aside>
+
+      <ConfirmDialog
+        open={pendingDelete != null}
+        danger
+        title={
+          pendingDelete
+            ? `Delete "${pendingDelete.node.name}"?`
+            : "Delete category?"
+        }
+        message={pendingDelete?.message}
+        confirmLabel="Delete category"
+        busy={busy}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

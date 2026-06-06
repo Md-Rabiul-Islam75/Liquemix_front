@@ -24,6 +24,7 @@ import {
   adminPut,
 } from "@/lib/adminApi";
 import { ErrorToast, SuccessToast } from "@/helpers/ToastHelper";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
 import type { SystemSolutionDownloadKind } from "@/types/Catalog";
 
 // ─── Local API shapes ─────────────────────────────────────────────────
@@ -136,6 +137,7 @@ export default function SolutionEditor(props: SolutionEditorProps) {
 
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   // ─── Load reference data once ─────────────────────────────────────
   useEffect(() => {
@@ -350,13 +352,6 @@ export default function SolutionEditor(props: SolutionEditorProps) {
 
   async function onDelete() {
     if (props.mode !== "edit") return;
-    if (
-      !window.confirm(
-        "Delete this solution? It will be soft-deleted on the backend and hidden from the public site."
-      )
-    ) {
-      return;
-    }
     setDeleting(true);
     try {
       await adminDelete(`/api/v1/admin/catalog/solutions/${props.id}`);
@@ -834,7 +829,7 @@ export default function SolutionEditor(props: SolutionEditorProps) {
               </p>
               <button
                 type="button"
-                onClick={onDelete}
+                onClick={() => setConfirmOpen(true)}
                 disabled={deleting || submitting}
                 className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-error-200 text-sm font-semibold text-error-500 hover:bg-error-50 disabled:opacity-60"
               >
@@ -867,6 +862,17 @@ export default function SolutionEditor(props: SolutionEditorProps) {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        danger
+        title="Delete this solution?"
+        message="It will be soft-deleted on the backend and hidden from the public site."
+        confirmLabel="Delete solution"
+        busy={deleting}
+        onConfirm={onDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </>
   );
 }

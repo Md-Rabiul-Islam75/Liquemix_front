@@ -16,7 +16,7 @@ import {
 import PageHeader from "@/components/common/PageHeader";
 import ProductCard from "@/components/product/ProductCard";
 
-import { referenceProjects, getReferenceBySlug } from "@/data/references";
+import { fetchReferences, fetchReferenceBySlug } from "@/data/references";
 import { products } from "@/data/products";
 import { fetchSegmentsMap } from "@/data/segments";
 import type { SegmentColor } from "@/types/Catalog";
@@ -31,12 +31,13 @@ const PANEL_VARIANT: Record<SegmentColor, string> = {
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
-  return referenceProjects.map((r) => ({ slug: r.slug }));
+  const refs = await fetchReferences();
+  return refs.map((r) => ({ slug: r.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const ref = getReferenceBySlug(slug);
+  const ref = await fetchReferenceBySlug(slug);
   if (!ref) return { title: "Not found" };
   return {
     title: ref.title,
@@ -46,10 +47,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ReferenceDetailPage({ params }: Props) {
   const { slug } = await params;
-  const project = getReferenceBySlug(slug);
+  const project = await fetchReferenceBySlug(slug);
   if (!project) notFound();
 
-  const usedProducts = project.productsUsed
+  const usedProducts = (project.productsUsed ?? [])
     .map((id) => products.find((p) => p.id === id))
     .filter((p): p is NonNullable<typeof p> => p !== undefined);
 
@@ -68,8 +69,8 @@ export default async function ReferenceDetailPage({ params }: Props) {
       ? "linear-gradient(135deg, #0e3d1a 0%, #2fa84f 100%)"
       : "linear-gradient(135deg, #072454 0%, #1565c0 100%)";
 
-  const otherReferences = referenceProjects
-    .filter((r) => r.id !== project.id)
+  const otherReferences = (await fetchReferences())
+    .filter((r) => r.slug !== project.slug)
     .slice(0, 3);
 
   return (
@@ -171,14 +172,16 @@ export default async function ReferenceDetailPage({ params }: Props) {
               className="relative aspect-[16/10] rounded-3xl overflow-hidden"
               style={{ background: heroBg }}
             >
-              <Image
-                src={encodeURI(project.heroImage)}
-                alt={project.title}
-                fill
-                priority
-                sizes="(min-width: 1024px) 66vw, 100vw"
-                className="object-cover"
-              />
+              {project.heroImage && (
+                <Image
+                  src={encodeURI(project.heroImage)}
+                  alt={project.title}
+                  fill
+                  priority
+                  sizes="(min-width: 1024px) 66vw, 100vw"
+                  className="object-cover"
+                />
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/85 via-neutral-900/30 to-transparent" />
               <div className="absolute inset-x-8 bottom-8">
                 <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/15 backdrop-blur text-[11px] font-bold tracking-wider uppercase text-white-base">
@@ -250,13 +253,15 @@ export default async function ReferenceDetailPage({ params }: Props) {
                   href={`/references/${r.slug}`}
                   className="group relative aspect-[4/5] rounded-2xl overflow-hidden flex flex-col justify-end bg-neutral-800"
                 >
-                  <Image
-                    src={encodeURI(r.heroImage)}
-                    alt={r.title}
-                    fill
-                    sizes="(min-width: 768px) 33vw, 100vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
+                  {r.heroImage && (
+                    <Image
+                      src={encodeURI(r.heroImage)}
+                      alt={r.title}
+                      fill
+                      sizes="(min-width: 768px) 33vw, 100vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/40 to-transparent" />
                   <div className="relative p-5">
                     <p className="text-[11px] uppercase tracking-wider text-accent-300">

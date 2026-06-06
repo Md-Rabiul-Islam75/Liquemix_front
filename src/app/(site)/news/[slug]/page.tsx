@@ -13,7 +13,7 @@ import {
 
 import PageHeader from "@/components/common/PageHeader";
 import ProductCard from "@/components/product/ProductCard";
-import { newsPosts, getNewsBySlug, getRelatedNews } from "@/data/news";
+import { fetchNews, fetchNewsBySlug, fetchRelatedNews } from "@/data/news";
 import { products } from "@/data/products";
 import { fetchSegmentsMap } from "@/data/segments";
 
@@ -42,12 +42,13 @@ function formatDate(d: string) {
 }
 
 export async function generateStaticParams() {
-  return newsPosts.map((p) => ({ slug: p.slug }));
+  const posts = await fetchNews();
+  return posts.map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const post = getNewsBySlug(slug);
+  const post = await fetchNewsBySlug(slug);
   if (!post) return { title: "Not found" };
   return {
     title: post.title,
@@ -57,10 +58,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function NewsDetailPage({ params }: Props) {
   const { slug } = await params;
-  const post = getNewsBySlug(slug);
+  const post = await fetchNewsBySlug(slug);
   if (!post) notFound();
 
-  const related = getRelatedNews(post.slug, 3);
+  const related = await fetchRelatedNews(post.slug, 3);
   const relatedProducts = (post.relatedProductIds ?? [])
     .map((id) => products.find((p) => p.id === id))
     .filter((p): p is NonNullable<typeof p> => p !== undefined);

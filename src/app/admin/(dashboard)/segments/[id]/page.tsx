@@ -16,6 +16,7 @@ import AdminPageHeader from "@/components/admin/PageHeader";
 import ImagePicker from "@/components/admin/ImagePicker";
 import { adminGet, adminPut, getToken } from "@/lib/adminApi";
 import { ErrorToast, SuccessToast } from "@/helpers/ToastHelper";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
 
 type SegmentResponse = {
   id: number;
@@ -69,6 +70,7 @@ export default function AdminSegmentEditPage() {
   const [displayOrder, setDisplayOrder] = useState<number>(0);
 
   const [submitting, setSubmitting] = useState(false);
+  const [discardOpen, setDiscardOpen] = useState(false);
 
   useEffect(() => {
     if (hasToken !== true || !id) return;
@@ -130,9 +132,7 @@ export default function AdminSegmentEditPage() {
   }
 
   function onDiscard() {
-    if (window.confirm("Discard changes and return to the segments list?")) {
-      router.push("/admin/segments");
-    }
+    router.push("/admin/segments");
   }
 
   // ─── Render gates ─────────────────────────────────────────────────
@@ -307,7 +307,7 @@ export default function AdminSegmentEditPage() {
                   Brand identity
                 </h3>
                 <p className="text-xs text-neutral-500 mt-0.5">
-                  Slug and colour are locked — they're part of the LiqueMix
+                  Slug and colour are locked — they&apos;re part of the LiqueMix
                   brand system and changing them would break every product
                   URL.
                 </p>
@@ -393,7 +393,7 @@ export default function AdminSegmentEditPage() {
           <div className="flex items-center gap-2 ml-auto">
             <button
               type="button"
-              onClick={onDiscard}
+              onClick={() => setDiscardOpen(true)}
               disabled={submitting}
               className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg border border-neutral-200 bg-white-base text-sm font-semibold text-neutral-700 hover:border-error-300 hover:text-error-500 disabled:opacity-60"
             >
@@ -410,6 +410,15 @@ export default function AdminSegmentEditPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={discardOpen}
+        title="Discard changes?"
+        message="You'll return to the segments list and any unsaved edits will be lost."
+        confirmLabel="Discard changes"
+        onConfirm={onDiscard}
+        onCancel={() => setDiscardOpen(false)}
+      />
     </>
   );
 }

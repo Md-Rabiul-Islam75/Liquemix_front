@@ -104,3 +104,29 @@ export const referenceProjects: ReferenceProject[] = [
 export function getReferenceBySlug(slug: string): ReferenceProject | undefined {
   return referenceProjects.find((r) => r.slug === slug);
 }
+
+// ─── Live fetchers ────────────────────────────────────────────────────
+// The public site reads from the backend (/api/v1/content/references),
+// falling back to the placeholder content above if the API is unreachable
+// so the marketing pages never render empty during local dev / downtime.
+import { apiGetOr, apiGet, ApiNotFoundError } from "@/lib/api";
+
+export async function fetchReferences(
+  opts: { projectType?: string } = {}
+): Promise<ReferenceProject[]> {
+  const qs = new URLSearchParams();
+  if (opts.projectType) qs.set("projectType", opts.projectType);
+  const path = `/api/v1/content/references${qs.toString() ? `?${qs}` : ""}`;
+  return apiGetOr<ReferenceProject[]>(path, referenceProjects);
+}
+
+export async function fetchReferenceBySlug(
+  slug: string
+): Promise<ReferenceProject | undefined> {
+  try {
+    return await apiGet<ReferenceProject>(`/api/v1/content/references/${slug}`);
+  } catch (e) {
+    if (e instanceof ApiNotFoundError) return getReferenceBySlug(slug);
+    return getReferenceBySlug(slug);
+  }
+}

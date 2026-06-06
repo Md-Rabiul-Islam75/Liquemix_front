@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FiLogIn, FiMail, FiPhone, FiSave } from "react-icons/fi";
 import AdminPageHeader from "@/components/admin/PageHeader";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { adminGet, adminPut, getToken } from "@/lib/adminApi";
 import { ErrorToast, SuccessToast } from "@/helpers/ToastHelper";
 import { DEFAULT_SETTINGS, type SiteSettings } from "@/data/settings";
@@ -18,6 +19,7 @@ export default function AdminSettingsPage() {
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [discardOpen, setDiscardOpen] = useState(false);
 
   useEffect(() => {
     if (hasToken !== true) return;
@@ -78,9 +80,9 @@ export default function AdminSettingsPage() {
   }
 
   function onDiscard() {
-    if (!window.confirm("Discard changes? The form will reload from the API.")) return;
     setLoaded(false);
     setHasToken(getToken() != null); // re-trigger the load effect
+    setDiscardOpen(false);
   }
 
   if (hasToken === false) {
@@ -334,7 +336,7 @@ export default function AdminSettingsPage() {
           <div className="flex items-center gap-2 ml-auto">
             <button
               type="button"
-              onClick={onDiscard}
+              onClick={() => setDiscardOpen(true)}
               disabled={submitting || !loaded}
               className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg border border-neutral-200 bg-white-base text-sm font-semibold text-neutral-700 hover:border-error-300 hover:text-error-500 disabled:opacity-50"
             >
@@ -351,6 +353,15 @@ export default function AdminSettingsPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={discardOpen}
+        title="Discard changes?"
+        message="The form will reload its values from the server. Any unsaved edits will be lost."
+        confirmLabel="Discard changes"
+        onConfirm={onDiscard}
+        onCancel={() => setDiscardOpen(false)}
+      />
     </>
   );
 }

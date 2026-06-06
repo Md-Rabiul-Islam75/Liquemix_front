@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FiArrowUpRight, FiMapPin } from "react-icons/fi";
 import PageHeader from "@/components/common/PageHeader";
 import ReferenceFilters from "@/components/reference/ReferenceFilters";
-import { referenceProjects } from "@/data/references";
+import { fetchReferences } from "@/data/references";
 import { fetchSegments } from "@/data/segments";
 import { products } from "@/data/products";
 
@@ -27,24 +27,25 @@ export default async function ReferencesPage({ searchParams }: Props) {
   const sp = await searchParams;
 
   // Build filter option lists from data
+  const allRefs = await fetchReferences();
   const segments = await fetchSegments();
   const segmentOptions = segments.map((s) => ({ value: String(s.id), label: s.name }));
   const projectTypes = Array.from(
-    new Set(referenceProjects.map((r) => r.projectType))
+    new Set(allRefs.map((r) => r.projectType))
   )
     .sort()
     .map((t) => ({ value: t, label: t }));
   const countries = Array.from(
-    new Set(referenceProjects.map((r) => r.location.country))
+    new Set(allRefs.map((r) => r.location.country))
   )
     .sort()
     .map((c) => ({ value: c, label: c }));
-  const years = Array.from(new Set(referenceProjects.map((r) => r.year)))
+  const years = Array.from(new Set(allRefs.map((r) => r.year)))
     .sort((a, b) => b - a)
     .map((y) => ({ value: String(y), label: String(y) }));
 
   // Apply filters
-  let filtered = [...referenceProjects];
+  let filtered = [...allRefs];
   if (sp.segment) {
     const productIdsInSegment = products
       .filter((p) => String(p.segmentId) === String(sp.segment))
@@ -77,7 +78,7 @@ export default async function ReferencesPage({ searchParams }: Props) {
             projectTypes={projectTypes}
             countries={countries}
             years={years}
-            total={referenceProjects.length}
+            total={allRefs.length}
             filtered={filtered.length}
           />
 
@@ -98,13 +99,15 @@ export default async function ReferencesPage({ searchParams }: Props) {
                   href={`/references/${ref.slug}`}
                   className="group relative aspect-[4/5] rounded-2xl overflow-hidden flex flex-col justify-end shadow-soft hover:shadow-primary hover:-translate-y-1 transition-all duration-300 bg-neutral-800"
                 >
-                  <Image
-                    src={encodeURI(ref.heroImage)}
-                    alt={ref.title}
-                    fill
-                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
+                  {ref.heroImage && (
+                    <Image
+                      src={encodeURI(ref.heroImage)}
+                      alt={ref.title}
+                      fill
+                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/40 to-transparent" />
                   <div className="relative p-5">
                     <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-accent-300">

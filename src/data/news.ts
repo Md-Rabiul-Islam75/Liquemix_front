@@ -137,3 +137,45 @@ export function getNewsBySlug(slug: string): NewsPost | undefined {
 export function getRelatedNews(currentSlug: string, limit = 3): NewsPost[] {
   return newsPosts.filter((p) => p.slug !== currentSlug).slice(0, limit);
 }
+
+export const NEWS_CATEGORIES: NewsPost["category"][] = [
+  "Product Launch",
+  "Company News",
+  "Industry",
+  "Project",
+];
+
+// ─── Live fetchers ────────────────────────────────────────────────────
+// The public site reads from the backend (/api/v1/content/news), falling
+// back to the placeholder content above if the API is unreachable so the
+// marketing pages never render empty during local dev / backend downtime.
+import { apiGetOr, apiGet, ApiNotFoundError } from "@/lib/api";
+
+export async function fetchNews(opts: { category?: string } = {}): Promise<
+  NewsPost[]
+> {
+  const qs = new URLSearchParams();
+  if (opts.category) qs.set("category", opts.category);
+  const path = `/api/v1/content/news${qs.toString() ? `?${qs}` : ""}`;
+  return apiGetOr<NewsPost[]>(path, newsPosts);
+}
+
+export async function fetchNewsBySlug(
+  slug: string
+): Promise<NewsPost | undefined> {
+  try {
+    return await apiGet<NewsPost>(`/api/v1/content/news/${slug}`);
+  } catch (e) {
+    if (e instanceof ApiNotFoundError) return getNewsBySlug(slug);
+    // On a real backend error, still try the mock so the page can render.
+    return getNewsBySlug(slug);
+  }
+}
+
+export async function fetchRelatedNews(
+  currentSlug: string,
+  limit = 3
+): Promise<NewsPost[]> {
+  const all = await fetchNews();
+  return all.filter((p) => p.slug !== currentSlug).slice(0, limit);
+}

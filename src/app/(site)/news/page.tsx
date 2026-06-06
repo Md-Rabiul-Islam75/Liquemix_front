@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { FiArrowRight, FiCalendar, FiClock, FiArrowUpRight } from "react-icons/fi";
 import PageHeader from "@/components/common/PageHeader";
-import { newsPosts } from "@/data/news";
+import { fetchNews } from "@/data/news";
 
 export const metadata: Metadata = {
   title: "News & Press",
@@ -41,15 +41,17 @@ export default async function NewsListPage({ searchParams }: Props) {
   const sp = await searchParams;
   const activeCategory = sp.category ?? "All";
 
+  const allPosts = await fetchNews();
+
   const categories = [
     "All",
-    ...Array.from(new Set(newsPosts.map((p) => p.category))),
+    ...Array.from(new Set(allPosts.map((p) => p.category))),
   ];
 
   const filtered =
     activeCategory === "All"
-      ? newsPosts
-      : newsPosts.filter((p) => p.category === activeCategory);
+      ? allPosts
+      : allPosts.filter((p) => p.category === activeCategory);
 
   const [lead, ...rest] = filtered;
 

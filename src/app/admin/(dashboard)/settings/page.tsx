@@ -21,6 +21,24 @@ export default function AdminSettingsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
 
+  // Product list for the hero card selectors.
+  const [products, setProducts] = useState<{ slug: string; name: string }[]>([]);
+  useEffect(() => {
+    if (hasToken !== true) return;
+    (async () => {
+      try {
+        const page = await adminGet<{ items: { slug: string; name: string }[] }>(
+          "/api/v1/admin/catalog/products?page=1&size=100"
+        );
+        setProducts(
+          (page.items ?? []).map((p) => ({ slug: p.slug, name: p.name }))
+        );
+      } catch {
+        /* selector just falls back to a free-text slug if this fails */
+      }
+    })();
+  }, [hasToken]);
+
   useEffect(() => {
     if (hasToken !== true) return;
     (async () => {
@@ -264,6 +282,72 @@ export default function AdminSettingsPage() {
                 />
               </Field>
             </div>
+
+            {/* KPI stats */}
+            <h3 className="mt-6 mb-1 text-sm font-bold text-neutral-900">
+              Banner stats
+            </h3>
+            <p className="text-xs text-neutral-500 mb-4">
+              The three numbers under the headline. Type them exactly as shown
+              (e.g. <code className="font-mono">200+</code>).
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Field label="Products">
+                <input
+                  type="text"
+                  value={form.statProducts}
+                  onChange={(e) => set("statProducts", e.target.value)}
+                  className="admin-input"
+                  maxLength={40}
+                  placeholder="200+"
+                />
+              </Field>
+              <Field label="Countries served">
+                <input
+                  type="text"
+                  value={form.statCountries}
+                  onChange={(e) => set("statCountries", e.target.value)}
+                  className="admin-input"
+                  maxLength={40}
+                  placeholder="40+"
+                />
+              </Field>
+              <Field label="Reference projects">
+                <input
+                  type="text"
+                  value={form.statReferences}
+                  onChange={(e) => set("statReferences", e.target.value)}
+                  className="admin-input"
+                  maxLength={40}
+                  placeholder="1500+"
+                />
+              </Field>
+            </div>
+
+            {/* Featured product cards */}
+            <h3 className="mt-6 mb-1 text-sm font-bold text-neutral-900">
+              Banner product cards
+            </h3>
+            <p className="text-xs text-neutral-500 mb-4">
+              The two products shown in the banner. The first is the large
+              card, the second is the smaller overlapping card.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Primary product (large card)">
+                <ProductSelect
+                  products={products}
+                  value={form.heroPrimaryProductSlug}
+                  onChange={(v) => set("heroPrimaryProductSlug", v)}
+                />
+              </Field>
+              <Field label="Secondary product (small card)">
+                <ProductSelect
+                  products={products}
+                  value={form.heroSecondaryProductSlug}
+                  onChange={(v) => set("heroSecondaryProductSlug", v)}
+                />
+              </Field>
+            </div>
           </section>
 
           {/* Operations */}
@@ -382,5 +466,34 @@ function Field({
       </span>
       {children}
     </label>
+  );
+}
+
+/** Product picker for the hero cards. Keeps the current slug selectable even
+ *  if the product list failed to load (e.g. backend down). */
+function ProductSelect({
+  products,
+  value,
+  onChange,
+}: {
+  products: { slug: string; name: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const known = products.some((p) => p.slug === value);
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="admin-input"
+    >
+      <option value="">— None —</option>
+      {!known && value && <option value={value}>{value} (current)</option>}
+      {products.map((p) => (
+        <option key={p.slug} value={p.slug}>
+          {p.name}
+        </option>
+      ))}
+    </select>
   );
 }

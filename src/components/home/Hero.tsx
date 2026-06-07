@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FiArrowRight, FiArrowUpRight, FiPlay } from "react-icons/fi";
-import { getProductBySlug } from "@/data/products";
-import { getSegmentById } from "@/data/segments";
+import { fetchProductBySlug } from "@/data/products";
+import { fetchSegmentsMap } from "@/data/segments";
 import { fetchSiteSettings } from "@/data/settings";
 
 export default async function Hero() {
@@ -14,12 +14,26 @@ export default async function Hero() {
     /\r?\n/
   );
   const headlineLine2 = headlineRest.join(" ");
-  const hydroGuard = getProductBySlug("lique-hydro-guard-3x");
-  const fixMt3 = getProductBySlug("lique-fix-mt-3");
-  const hydroImage = hydroGuard?.images.find((i) => i.isPrimary) ?? hydroGuard?.images[0];
+
+  // The two banner product cards are admin-selected (by slug). Fetch both
+  // plus the segment map (for their URLs + segment labels).
+  const [hydroGuard, fixMt3, segMap] = await Promise.all([
+    settings.heroPrimaryProductSlug
+      ? fetchProductBySlug(settings.heroPrimaryProductSlug)
+      : Promise.resolve(undefined),
+    settings.heroSecondaryProductSlug
+      ? fetchProductBySlug(settings.heroSecondaryProductSlug)
+      : Promise.resolve(undefined),
+    fetchSegmentsMap(),
+  ]);
+
+  const hydroImage =
+    hydroGuard?.images.find((i) => i.isPrimary) ?? hydroGuard?.images[0];
   const fixImage = fixMt3?.images.find((i) => i.isPrimary) ?? fixMt3?.images[0];
-  const hydroSegment = hydroGuard ? getSegmentById(hydroGuard.segmentId) : null;
-  const fixSegment = fixMt3 ? getSegmentById(fixMt3.segmentId) : null;
+  const hydroSegment = hydroGuard
+    ? segMap.get(String(hydroGuard.segmentId))
+    : null;
+  const fixSegment = fixMt3 ? segMap.get(String(fixMt3.segmentId)) : null;
   const hydroHref =
     hydroGuard && hydroSegment
       ? `/products/${hydroSegment.slug}/${hydroGuard.slug}`
@@ -28,6 +42,12 @@ export default async function Hero() {
     fixMt3 && fixSegment
       ? `/products/${fixSegment.slug}/${fixMt3.slug}`
       : "/products";
+
+  const stats = [
+    { kpi: settings.statProducts, label: "Products" },
+    { kpi: settings.statCountries, label: "Countries served" },
+    { kpi: settings.statReferences, label: "Reference projects" },
+  ];
 
   return (
     <section className="relative overflow-hidden bg-neutral-900 text-white-base">
@@ -85,11 +105,7 @@ export default async function Hero() {
           </div>
 
           <div className="mt-10 md:mt-12 grid grid-cols-3 gap-3 sm:gap-6 max-w-xl">
-            {[
-              { kpi: "200+", label: "Products" },
-              { kpi: "40+", label: "Countries served" },
-              { kpi: "1500+", label: "Reference projects" },
-            ].map((m) => (
+            {stats.map((m) => (
               <div key={m.label} className="border-l-2 border-accent-400 pl-2 sm:pl-3">
                 <p className="text-xl sm:text-2xl md:text-3xl font-bold leading-none">{m.kpi}</p>
                 <p className="mt-1 text-[10px] sm:text-xs uppercase tracking-wider text-white/65 leading-tight">
@@ -162,10 +178,10 @@ export default async function Hero() {
                   {/* Heading */}
                   <div className="mt-5">
                     <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-700">
-                      Waterproofing
+                      {hydroSegment?.name ?? "Featured product"}
                     </p>
                     <h3 className="mt-1.5 text-[1.75rem] leading-[1.05] font-bold text-neutral-900 tracking-tight">
-                      Hydro-Guard 3X
+                      {hydroGuard?.name ?? "Hydro-Guard 3X"}
                     </h3>
                   </div>
 
@@ -191,12 +207,16 @@ export default async function Hero() {
                     )}
                   </div>
 
-                  {/* Footer row — spec chip + arrow */}
+                  {/* Footer row — segment tagline + arrow */}
                   <div className="mt-5 flex items-center justify-between gap-3">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-50 text-primary-700 text-[10px] font-bold tracking-wider uppercase">
-                      ≥ 7 bar pressure
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-primary-700 group-hover:gap-2 transition-all">
+                    {hydroSegment?.tagline ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-50 text-primary-700 text-[10px] font-bold tracking-wider uppercase truncate max-w-[60%]">
+                        {hydroSegment.tagline}
+                      </span>
+                    ) : (
+                      <span />
+                    )}
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-primary-700 group-hover:gap-2 transition-all shrink-0">
                       View product <FiArrowUpRight className="text-base" />
                     </span>
                   </div>
@@ -235,10 +255,10 @@ export default async function Hero() {
                   </span>
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-secondary-700">
-                      Tile
+                      {fixSegment?.name ?? "Featured"}
                     </p>
                     <h3 className="mt-1 text-lg font-bold text-neutral-900 leading-tight">
-                      Fix MT-3
+                      {fixMt3?.name ?? "Fix MT-3"}
                     </h3>
                   </div>
                 </div>

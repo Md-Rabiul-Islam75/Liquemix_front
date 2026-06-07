@@ -22,6 +22,11 @@ export type SiteSettings = {
   heroEyebrow: string;
   heroHeadline: string;
   heroSubtitle: string;
+  statProducts: string;
+  statCountries: string;
+  statReferences: string;
+  heroPrimaryProductSlug: string;
+  heroSecondaryProductSlug: string;
   officeAddress: string;
   replySla: string;
   businessDays: string;
@@ -48,6 +53,11 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   heroHeadline: "Build on simple systems.\nEngineered for the real world.",
   heroSubtitle:
     "From basement waterproofing to industrial flooring — LiqueMix delivers complete engineered systems with full technical documentation, applicator support, and a guaranteed service life.",
+  statProducts: "200+",
+  statCountries: "40+",
+  statReferences: "1500+",
+  heroPrimaryProductSlug: "lique-hydro-guard-3x",
+  heroSecondaryProductSlug: "lique-fix-mt-3",
   officeAddress: "Plot 42, Dhaka EPZ\nSavar, Dhaka 1349\nBangladesh",
   replySla: "< 4 business hours",
   businessDays: "Sunday–Thursday",

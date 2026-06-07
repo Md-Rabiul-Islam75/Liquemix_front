@@ -10,12 +10,15 @@ import {
   FiFile,
   FiLogIn,
   FiSearch,
+  FiTrash2,
   FiUpload,
 } from "react-icons/fi";
 
 import AdminPageHeader from "@/components/admin/PageHeader";
 import Highlight from "@/components/common/Highlight";
-import { adminGet, getToken } from "@/lib/adminApi";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
+import { adminDelete, adminGet, getToken } from "@/lib/adminApi";
+import { ErrorToast, SuccessToast } from "@/helpers/ToastHelper";
 import {
   mapEmbeddedDocument,
   type EmbeddedDocument,
@@ -68,9 +71,30 @@ export default function AdminDownloadsPage() {
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("");
 
+  const [pendingDelete, setPendingDelete] = useState<DocumentRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   useEffect(() => {
     setHasToken(getToken() != null);
   }, []);
+
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    try {
+      await adminDelete(`/api/v1/admin/content/downloads/${pendingDelete.id}`);
+      setStandalone((prev) => prev.filter((d) => d.id !== pendingDelete.id));
+      SuccessToast("Deleted", pendingDelete.title);
+      setPendingDelete(null);
+    } catch (e) {
+      ErrorToast(
+        "Delete failed",
+        e instanceof Error ? e.message : "Unknown error."
+      );
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   useEffect(() => {
     if (hasToken !== true) return;
@@ -270,6 +294,14 @@ export default function AdminDownloadsPage() {
                         >
                           <FiArrowUpRight />
                         </Link>
+                        <button
+                          type="button"
+                          aria-label="Delete"
+                          onClick={() => setPendingDelete(d)}
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-md text-neutral-400 hover:bg-error-50 hover:text-error-500"
+                        >
+                          <FiTrash2 />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -340,6 +372,19 @@ export default function AdminDownloadsPage() {
           </table>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={pendingDelete != null}
+        danger
+        title={
+          pendingDelete ? `Delete "${pendingDelete.title}"?` : "Delete document?"
+        }
+        message="It will be removed from the public downloads library. This can't be undone from here."
+        confirmLabel="Delete document"
+        busy={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </>
   );
 }

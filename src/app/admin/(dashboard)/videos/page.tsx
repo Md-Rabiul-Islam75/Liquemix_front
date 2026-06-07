@@ -11,11 +11,14 @@ import {
   FiPlay,
   FiPlus,
   FiSearch,
+  FiTrash2,
 } from "react-icons/fi";
 
 import AdminPageHeader from "@/components/admin/PageHeader";
 import Highlight from "@/components/common/Highlight";
-import { adminGet, getToken } from "@/lib/adminApi";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
+import { adminDelete, adminGet, getToken } from "@/lib/adminApi";
+import { ErrorToast, SuccessToast } from "@/helpers/ToastHelper";
 
 type StandaloneVideo = {
   id: number;
@@ -59,9 +62,32 @@ export default function AdminVideosPage() {
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("");
 
+  const [pendingDelete, setPendingDelete] = useState<StandaloneVideo | null>(
+    null
+  );
+  const [deleting, setDeleting] = useState(false);
+
   useEffect(() => {
     setHasToken(getToken() != null);
   }, []);
+
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    try {
+      await adminDelete(`/api/v1/admin/content/videos/${pendingDelete.id}`);
+      setStandalone((prev) => prev.filter((v) => v.id !== pendingDelete.id));
+      SuccessToast("Deleted", pendingDelete.title);
+      setPendingDelete(null);
+    } catch (e) {
+      ErrorToast(
+        "Delete failed",
+        e instanceof Error ? e.message : "Unknown error."
+      );
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   useEffect(() => {
     if (hasToken !== true) return;
@@ -201,6 +227,7 @@ export default function AdminVideosPage() {
               durationSeconds={v.durationSeconds}
               href={`/admin/videos/${v.id}`}
               query={q}
+              onDelete={() => setPendingDelete(v)}
             />
           ))}
           {visibleProduct.map((v, i) => (
@@ -218,6 +245,19 @@ export default function AdminVideosPage() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={pendingDelete != null}
+        danger
+        title={
+          pendingDelete ? `Delete "${pendingDelete.title}"?` : "Delete video?"
+        }
+        message="It will be removed from the public Videos library. This can't be undone from here."
+        confirmLabel="Delete video"
+        busy={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </>
   );
 }
@@ -230,6 +270,7 @@ function VideoCard({
   href,
   sourceLabel,
   query = "",
+  onDelete,
 }: {
   youtubeId: string;
   title: string;
@@ -239,6 +280,8 @@ function VideoCard({
   /** When set, this is a product-attached video (read-only here). */
   sourceLabel?: string;
   query?: string;
+  /** Standalone videos only — deletes the library entry. */
+  onDelete?: () => void;
 }) {
   // Play the video inline (like the public page). The thumbnail is a play
   // button; the title + arrow still navigate to edit (standalone) or the
@@ -324,16 +367,29 @@ function VideoCard({
               {youtubeId}
             </code>
           )}
-          {href && (
-            <Link
-              href={href}
-              aria-label={sourceLabel ? "Edit on product" : "Edit video"}
-              title={sourceLabel ? "Edit on the product" : "Edit video"}
-              className="inline-flex items-center justify-center w-7 h-7 rounded-md text-neutral-500 hover:bg-primary-50 hover:text-primary-700"
-            >
-              <FiArrowUpRight />
-            </Link>
-          )}
+          <div className="inline-flex items-center gap-1">
+            {href && (
+              <Link
+                href={href}
+                aria-label={sourceLabel ? "Edit on product" : "Edit video"}
+                title={sourceLabel ? "Edit on the product" : "Edit video"}
+                className="inline-flex items-center justify-center w-7 h-7 rounded-md text-neutral-500 hover:bg-primary-50 hover:text-primary-700"
+              >
+                <FiArrowUpRight />
+              </Link>
+            )}
+            {onDelete && (
+              <button
+                type="button"
+                aria-label="Delete video"
+                title="Delete video"
+                onClick={onDelete}
+                className="inline-flex items-center justify-center w-7 h-7 rounded-md text-neutral-400 hover:bg-error-50 hover:text-error-500"
+              >
+                <FiTrash2 />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

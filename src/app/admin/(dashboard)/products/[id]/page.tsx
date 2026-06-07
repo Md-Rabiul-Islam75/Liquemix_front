@@ -28,6 +28,7 @@ import ProductDocumentsEditor, {
   type ProductDocument,
 } from "@/components/admin/ProductDocumentsEditor";
 import CategoryPicker from "@/components/admin/CategoryPicker";
+import ConsumptionUnitField from "@/components/admin/ConsumptionUnitField";
 import {
   adminGet,
   adminPost,
@@ -421,12 +422,9 @@ export default function AdminProductEditPage() {
                 />
               </Field>
               <Field label="Unit">
-                <input
-                  type="text"
+                <ConsumptionUnitField
                   value={consumptionUnit}
-                  onChange={(e) => setConsumptionUnit(e.target.value)}
-                  placeholder="kg / m² per coat"
-                  className="admin-input"
+                  onChange={setConsumptionUnit}
                 />
               </Field>
             </div>

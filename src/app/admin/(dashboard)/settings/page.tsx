@@ -16,6 +16,10 @@ export default function AdminSettingsPage() {
   }, []);
 
   const [form, setForm] = useState<SiteSettings>(DEFAULT_SETTINGS);
+  // The last persisted state — what the form reverts to on Discard. Set on
+  // first load and after every successful save (so Discard returns to the
+  // last save, not the raw defaults).
+  const [savedForm, setSavedForm] = useState<SiteSettings>(DEFAULT_SETTINGS);
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -54,6 +58,7 @@ export default function AdminSettingsPage() {
           if (typeof v === "string") merged[key] = v;
         }
         setForm(merged);
+        setSavedForm(merged);
       } catch (e) {
         setLoadError(
           e instanceof Error ? e.message : "Failed to load settings."
@@ -83,6 +88,7 @@ export default function AdminSettingsPage() {
         if (typeof v === "string") merged[key] = v;
       }
       setForm(merged);
+      setSavedForm(merged); // this is the new "last saved" baseline
       SuccessToast(
         "Settings saved",
         "The public site now reflects your changes."
@@ -98,10 +104,13 @@ export default function AdminSettingsPage() {
   }
 
   function onDiscard() {
-    setLoaded(false);
-    setHasToken(getToken() != null); // re-trigger the load effect
+    // Revert to the last saved state — not the raw defaults.
+    setForm(savedForm);
     setDiscardOpen(false);
   }
+
+  // Are there unsaved edits since the last save/load?
+  const dirty = JSON.stringify(form) !== JSON.stringify(savedForm);
 
   if (hasToken === false) {
     return (
@@ -417,19 +426,24 @@ export default function AdminSettingsPage() {
             enquiry, /contact.
             <FiPhone className="text-neutral-400" />
           </p>
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-3 ml-auto">
+            {loaded && !dirty && (
+              <span className="text-xs text-neutral-400 hidden sm:inline">
+                No unsaved changes
+              </span>
+            )}
             <button
               type="button"
               onClick={() => setDiscardOpen(true)}
-              disabled={submitting || !loaded}
-              className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg border border-neutral-200 bg-white-base text-sm font-semibold text-neutral-700 hover:border-error-300 hover:text-error-500 disabled:opacity-50"
+              disabled={submitting || !loaded || !dirty}
+              className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg border border-neutral-200 bg-white-base text-sm font-semibold text-neutral-700 hover:border-error-300 hover:text-error-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-neutral-200 disabled:hover:text-neutral-700"
             >
               Discard
             </button>
             <button
               type="button"
               onClick={onSave}
-              disabled={submitting || !loaded}
+              disabled={submitting || !loaded || !dirty}
               className="inline-flex items-center gap-1.5 h-10 px-5 rounded-lg bg-primary-500 text-white-base text-sm font-semibold hover:bg-primary-600 transition-colors shadow-[0_8px_24px_-8px_rgba(21,101,192,0.45)] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <FiSave /> {submitting ? "Saving…" : "Save settings"}
@@ -441,7 +455,7 @@ export default function AdminSettingsPage() {
       <ConfirmDialog
         open={discardOpen}
         title="Discard changes?"
-        message="The form will reload its values from the server. Any unsaved edits will be lost."
+        message="The form will revert to your last saved values. Any edits since the last save will be lost."
         confirmLabel="Discard changes"
         onConfirm={onDiscard}
         onCancel={() => setDiscardOpen(false)}

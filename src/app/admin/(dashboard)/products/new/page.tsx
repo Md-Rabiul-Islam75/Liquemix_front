@@ -24,6 +24,7 @@ import ProductDocumentsEditor, {
   type ProductDocument,
 } from "@/components/admin/ProductDocumentsEditor";
 import CategoryPicker from "@/components/admin/CategoryPicker";
+import ConsumptionUnitField from "@/components/admin/ConsumptionUnitField";
 import { adminGet, adminPost, getToken } from "@/lib/adminApi";
 import { ErrorToast, SuccessToast } from "@/helpers/ToastHelper";
 
@@ -129,27 +130,6 @@ export default function NewProductPage() {
   }, [segmentId]);
 
   // ─── Helpers ──────────────────────────────────────────────────────
-  function updateList(
-    list: string[],
-    setList: (v: string[]) => void,
-    idx: number,
-    value: string
-  ) {
-    const next = [...list];
-    next[idx] = value;
-    setList(next);
-  }
-  function addRow(list: string[], setList: (v: string[]) => void) {
-    setList([...list, ""]);
-  }
-  function removeRow(
-    list: string[],
-    setList: (v: string[]) => void,
-    idx: number
-  ) {
-    setList(list.filter((_, i) => i !== idx));
-  }
-
   const toggleCategory = (id: number) => {
     setSelectedCategoryIds((prev) => {
       const next = new Set(prev);
@@ -462,12 +442,9 @@ export default function NewProductPage() {
                 <span className="block text-xs font-bold tracking-wider uppercase text-neutral-700 mb-1.5">
                   Unit
                 </span>
-                <input
-                  type="text"
+                <ConsumptionUnitField
                   value={consumptionUnit}
-                  onChange={(e) => setConsumptionUnit(e.target.value)}
-                  placeholder="kg / m² per coat"
-                  className="admin-input"
+                  onChange={setConsumptionUnit}
                 />
               </label>
             </div>

@@ -239,3 +239,76 @@ export function getDocumentsByCategory(
 ): StandaloneDocument[] {
   return standaloneDocuments.filter((d) => d.category === category);
 }
+
+// ─── Live fetcher ─────────────────────────────────────────────────────
+// The public site reads from the backend (/api/v1/content/downloads),
+// falling back to the placeholder library above if the API is unreachable.
+import { apiGetOr } from "@/lib/api";
+
+export async function fetchDownloads(
+  opts: { category?: string; segmentId?: string | number } = {}
+): Promise<StandaloneDocument[]> {
+  const qs = new URLSearchParams();
+  if (opts.category) qs.set("category", opts.category);
+  if (opts.segmentId != null) qs.set("segmentId", String(opts.segmentId));
+  const path = `/api/v1/content/downloads${qs.toString() ? `?${qs}` : ""}`;
+  return apiGetOr<StandaloneDocument[]>(path, standaloneDocuments);
+}
+
+/**
+ * Public: documents embedded across published products, lifted into the
+ * StandaloneDocument shape so they merge into the /service/downloads library.
+ * The catalog list is compact (no media) so this hits a dedicated flatten
+ * endpoint. The admin Downloads page reads the admin equivalent via adminGet.
+ *
+ * Carries product context (productId/productName/productSlug) so the admin
+ * list can link back to the owning product — the public page ignores it.
+ */
+export type EmbeddedDocument = StandaloneDocument & {
+  productId?: number;
+  productName?: string;
+  productSlug?: string;
+};
+
+export type EmbeddedDocumentRow = {
+  type?: string;
+  category: StandaloneDocument["category"];
+  title: string;
+  url: string;
+  language?: string | null;
+  fileSizeKb?: number | null;
+  uploadedAt?: string | null;
+  segmentId?: number | null;
+  productId?: number | null;
+  productName?: string | null;
+  productSlug?: string | null;
+};
+
+/** Shared mapper so the admin page (which fetches via adminGet) can reuse it. */
+export function mapEmbeddedDocument(
+  r: EmbeddedDocumentRow,
+  i: number
+): EmbeddedDocument {
+  return {
+    id: `prod-${r.productId}-${i}`,
+    title: r.title,
+    description: r.productName ? `From ${r.productName}` : undefined,
+    category: r.category,
+    segmentId: r.segmentId != null ? String(r.segmentId) : undefined,
+    language: r.language ?? "EN",
+    fileSizeKb: r.fileSizeKb ?? undefined,
+    url: r.url,
+    uploadedAt: r.uploadedAt ?? "",
+    productId: r.productId ?? undefined,
+    productName: r.productName ?? undefined,
+    productSlug: r.productSlug ?? undefined,
+  };
+}
+
+export async function fetchProductDocuments(): Promise<EmbeddedDocument[]> {
+  const rows = await apiGetOr<EmbeddedDocumentRow[]>(
+    "/api/v1/catalog/products/media/documents",
+    []
+  );
+  return rows.map(mapEmbeddedDocument);
+}

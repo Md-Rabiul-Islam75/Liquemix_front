@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { adminGet, getToken } from "@/lib/adminApi";
 import {
   FiActivity,
   FiArchive,
@@ -33,25 +35,43 @@ type NavGroup = {
   items: NavItem[];
 };
 
+type Counts = {
+  segments: number;
+  products: number;
+  categories: number;
+  solutions: number;
+  references: number;
+  news: number;
+  videos: number;
+  downloads: number;
+};
+
 /**
  * Admin sidebar. Groups mirror the IA in ADMIN_PANEL_DESIGN.md §3.
- * Counts are passed at build-time (derived from mock data) — when the
- * backend lands these become live numbers fetched per route.
+ * The `counts` prop is a mock-derived placeholder for first paint; on mount
+ * we fetch live counts from /api/v1/admin/dashboard/counts and override.
  */
-export default function AdminSidebar({
-  counts,
-}: {
-  counts: {
-    products: number;
-    categories: number;
-    solutions: number;
-    references: number;
-    news: number;
-    videos: number;
-    downloads: number;
-  };
-}) {
+export default function AdminSidebar({ counts }: { counts: Counts }) {
   const pathname = usePathname();
+
+  const [live, setLive] = useState<Partial<Counts>>({});
+  useEffect(() => {
+    if (getToken() == null) return;
+    let cancelled = false;
+    adminGet<Counts>("/api/v1/admin/dashboard/counts")
+      .then((c) => {
+        if (!cancelled) setLive(c);
+      })
+      .catch(() => {
+        /* keep the placeholder counts on failure */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
+
+  // Live numbers win once loaded; placeholders show instantly meanwhile.
+  const c: Counts = { ...counts, ...live };
 
   const groups: NavGroup[] = [
     {
@@ -61,24 +81,29 @@ export default function AdminSidebar({
     {
       label: "Catalog",
       items: [
-        { href: "/admin/segments", label: "Segments", icon: <FiGrid />, count: 4 },
+        {
+          href: "/admin/segments",
+          label: "Segments",
+          icon: <FiGrid />,
+          count: c.segments,
+        },
         {
           href: "/admin/categories",
           label: "Categories",
           icon: <FiFolder />,
-          count: counts.categories,
+          count: c.categories,
         },
         {
           href: "/admin/products",
           label: "Products",
           icon: <FiBox />,
-          count: counts.products,
+          count: c.products,
         },
         {
           href: "/admin/solutions",
           label: "System Solutions",
           icon: <FiLayers />,
-          count: counts.solutions,
+          count: c.solutions,
         },
       ],
     },
@@ -89,25 +114,25 @@ export default function AdminSidebar({
           href: "/admin/references",
           label: "References",
           icon: <FiBarChart2 />,
-          count: counts.references,
+          count: c.references,
         },
         {
           href: "/admin/news",
           label: "News & Press",
           icon: <FiBookOpen />,
-          count: counts.news,
+          count: c.news,
         },
         {
           href: "/admin/videos",
           label: "Videos",
           icon: <FiVideo />,
-          count: counts.videos,
+          count: c.videos,
         },
         {
           href: "/admin/downloads",
           label: "Downloads",
           icon: <FiDownload />,
-          count: counts.downloads,
+          count: c.downloads,
         },
       ],
     },

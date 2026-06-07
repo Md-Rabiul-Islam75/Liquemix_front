@@ -1,12 +1,21 @@
+import Image from "next/image";
 import Link from "next/link";
 import { FiArrowRight, FiCalendar, FiClock } from "react-icons/fi";
-import { newsPosts } from "@/data/news";
+import { fetchNews } from "@/data/news";
 
 const CATEGORY_TINT: Record<string, string> = {
   "Product Launch": "bg-secondary-100 text-secondary-800",
   "Company News": "bg-primary-100 text-primary-800",
   Industry: "bg-success-50 text-success-700",
   Project: "bg-accent-100 text-accent-800",
+};
+
+// Fallback gradient when a post has no cover image — matches /news.
+const CATEGORY_GRADIENT: Record<string, string> = {
+  "Product Launch": "linear-gradient(135deg, #5c2e00 0%, #f57c00 100%)",
+  "Company News": "linear-gradient(135deg, #072454 0%, #1565c0 100%)",
+  Industry: "linear-gradient(135deg, #0e3d1a 0%, #2fa84f 100%)",
+  Project: "linear-gradient(135deg, #5c3e00 0%, #ffb300 100%)",
 };
 
 function formatDate(d: string) {
@@ -17,8 +26,10 @@ function formatDate(d: string) {
   });
 }
 
-export default function NewsSection() {
-  const [lead, ...rest] = newsPosts.slice(0, 4);
+export default async function NewsSection() {
+  const posts = (await fetchNews()).slice(0, 4);
+  const [lead, ...rest] = posts;
+  if (!lead) return null;
 
   return (
     <section className="section">
@@ -43,12 +54,22 @@ export default function NewsSection() {
           {/* Lead post */}
           <Link
             href={`/news/${lead.slug}`}
-            className="lg:col-span-7 group relative aspect-[16/10] rounded-2xl overflow-hidden flex flex-col justify-end"
-            style={{
-              background:
-                "linear-gradient(135deg, #072454 0%, #1565c0 50%, #f57c00 100%)",
-            }}
+            className="lg:col-span-7 group relative aspect-[16/10] rounded-2xl overflow-hidden flex flex-col justify-end bg-neutral-800"
+            style={
+              lead.coverImage
+                ? undefined
+                : { background: CATEGORY_GRADIENT[lead.category] }
+            }
           >
+            {lead.coverImage && (
+              <Image
+                src={encodeURI(lead.coverImage)}
+                alt={lead.title}
+                fill
+                sizes="(min-width: 1024px) 58vw, 100vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/85 via-neutral-900/30 to-transparent" />
             <div className="relative p-7 md:p-10">
               <span
@@ -84,16 +105,23 @@ export default function NewsSection() {
                 className="group flex gap-4 p-4 rounded-2xl border border-neutral-100 hover:shadow-soft hover:border-primary-200 transition-all"
               >
                 <div
-                  className="w-28 h-24 shrink-0 rounded-xl"
-                  style={{
-                    background:
-                      post.category === "Project"
-                        ? "linear-gradient(135deg, #5c3e00 0%, #ffb300 100%)"
-                        : post.category === "Industry"
-                        ? "linear-gradient(135deg, #0e3d1a 0%, #2fa84f 100%)"
-                        : "linear-gradient(135deg, #0a3674 0%, #3f88d6 100%)",
-                  }}
-                />
+                  className="relative w-28 h-24 shrink-0 rounded-xl overflow-hidden bg-neutral-200"
+                  style={
+                    post.coverImage
+                      ? undefined
+                      : { background: CATEGORY_GRADIENT[post.category] }
+                  }
+                >
+                  {post.coverImage && (
+                    <Image
+                      src={encodeURI(post.coverImage)}
+                      alt={post.title}
+                      fill
+                      sizes="112px"
+                      className="object-cover"
+                    />
+                  )}
+                </div>
                 <div className="flex-1 min-w-0">
                   <span
                     className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${

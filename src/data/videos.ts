@@ -184,3 +184,37 @@ export async function fetchVideos(opts: {
   const path = `/api/v1/content/videos${qs.toString() ? `?${qs}` : ""}`;
   return apiGetOr<Video[]>(path, videos);
 }
+
+/**
+ * Public: videos embedded across published products, lifted into the Video
+ * shape so they merge into the /service/videos library. The catalog list is
+ * compact (no media) so this hits a dedicated flatten endpoint. The admin
+ * Videos page reads the equivalent admin endpoint directly via adminGet.
+ */
+type EmbeddedVideo = {
+  youtubeId: string;
+  title: string;
+  category: string;
+  segmentId?: number | null;
+  publishedAt?: string | null;
+  productId?: number | null;
+  productName?: string | null;
+  productSlug?: string | null;
+};
+
+export async function fetchProductVideos(): Promise<Video[]> {
+  const rows = await apiGetOr<EmbeddedVideo[]>(
+    "/api/v1/catalog/products/media/videos",
+    []
+  );
+  return rows.map((r) => ({
+    id: `prod-${r.productId}-${r.youtubeId}`,
+    title: r.title,
+    description: r.productName ? `Featured on ${r.productName}.` : undefined,
+    youtubeId: r.youtubeId,
+    category: (r.category as Video["category"]) ?? "Product Demo",
+    segmentId: r.segmentId != null ? String(r.segmentId) : undefined,
+    relatedProductIds: r.productId != null ? [String(r.productId)] : undefined,
+    publishedAt: r.publishedAt ?? "",
+  }));
+}

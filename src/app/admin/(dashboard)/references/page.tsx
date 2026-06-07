@@ -15,6 +15,7 @@ import {
 
 import AdminPageHeader from "@/components/admin/PageHeader";
 import StatusPill from "@/components/admin/StatusPill";
+import Highlight from "@/components/common/Highlight";
 import { adminGet, getToken } from "@/lib/adminApi";
 
 type ReferenceRow = {
@@ -225,7 +226,7 @@ export default function AdminReferencesPage() {
                   {r.projectType}
                 </span>
                 <h3 className="mt-2 text-sm font-bold text-neutral-900 leading-snug line-clamp-2 group-hover:text-primary-700">
-                  {r.title}
+                  <Highlight text={r.title} query={q} />
                 </h3>
                 <div className="mt-3 flex items-center justify-between text-xs text-neutral-500">
                   <span className="inline-flex items-center gap-1.5 truncate">

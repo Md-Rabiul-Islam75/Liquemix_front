@@ -7,16 +7,14 @@ import { referenceProjects } from "@/data/references";
 import { newsPosts } from "@/data/news";
 import { videos } from "@/data/videos";
 import { standaloneDocuments } from "@/data/downloads";
+import { segments } from "@/data/segments";
 
 /**
  * Dashboard layout (everything under /admin except /admin/login).
  *
- * Sidebar counts are derived from the mock data at build-time. When the
- * backend lands, this layout becomes either:
- *   • a client-side wrapper that fetches counts via SWR / TanStack Query, or
- *   • a server component that fetches counts via the API on each render.
- * Either way the consumer components (AdminSidebar) keep their props
- * shape unchanged.
+ * The counts passed here are mock-derived and act only as an instant
+ * placeholder for first paint. AdminSidebar then fetches live counts from
+ * /api/v1/admin/dashboard/counts on mount and overrides these.
  */
 export default function AdminDashboardLayout({
   children,
@@ -24,6 +22,7 @@ export default function AdminDashboardLayout({
   children: React.ReactNode;
 }) {
   const counts = {
+    segments: segments.length,
     products: products.length,
     categories: categories.length,
     solutions: systemSolutions.length,

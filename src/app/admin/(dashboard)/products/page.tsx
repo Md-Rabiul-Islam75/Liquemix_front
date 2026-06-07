@@ -18,6 +18,7 @@ import {
 
 import AdminPageHeader from "@/components/admin/PageHeader";
 import StatusPill from "@/components/admin/StatusPill";
+import Highlight from "@/components/common/Highlight";
 import { adminGet, getToken } from "@/lib/adminApi";
 
 type SegmentLite = { id: number; slug: string; name: string; color: string };
@@ -323,7 +324,7 @@ export default function AdminProductsListPage() {
                           </div>
                           <div className="min-w-0">
                             <p className="font-semibold text-neutral-900 truncate group-hover:text-primary-700">
-                              {p.name}
+                              <Highlight text={p.name} query={q} />
                             </p>
                             <p className="text-xs text-neutral-500 truncate max-w-xs">
                               {p.shortDescription}

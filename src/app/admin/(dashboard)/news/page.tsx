@@ -15,6 +15,7 @@ import {
 
 import AdminPageHeader from "@/components/admin/PageHeader";
 import StatusPill from "@/components/admin/StatusPill";
+import Highlight from "@/components/common/Highlight";
 import { adminGet, getToken } from "@/lib/adminApi";
 
 type NewsRow = {
@@ -253,7 +254,7 @@ export default function AdminNewsPage() {
                         </div>
                         <div className="min-w-0">
                           <p className="font-semibold text-neutral-900 truncate group-hover:text-primary-700 max-w-md">
-                            {p.title}
+                            <Highlight text={p.title} query={q} />
                           </p>
                           <p className="text-xs text-neutral-500 truncate max-w-md inline-flex items-center gap-2">
                             <FiClock className="shrink-0" />

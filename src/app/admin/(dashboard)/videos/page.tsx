@@ -1,15 +1,37 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import {
+  FiAlertCircle,
   FiArrowUpRight,
-  FiMoreVertical,
+  FiBox,
+  FiExternalLink,
+  FiLogIn,
   FiPlay,
   FiPlus,
   FiSearch,
 } from "react-icons/fi";
-import AdminPageHeader from "@/components/admin/PageHeader";
-import { videos } from "@/data/videos";
 
-export const metadata = { title: "Videos" };
+import AdminPageHeader from "@/components/admin/PageHeader";
+import Highlight from "@/components/common/Highlight";
+import { adminGet, getToken } from "@/lib/adminApi";
+
+type StandaloneVideo = {
+  id: number;
+  title: string;
+  youtubeId: string;
+  durationSeconds?: number | null;
+  category: string;
+};
+
+type ProductVideo = {
+  youtubeId: string;
+  title: string;
+  category: string;
+  productId?: number | null;
+  productName?: string | null;
+};
 
 const CATEGORY_TINT: Record<string, string> = {
   "Product Demo": "bg-primary-50 text-primary-700",
@@ -19,16 +41,106 @@ const CATEGORY_TINT: Record<string, string> = {
   "System Solution": "bg-neutral-100 text-neutral-700",
 };
 
+const CATEGORIES = Object.keys(CATEGORY_TINT);
+
+/**
+ * Videos library. Two sources, shown together:
+ *   - Standalone videos (/api/v1/admin/content/videos) — fully editable here.
+ *   - Videos attached to products — read-only, with a link to edit on the
+ *     owning product. The library is the single place to see all of them.
+ */
 export default function AdminVideosPage() {
+  const [hasToken, setHasToken] = useState<boolean | null>(null);
+  const [standalone, setStandalone] = useState<StandaloneVideo[]>([]);
+  const [productVideos, setProductVideos] = useState<ProductVideo[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const [q, setQ] = useState("");
+  const [category, setCategory] = useState("");
+
+  useEffect(() => {
+    setHasToken(getToken() != null);
+  }, []);
+
+  useEffect(() => {
+    if (hasToken !== true) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const params = new URLSearchParams();
+        if (category) params.set("category", category);
+        const [std, prod] = await Promise.all([
+          adminGet<StandaloneVideo[]>(
+            `/api/v1/admin/content/videos${params.toString() ? `?${params}` : ""}`
+          ),
+          adminGet<ProductVideo[]>("/api/v1/admin/catalog/products/media/videos"),
+        ]);
+        if (!cancelled) {
+          setStandalone(std);
+          setProductVideos(prod);
+        }
+      } catch (e) {
+        if (!cancelled)
+          setError(e instanceof Error ? e.message : "Failed to load videos.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [hasToken, category]);
+
+  const ql = q.trim().toLowerCase();
+  const matchesQ = (t: string) => (ql ? t.toLowerCase().includes(ql) : true);
+  // Product videos are all "Product Demo"; honour the category filter client-side.
+  const matchesCat = (c: string) => (category ? c === category : true);
+
+  const visibleStandalone = standalone.filter((v) => matchesQ(v.title));
+  const visibleProduct = productVideos.filter(
+    (v) => matchesQ(v.title) && matchesCat(v.category)
+  );
+  const total = visibleStandalone.length + visibleProduct.length;
+
+  if (hasToken === false) {
+    return (
+      <>
+        <AdminPageHeader
+          eyebrow="Content"
+          title="Videos"
+          description="Sign in to manage videos."
+        />
+        <div className="rounded-2xl border border-neutral-100 bg-white-base p-10 text-center">
+          <FiLogIn className="mx-auto text-3xl text-primary-500 mb-3" />
+          <p className="text-base font-bold text-neutral-900 mb-1">
+            Sign-in required
+          </p>
+          <p className="text-sm text-neutral-500 mb-5">
+            The admin API rejects unauthenticated calls.
+          </p>
+          <Link
+            href="/admin/login?next=/admin/videos"
+            className="inline-flex items-center gap-1.5 h-10 px-5 rounded-lg bg-primary-500 text-white-base text-sm font-semibold hover:bg-primary-600"
+          >
+            <FiLogIn /> Go to sign in
+          </Link>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <AdminPageHeader
         eyebrow="Content"
         title="Videos"
-        description="YouTube-hosted videos surfaced on /service/videos and on related product pages."
+        description="Standalone videos plus every video attached to a product — all surfaced on /service/videos and related product pages."
         actions={
           <Link
-            href="#"
+            href="/admin/videos/new"
             className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg bg-primary-500 text-white-base text-sm font-semibold hover:bg-primary-600"
           >
             <FiPlus /> Add video
@@ -41,76 +153,189 @@ export default function AdminVideosPage() {
           <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
           <input
             type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
             placeholder="Search videos..."
             className="w-full h-10 pl-10 pr-3 rounded-lg border border-neutral-200 text-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
           />
         </div>
         <select
-          defaultValue=""
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
           className="h-10 px-3 rounded-lg border border-neutral-200 text-sm font-semibold text-neutral-700 bg-white-base"
         >
           <option value="">All categories</option>
-          {Object.keys(CATEGORY_TINT).map((c) => (
-            <option key={c}>{c}</option>
+          {CATEGORIES.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
           ))}
         </select>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {videos.map((v) => (
-          <article
-            key={v.id}
-            className="group rounded-2xl bg-white-base border border-neutral-100 overflow-hidden hover:border-primary-200 hover:shadow-soft transition-all"
-          >
-            <div className="relative aspect-video bg-neutral-900 grid place-items-center">
-              <img
-                src={`https://i.ytimg.com/vi/${v.youtubeId}/hqdefault.jpg`}
-                alt={v.title}
-                className="absolute inset-0 w-full h-full object-cover opacity-90"
-              />
-              <span className="relative inline-flex items-center justify-center w-12 h-12 rounded-full bg-white-base/95 text-primary-700 text-lg shadow-lg">
-                <FiPlay />
-              </span>
-              {v.durationSeconds && (
-                <span className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-neutral-900/80 text-white-base text-[10px] font-mono">
-                  {Math.floor(v.durationSeconds / 60)}:
-                  {String(v.durationSeconds % 60).padStart(2, "0")}
-                </span>
-              )}
-            </div>
-            <div className="p-4">
-              <span
-                className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase ${CATEGORY_TINT[v.category]}`}
-              >
-                {v.category}
-              </span>
-              <h3 className="mt-2 text-sm font-bold text-neutral-900 leading-snug line-clamp-2 group-hover:text-primary-700">
-                {v.title}
-              </h3>
-              <div className="mt-3 flex items-center justify-between">
-                <code className="font-mono text-[10px] text-neutral-400">
-                  {v.youtubeId}
-                </code>
-                <div className="flex items-center gap-1">
-                  <Link
-                    href={`/admin/videos/${v.id}`}
-                    aria-label="Edit"
-                    className="inline-flex items-center justify-center w-7 h-7 rounded-md text-neutral-500 hover:bg-primary-50 hover:text-primary-700"
-                  >
-                    <FiArrowUpRight />
-                  </Link>
-                  <span
-                    aria-label="Row menu"
-                    className="inline-flex items-center justify-center w-7 h-7 rounded-md text-neutral-500 hover:bg-neutral-100"
-                  >
-                    <FiMoreVertical />
-                  </span>
-                </div>
-              </div>
-            </div>
-          </article>
-        ))}
-      </div>
+      {error && (
+        <div className="mb-4 flex items-start gap-2 p-3 rounded-lg bg-error-50 border border-error-300 text-error-500 text-sm">
+          <FiAlertCircle className="text-base mt-0.5 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="rounded-2xl border border-neutral-100 bg-white-base p-12 text-center text-sm text-neutral-500">
+          Loading videos…
+        </div>
+      ) : total === 0 ? (
+        <div className="rounded-2xl border border-neutral-100 bg-white-base p-12 text-center text-sm text-neutral-500">
+          {q || category
+            ? "No videos match your filters."
+            : "No videos yet — add one, or attach videos to a product."}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {visibleStandalone.map((v) => (
+            <VideoCard
+              key={`std-${v.id}`}
+              youtubeId={v.youtubeId}
+              title={v.title}
+              category={v.category}
+              durationSeconds={v.durationSeconds}
+              href={`/admin/videos/${v.id}`}
+              query={q}
+            />
+          ))}
+          {visibleProduct.map((v, i) => (
+            <VideoCard
+              key={`prod-${v.productId}-${v.youtubeId}-${i}`}
+              youtubeId={v.youtubeId}
+              title={v.title}
+              category={v.category}
+              href={
+                v.productId != null ? `/admin/products/${v.productId}` : undefined
+              }
+              sourceLabel={v.productName ?? "Product"}
+              query={q}
+            />
+          ))}
+        </div>
+      )}
     </>
+  );
+}
+
+function VideoCard({
+  youtubeId,
+  title,
+  category,
+  durationSeconds,
+  href,
+  sourceLabel,
+  query = "",
+}: {
+  youtubeId: string;
+  title: string;
+  category: string;
+  durationSeconds?: number | null;
+  href?: string;
+  /** When set, this is a product-attached video (read-only here). */
+  sourceLabel?: string;
+  query?: string;
+}) {
+  // Play the video inline (like the public page). The thumbnail is a play
+  // button; the title + arrow still navigate to edit (standalone) or the
+  // owning product (product video).
+  const [playing, setPlaying] = useState(false);
+
+  return (
+    <div className="group rounded-2xl bg-white-base border border-neutral-100 overflow-hidden hover:border-primary-200 hover:shadow-soft transition-all">
+      <div className="relative aspect-video bg-neutral-900">
+        {playing ? (
+          <>
+            <iframe
+              src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`}
+              title={title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="absolute inset-0 w-full h-full"
+            />
+            <a
+              href={`https://www.youtube.com/watch?v=${youtubeId}`}
+              target="_blank"
+              rel="noreferrer"
+              className="absolute bottom-2 right-2 inline-flex items-center gap-1 px-2 py-1 rounded-md bg-neutral-900/85 hover:bg-neutral-900 text-white-base text-[10px] font-semibold"
+              title="If the player shows an error, open it on YouTube"
+            >
+              <FiExternalLink className="text-[10px]" /> YouTube
+            </a>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setPlaying(true)}
+            aria-label={`Play ${title}`}
+            className="absolute inset-0 w-full h-full grid place-items-center"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`}
+              alt={title}
+              className="absolute inset-0 w-full h-full object-cover opacity-90"
+            />
+            <span className="relative inline-flex items-center justify-center w-12 h-12 rounded-full bg-white-base/95 text-primary-700 text-lg shadow-lg group-hover:scale-110 transition-transform">
+              <FiPlay className="ml-0.5" />
+            </span>
+            {sourceLabel && (
+              <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-neutral-900/80 text-white-base text-[10px] font-semibold">
+                <FiBox className="text-[10px]" /> Product
+              </span>
+            )}
+            {durationSeconds ? (
+              <span className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-neutral-900/80 text-white-base text-[10px] font-mono">
+                {Math.floor(durationSeconds / 60)}:
+                {String(durationSeconds % 60).padStart(2, "0")}
+              </span>
+            ) : null}
+          </button>
+        )}
+      </div>
+      <div className="p-4">
+        <span
+          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase ${
+            CATEGORY_TINT[category] ?? "bg-neutral-100 text-neutral-700"
+          }`}
+        >
+          {category}
+        </span>
+        <h3 className="mt-2 text-sm font-bold text-neutral-900 leading-snug line-clamp-2">
+          {href ? (
+            <Link href={href} className="hover:text-primary-700">
+              <Highlight text={title} query={query} />
+            </Link>
+          ) : (
+            <Highlight text={title} query={query} />
+          )}
+        </h3>
+        <div className="mt-3 flex items-center justify-between">
+          {sourceLabel ? (
+            <span className="text-[11px] text-neutral-500 truncate max-w-[70%]">
+              {sourceLabel}
+            </span>
+          ) : (
+            <code className="font-mono text-[10px] text-neutral-400">
+              {youtubeId}
+            </code>
+          )}
+          {href && (
+            <Link
+              href={href}
+              aria-label={sourceLabel ? "Edit on product" : "Edit video"}
+              title={sourceLabel ? "Edit on the product" : "Edit video"}
+              className="inline-flex items-center justify-center w-7 h-7 rounded-md text-neutral-500 hover:bg-primary-50 hover:text-primary-700"
+            >
+              <FiArrowUpRight />
+            </Link>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

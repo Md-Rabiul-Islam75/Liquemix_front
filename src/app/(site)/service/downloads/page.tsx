@@ -3,7 +3,8 @@ import { FiFile, FiDownload } from "react-icons/fi";
 import PageHeader from "@/components/common/PageHeader";
 import DownloadCategoryTabs from "@/components/service/DownloadCategoryTabs";
 import {
-  standaloneDocuments,
+  fetchDownloads,
+  fetchProductDocuments,
   DOWNLOAD_CATEGORIES,
 } from "@/data/downloads";
 import { fetchSegmentsMap } from "@/data/segments";
@@ -22,19 +23,25 @@ export default async function DownloadsPage({ searchParams }: Props) {
   const sp = await searchParams;
   const category = sp.category;
 
-  const segMap = await fetchSegmentsMap();
+  const [segMap, standaloneDocs, productDocs] = await Promise.all([
+    fetchSegmentsMap(),
+    fetchDownloads(),
+    fetchProductDocuments(),
+  ]);
+  // Standalone library documents + every document attached to a product.
+  const allDocuments = [...standaloneDocs, ...productDocs];
 
   const counts = DOWNLOAD_CATEGORIES.reduce<Record<string, number>>(
     (acc, c) => {
-      acc[c] = standaloneDocuments.filter((d) => d.category === c).length;
+      acc[c] = allDocuments.filter((d) => d.category === c).length;
       return acc;
     },
     {}
   );
 
   const list = category
-    ? standaloneDocuments.filter((d) => d.category === category)
-    : standaloneDocuments;
+    ? allDocuments.filter((d) => d.category === category)
+    : allDocuments;
 
   // Group remaining list by category for nicer presentation
   const grouped = DOWNLOAD_CATEGORIES.map((c) => ({

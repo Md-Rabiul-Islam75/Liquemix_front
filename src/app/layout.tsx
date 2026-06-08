@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import { StoreProvider } from "@/redux/store/StoreProvider";
 import { Toaster } from "sonner";
+import RouteProgress from "@/components/common/RouteProgress";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -37,6 +38,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${poppins.variable} antialiased`}>
         <StoreProvider>
+          <RouteProgress />
           {children}
           <Toaster position="top-right" expand={false} richColors closeButton />
         </StoreProvider>

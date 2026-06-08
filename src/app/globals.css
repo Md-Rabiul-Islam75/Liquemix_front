@@ -489,6 +489,15 @@ textarea.admin-input {
 .lqm-fade-in { animation: lqm-fade-in 120ms ease-out; }
 .lqm-pop-in { animation: lqm-pop-in 150ms ease-out; }
 
+/* Global route-change progress bar (RouteProgress) — an indeterminate
+ * brand-gradient sweep that runs while the next page is being fetched. */
+@keyframes lqm-route-sweep {
+  0%   { left: -35%; width: 35%; }
+  50%  { left: 30%;  width: 45%; }
+  100% { left: 100%; width: 35%; }
+}
+.lqm-route-bar { animation: lqm-route-sweep 1.1s ease-in-out infinite; }
+
 /* ---------- Rich text editor (RichTextEditor) ----------
  * The contentEditable surface reuses the public `.prose-news` typography so
  * the editor is true WYSIWYG — a heading or list looks exactly like it will

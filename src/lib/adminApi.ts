@@ -20,7 +20,11 @@ export type AdminUser = {
   firstName?: string;
   lastName?: string;
   role?: string;
+  /** Admin access level: SUPER_ADMIN | EDITOR | VIEWER. */
+  adminRole?: AdminRoleName;
 };
+
+export type AdminRoleName = "SUPER_ADMIN" | "EDITOR" | "VIEWER";
 
 type Envelope<T> = {
   status: "success" | "error";
@@ -95,10 +99,26 @@ export async function adminLogin(
     firstName: body.firstName as string | undefined,
     lastName: body.lastName as string | undefined,
     role: body.role as string | undefined,
+    adminRole: body.adminRole as AdminRoleName | undefined,
   };
   setToken(token);
   cacheUser(user);
   return { token, user };
+}
+
+/** The signed-in admin's access level, or null if unknown. */
+export function getAdminRole(): AdminRoleName | null {
+  return getCachedUser()?.adminRole ?? null;
+}
+
+/** Capability helpers derived from the cached admin role. */
+export function canManageUsers(): boolean {
+  return getAdminRole() === "SUPER_ADMIN";
+}
+
+export function canWrite(): boolean {
+  // Viewers are read-only; editors and super admins can write.
+  return getAdminRole() !== "VIEWER";
 }
 
 async function call<T>(

@@ -4,7 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { adminGet, getToken } from "@/lib/adminApi";
+import {
+  adminGet,
+  getToken,
+  getCachedUser,
+  type AdminRoleName,
+  type AdminUser,
+} from "@/lib/adminApi";
 import {
   FiActivity,
   FiArchive,
@@ -73,6 +79,28 @@ export default function AdminSidebar({ counts }: { counts: Counts }) {
   // Live numbers win once loaded; placeholders show instantly meanwhile.
   const c: Counts = { ...counts, ...live };
 
+  // Signed-in admin (for the footer + role-based nav gating).
+  const [me, setMe] = useState<AdminUser | null>(null);
+  useEffect(() => {
+    setMe(getCachedUser());
+  }, [pathname]);
+  const myRole: AdminRoleName | null = me?.adminRole ?? null;
+  const isSuperAdmin = myRole === "SUPER_ADMIN";
+  const initials = me
+    ? `${me.firstName ?? ""} ${me.lastName ?? ""}`
+        .trim()
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase() || "AD"
+    : "AD";
+  const fullName =
+    me && (me.firstName || me.lastName)
+      ? `${me.firstName ?? ""} ${me.lastName ?? ""}`.trim()
+      : me?.email ?? "Admin";
+  const roleLabel = myRole ? myRole.replace("_", " ").toLowerCase() : "admin";
+
   const groups: NavGroup[] = [
     {
       label: "Dashboard",
@@ -140,7 +168,16 @@ export default function AdminSidebar({ counts }: { counts: Counts }) {
       label: "Settings",
       items: [
         { href: "/admin/settings", label: "Site settings", icon: <FiSettings /> },
-        { href: "/admin/users", label: "Users & roles", icon: <FiUsers /> },
+        // User management is Super-Admin only.
+        ...(isSuperAdmin
+          ? [
+              {
+                href: "/admin/users",
+                label: "Users & roles",
+                icon: <FiUsers />,
+              },
+            ]
+          : []),
         { href: "/admin/audit", label: "Audit log", icon: <FiActivity /> },
       ],
     },
@@ -232,13 +269,15 @@ export default function AdminSidebar({ counts }: { counts: Counts }) {
         </Link>
         <div className="px-3 pt-3 mt-2 border-t border-white/10 flex items-center gap-3">
           <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-accent-500 text-neutral-900 text-sm font-bold">
-            TR
+            {initials}
           </span>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-white-base truncate">
-              Tanvir Rahman
+              {fullName}
             </p>
-            <p className="text-[11px] text-white/60 truncate">Super admin</p>
+            <p className="text-[11px] text-white/60 truncate capitalize">
+              {roleLabel}
+            </p>
           </div>
           <Link
             href="/admin/login"

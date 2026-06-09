@@ -74,7 +74,7 @@ export default function DocumentAccordion({
   );
 
   return (
-    <section className="rounded-2xl overflow-hidden bg-neutral-900 text-white-base">
+    <section className="rounded-2xl overflow-hidden bg-brand-deep text-white-base">
       <div className="px-6 md:px-8 py-6 md:py-7 border-b border-white/10">
         <h2 className="text-xl md:text-2xl font-bold">Downloads</h2>
         <p className="mt-1 text-sm text-white/65">

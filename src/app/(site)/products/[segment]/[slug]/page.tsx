@@ -379,7 +379,7 @@ export default async function ProductDetailPage({ params }: Props) {
       {videos.length > 0 && (
         <section className="section pt-0 bg-white-base print:hidden">
           <div className="container-page">
-            <div className="rounded-2xl bg-neutral-900 text-white-base p-6 md:p-10">
+            <div className="rounded-2xl bg-brand-deep text-white-base p-6 md:p-10">
               <div className="flex items-baseline justify-between mb-6">
                 <h2 className="text-xl md:text-2xl font-bold">Videos</h2>
                 <Link

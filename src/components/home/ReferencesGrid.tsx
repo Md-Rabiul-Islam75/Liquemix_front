@@ -7,17 +7,17 @@ export default function ReferencesGrid() {
   const list = referenceProjects.slice(0, 6);
 
   return (
-    <section className="section bg-neutral-900 text-white-base">
+    <section className="section bg-brand-deep text-white-base">
       <div className="container-page">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
           <div>
             <span className="eyebrow !text-accent-400">
               <span className="block w-4 h-px bg-accent-400" /> Reference projects
             </span>
-            <h2 className="section-title mt-3 text-white-base">
+            <h2 className="section-title mt-3 !text-white-base">
               Trusted on landmark projects.
             </h2>
-            <p className="section-subtitle text-neutral-400">
+            <p className="section-subtitle !text-neutral-300">
               From metro stations to high-rise residences — see how LiqueMix
               systems perform on the ground.
             </p>

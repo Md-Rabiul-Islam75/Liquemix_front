@@ -94,7 +94,7 @@ export default function VideoCard({
         >
           {video.category}
         </span>
-        <h3 className={`mt-2 ${compact ? "text-sm" : "text-base"} font-bold text-neutral-900 leading-snug line-clamp-2`}>
+        <h3 className={`mt-2 font-bold leading-snug line-clamp-2 ${compact ? "text-sm text-accent-400" : "text-base text-neutral-900"}`}>
           {video.title}
         </h3>
         {!compact && video.description && (

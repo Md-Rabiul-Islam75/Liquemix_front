@@ -121,6 +121,44 @@ export function canWrite(): boolean {
   return getAdminRole() !== "VIEWER";
 }
 
+/**
+ * Map an admin write path to the public cache tag(s) it invalidates. Kept
+ * in sync with lib/api.ts → tagsForPath. Some edits ripple: a category or
+ * segment change also affects product pages, so those purge "products" too.
+ */
+function tagsForAdminPath(path: string): string[] {
+  if (path.includes("/products")) return ["products"];
+  if (path.includes("/categories")) return ["categories", "products"];
+  if (path.includes("/segments")) return ["segments", "products"];
+  if (path.includes("/solutions")) return ["solutions"];
+  if (path.includes("/news")) return ["news"];
+  if (path.includes("/references")) return ["references"];
+  if (path.includes("/downloads")) return ["downloads"];
+  if (path.includes("/videos")) return ["videos"];
+  if (path.includes("/settings")) return ["settings"];
+  return [];
+}
+
+/**
+ * Fire-and-forget on-demand purge of the public cache after an admin write.
+ * Hits our own Next route (relative URL → port 3000), not the backend.
+ * Best-effort: any failure is swallowed because the revalidate window in
+ * lib/api.ts will heal the cache anyway.
+ */
+function purgePublic(path: string, token: string | null) {
+  const tags = tagsForAdminPath(path);
+  if (!tags.length || !token) return;
+  void fetch("/api/revalidate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ tags }),
+    keepalive: true,
+  }).catch(() => {});
+}
+
 async function call<T>(
   path: string,
   init: RequestInit = {}
@@ -146,6 +184,10 @@ async function call<T>(
         : `API ${path} failed (HTTP ${res.status})`
     );
   }
+  // After a successful mutation, purge the matching public cache tag so the
+  // live site reflects the change near-instantly.
+  const method = (init.method ?? "GET").toUpperCase();
+  if (method !== "GET") purgePublic(path, token);
   return json.data;
 }
 

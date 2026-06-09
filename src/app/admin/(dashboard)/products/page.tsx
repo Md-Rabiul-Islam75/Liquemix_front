@@ -3,23 +3,30 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import useSWR from "swr";
 import {
   FiAlertCircle,
   FiArrowUpRight,
+  FiCheckCircle,
   FiDownload,
+  FiEye,
   FiFilter,
   FiLogIn,
-  FiMoreVertical,
   FiPlus,
   FiSearch,
+  FiSlash,
   FiStar,
   FiTag,
+  FiTrash,
 } from "react-icons/fi";
 
 import AdminPageHeader from "@/components/admin/PageHeader";
 import StatusPill from "@/components/admin/StatusPill";
 import Highlight from "@/components/common/Highlight";
-import { adminGet, getToken } from "@/lib/adminApi";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
+import RowActionsMenu from "@/components/admin/RowActionsMenu";
+import { adminGet, adminPost, adminDelete, getToken } from "@/lib/adminApi";
+import { ErrorToast, SuccessToast } from "@/helpers/ToastHelper";
 
 type SegmentLite = { id: number; slug: string; name: string; color: string };
 
@@ -58,10 +65,6 @@ const SEGMENT_DOT: Record<string, string> = {
  */
 export default function AdminProductsListPage() {
   const [hasToken, setHasToken] = useState<boolean | null>(null);
-  const [segments, setSegments] = useState<SegmentLite[]>([]);
-  const [data, setData] = useState<PageOf<ProductRow> | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
   const [q, setQ] = useState("");
   const [segmentId, setSegmentId] = useState<string>(""); // "" = all
@@ -69,54 +72,112 @@ export default function AdminProductsListPage() {
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
+  const [confirmDelete, setConfirmDelete] = useState<ProductRow | null>(null);
+
   useEffect(() => {
     setHasToken(getToken() != null);
   }, []);
 
-  // Load segments once
-  useEffect(() => {
-    if (hasToken !== true) return;
-    (async () => {
-      try {
-        const segs = await adminGet<SegmentLite[]>("/api/v1/catalog/segments");
-        setSegments(segs);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to load segments.");
-      }
-    })();
-  }, [hasToken]);
+  // Segments — cached across the whole admin session via SWR.
+  const { data: segments = [] } = useSWR<SegmentLite[]>(
+    hasToken ? "/api/v1/catalog/segments" : null,
+    adminGet
+  );
 
-  // Load products whenever filters change
-  useEffect(() => {
-    if (hasToken !== true) return;
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const params = new URLSearchParams();
-        if (segmentId) params.set("segmentId", segmentId);
-        if (q.trim()) params.set("q", q.trim());
-        params.set("page", String(page));
-        params.set("size", String(pageSize));
-        const result = await adminGet<PageOf<ProductRow>>(
-          `/api/v1/admin/catalog/products?${params.toString()}`
-        );
-        if (!cancelled) setData(result);
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Failed to load products.");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [hasToken, segmentId, q, page]);
+  // Products — SWR serves the cached page instantly on repeat navigation
+  // (no loading spinner once seen) and keeps the previous page on screen
+  // while a new filter/page loads, so the list never blanks out.
+  const params = new URLSearchParams();
+  if (segmentId) params.set("segmentId", segmentId);
+  if (q.trim()) params.set("q", q.trim());
+  params.set("page", String(page));
+  params.set("size", String(pageSize));
+  const productsKey = hasToken
+    ? `/api/v1/admin/catalog/products?${params.toString()}`
+    : null;
+  const { data, error, isLoading, mutate } = useSWR<PageOf<ProductRow>>(
+    productsKey,
+    adminGet,
+    { keepPreviousData: true }
+  );
+  const loading = isLoading;
+  const errorMsg = error
+    ? error instanceof Error
+      ? error.message
+      : String(error)
+    : null;
 
   const segmentByid = (id: number) => segments.find((s) => s.id === id);
+
+  // Optimistic publish toggle: flip the row's status in the SWR cache
+  // immediately (no refetch), fire the API, and revert only if it fails —
+  // so the status pill changes the instant you click.
+  async function togglePublish(p: ProductRow) {
+    const publishing = p.status !== "published";
+    const action = publishing ? "publish" : "unpublish";
+    const nextStatus: ProductRow["status"] = publishing ? "published" : "draft";
+    const snapshot = data;
+
+    mutate(
+      (d) =>
+        d
+          ? {
+              ...d,
+              items: d.items.map((row) =>
+                row.id === p.id
+                  ? {
+                      ...row,
+                      status: nextStatus,
+                      publishedAt:
+                        publishing && !row.publishedAt
+                          ? new Date().toISOString()
+                          : row.publishedAt,
+                    }
+                  : row
+              ),
+            }
+          : d,
+      { revalidate: false }
+    );
+
+    try {
+      await adminPost(`/api/v1/admin/catalog/products/${p.id}/${action}`, {});
+      SuccessToast(
+        publishing ? `"${p.name}" published` : `"${p.name}" moved to draft`
+      );
+    } catch (e) {
+      mutate(snapshot, { revalidate: false }); // revert
+      ErrorToast(e instanceof Error ? e.message : "Update failed");
+    }
+  }
+
+  // Optimistic delete: drop the row immediately, revert if the API fails.
+  async function doDelete() {
+    const target = confirmDelete;
+    if (!target) return;
+    setConfirmDelete(null);
+    const snapshot = data;
+
+    mutate(
+      (d) =>
+        d
+          ? {
+              ...d,
+              items: d.items.filter((row) => row.id !== target.id),
+              total: Math.max(0, d.total - 1),
+            }
+          : d,
+      { revalidate: false }
+    );
+
+    try {
+      await adminDelete(`/api/v1/admin/catalog/products/${target.id}`);
+      SuccessToast(`"${target.name}" deleted`);
+    } catch (e) {
+      mutate(snapshot, { revalidate: false }); // revert
+      ErrorToast(e instanceof Error ? e.message : "Delete failed");
+    }
+  }
 
   // Apply status filter client-side
   const visible = (data?.items ?? []).filter((p) =>
@@ -226,10 +287,10 @@ export default function AdminProductsListPage() {
         </div>
       </div>
 
-      {error && (
+      {errorMsg && (
         <div className="mb-4 flex items-start gap-2 p-3 rounded-lg bg-error-50 border border-error-300 text-error-500 text-sm">
           <FiAlertCircle className="text-base mt-0.5 shrink-0" />
-          <span>{error}</span>
+          <span>{errorMsg}</span>
         </div>
       )}
 
@@ -386,12 +447,38 @@ export default function AdminProductsListPage() {
                           >
                             <FiArrowUpRight />
                           </Link>
-                          <span
-                            aria-label="Row menu"
-                            className="inline-flex items-center justify-center w-8 h-8 rounded-md text-neutral-400"
-                          >
-                            <FiMoreVertical />
-                          </span>
+                          <RowActionsMenu
+                            label={`Actions for ${p.name}`}
+                            actions={[
+                              ...(seg?.slug && p.slug
+                                ? [
+                                    {
+                                      label: "View on site",
+                                      icon: <FiEye />,
+                                      href: `/products/${seg.slug}/${p.slug}`,
+                                    },
+                                  ]
+                                : []),
+                              p.status === "published"
+                                ? {
+                                    label: "Unpublish",
+                                    icon: <FiSlash />,
+                                    onClick: () => togglePublish(p),
+                                  }
+                                : {
+                                    label: "Publish",
+                                    icon: <FiCheckCircle />,
+                                    onClick: () => togglePublish(p),
+                                  },
+                              {
+                                label: "Delete",
+                                icon: <FiTrash />,
+                                danger: true,
+                                separatorBefore: true,
+                                onClick: () => setConfirmDelete(p),
+                              },
+                            ]}
+                          />
                         </div>
                       </td>
                     </tr>
@@ -429,6 +516,16 @@ export default function AdminProductsListPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmDelete != null}
+        danger
+        title={`Delete "${confirmDelete?.name ?? ""}"?`}
+        message="This removes the product from the catalog and the public site. This action can be reversed by an administrator."
+        confirmLabel="Delete product"
+        onConfirm={doDelete}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </>
   );
 }

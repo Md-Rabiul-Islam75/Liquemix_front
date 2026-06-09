@@ -88,16 +88,13 @@ export default function RouteProgress() {
 
   return (
     <div aria-live="polite" aria-busy="true">
-      {/* Top progress bar — sliding brand gradient */}
+      {/* Slim top progress bar — sliding brand gradient. The route-level
+          loading.tsx skeletons now own "page is loading" feedback, so this
+          is just a lightweight "navigation in progress" hint and never
+          covers content (which previously made a loaded page still look
+          like it was loading). */}
       <div className="fixed top-0 left-0 right-0 z-[200] h-[3px] bg-primary-100/40 overflow-hidden">
         <span className="lqm-route-bar absolute top-0 h-full rounded-full bg-gradient-to-r from-primary-500 via-secondary-500 to-accent-500" />
-      </div>
-
-      {/* Floating brand spinner — current page stays visible behind it */}
-      <div className="fixed inset-0 z-[195] flex items-center justify-center pointer-events-none">
-        <span className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white-base/90 backdrop-blur shadow-[0_20px_50px_-12px_rgba(7,36,84,0.35)] ring-1 ring-neutral-100">
-          <span className="loading loading-dots loading-lg text-secondary-500" />
-        </span>
       </div>
     </div>
   );

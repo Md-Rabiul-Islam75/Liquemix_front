@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import useSWR from "swr";
 import {
   FiAlertCircle,
   FiArrowUpRight,
@@ -63,10 +64,6 @@ function formatBytes(kb?: number | null) {
  */
 export default function AdminDownloadsPage() {
   const [hasToken, setHasToken] = useState<boolean | null>(null);
-  const [standalone, setStandalone] = useState<DocumentRow[]>([]);
-  const [productDocs, setProductDocs] = useState<EmbeddedDocument[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("");
@@ -83,7 +80,9 @@ export default function AdminDownloadsPage() {
     setDeleting(true);
     try {
       await adminDelete(`/api/v1/admin/content/downloads/${pendingDelete.id}`);
-      setStandalone((prev) => prev.filter((d) => d.id !== pendingDelete.id));
+      mutateStd((prev) => (prev ?? []).filter((d) => d.id !== pendingDelete.id), {
+        revalidate: false,
+      });
       SuccessToast("Deleted", pendingDelete.title);
       setPendingDelete(null);
     } catch (e) {
@@ -96,41 +95,32 @@ export default function AdminDownloadsPage() {
     }
   }
 
-  useEffect(() => {
-    if (hasToken !== true) return;
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const params = new URLSearchParams();
-        if (category) params.set("category", category);
-        if (q.trim()) params.set("q", q.trim());
-        const [std, prodRows] = await Promise.all([
-          adminGet<DocumentRow[]>(
-            `/api/v1/admin/content/downloads${
-              params.toString() ? `?${params}` : ""
-            }`
-          ),
-          adminGet<EmbeddedDocumentRow[]>(
-            "/api/v1/admin/catalog/products/media/documents"
-          ),
-        ]);
-        if (!cancelled) {
-          setStandalone(std);
-          setProductDocs(prodRows.map(mapEmbeddedDocument));
-        }
-      } catch (e) {
-        if (!cancelled)
-          setError(e instanceof Error ? e.message : "Failed to load documents.");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [hasToken, category, q]);
+  // SWR: cached + instant on repeat navigation; keeps the previous list on
+  // screen while a category/search filter reloads.
+  const dlParams = new URLSearchParams();
+  if (category) dlParams.set("category", category);
+  if (q.trim()) dlParams.set("q", q.trim());
+  const stdKey = hasToken
+    ? `/api/v1/admin/content/downloads${
+        dlParams.toString() ? `?${dlParams}` : ""
+      }`
+    : null;
+  const {
+    data: standalone = [],
+    error: stdError,
+    isLoading: loading,
+    mutate: mutateStd,
+  } = useSWR<DocumentRow[]>(stdKey, adminGet, { keepPreviousData: true });
+  const { data: rawProductDocs } = useSWR<EmbeddedDocumentRow[]>(
+    hasToken ? "/api/v1/admin/catalog/products/media/documents" : null,
+    adminGet
+  );
+  const productDocs = (rawProductDocs ?? []).map(mapEmbeddedDocument);
+  const error = stdError
+    ? stdError instanceof Error
+      ? stdError.message
+      : String(stdError)
+    : null;
 
   // Product docs are filtered client-side (the admin endpoint returns all).
   const ql = q.trim().toLowerCase();

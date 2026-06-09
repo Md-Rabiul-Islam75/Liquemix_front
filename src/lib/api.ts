@@ -5,13 +5,37 @@
  * Every backend response wraps payload in {status,data,message,meta}.
  * This helper unwraps `data` so callers see just the entity / entities.
  *
- * Cache policy: `no-store` on every request so the public site reflects
- * the latest admin edits immediately. Swap per-route to `next.revalidate`
- * once we settle on freshness windows (e.g. featured products = 60s).
+ * Cache policy: responses are cached and tagged per resource. Pages serve
+ * instantly from cache; an admin edit fires an on-demand purge (POST
+ * /api/revalidate → revalidateTag) so the change shows within ~1s. The
+ * `revalidate` window below is a safety net that heals the cache even if a
+ * purge is ever missed.
  */
 
 const BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+
+/** Safety-net revalidation window (seconds). On-demand purges keep content
+ *  fresh in real time; this just guarantees eventual freshness. */
+const REVALIDATE_SECONDS = 600;
+
+/**
+ * Derive the cache tag(s) for a backend path so a public fetch can be
+ * purged by resource. MUST stay in sync with the admin-side tag map in
+ * lib/adminApi.ts (tagsForAdminPath) — same strings on both ends.
+ */
+export function tagsForPath(path: string): string[] {
+  if (path.includes("/products")) return ["products"];
+  if (path.includes("/categories")) return ["categories"];
+  if (path.includes("/segments")) return ["segments"];
+  if (path.includes("/solutions")) return ["solutions"];
+  if (path.includes("/news")) return ["news"];
+  if (path.includes("/references")) return ["references"];
+  if (path.includes("/downloads")) return ["downloads"];
+  if (path.includes("/videos")) return ["videos"];
+  if (path.includes("/settings")) return ["settings"];
+  return ["public"];
+}
 
 type Envelope<T> = {
   status: "success" | "error";
@@ -54,7 +78,7 @@ export async function apiGet<T>(path: string): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`${BASE}${path}`, {
-      cache: "no-store",
+      next: { revalidate: REVALIDATE_SECONDS, tags: tagsForPath(path) },
       signal: controller.signal,
     });
   } catch (e) {

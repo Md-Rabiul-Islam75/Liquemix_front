@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import useSWR from "swr";
 import {
   FiAlertCircle,
   FiArrowUpRight,
@@ -32,9 +33,6 @@ type ReferenceRow = {
 /** References list — talks to /api/v1/admin/content/references (all statuses). */
 export default function AdminReferencesPage() {
   const [hasToken, setHasToken] = useState<boolean | null>(null);
-  const [rows, setRows] = useState<ReferenceRow[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
   const [q, setQ] = useState("");
   const [projectType, setProjectType] = useState("");
@@ -44,35 +42,27 @@ export default function AdminReferencesPage() {
     setHasToken(getToken() != null);
   }, []);
 
-  useEffect(() => {
-    if (hasToken !== true) return;
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const params = new URLSearchParams();
-        if (projectType) params.set("projectType", projectType);
-        if (q.trim()) params.set("q", q.trim());
-        const result = await adminGet<ReferenceRow[]>(
-          `/api/v1/admin/content/references${
-            params.toString() ? `?${params}` : ""
-          }`
-        );
-        if (!cancelled) setRows(result);
-      } catch (e) {
-        if (!cancelled)
-          setError(
-            e instanceof Error ? e.message : "Failed to load references."
-          );
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [hasToken, projectType, q]);
+  // SWR: cached + instant on repeat navigation; keeps the previous list on
+  // screen while a filter/search reloads.
+  const params = new URLSearchParams();
+  if (projectType) params.set("projectType", projectType);
+  if (q.trim()) params.set("q", q.trim());
+  const { data: rows = [], error: swrError, isLoading: loading } = useSWR<
+    ReferenceRow[]
+  >(
+    hasToken
+      ? `/api/v1/admin/content/references${
+          params.toString() ? `?${params}` : ""
+        }`
+      : null,
+    adminGet,
+    { keepPreviousData: true }
+  );
+  const error = swrError
+    ? swrError instanceof Error
+      ? swrError.message
+      : String(swrError)
+    : null;
 
   // Distinct project types for the filter — derived from the loaded rows.
   const types = Array.from(new Set(rows.map((r) => r.projectType))).sort();

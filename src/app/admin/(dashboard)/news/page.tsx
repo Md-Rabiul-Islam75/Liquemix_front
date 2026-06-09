@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import useSWR from "swr";
 import {
   FiAlertCircle,
   FiArrowUpRight,
@@ -51,9 +52,6 @@ function formatDate(d?: string | null) {
 /** News list — talks to /api/v1/admin/content/news (all statuses). */
 export default function AdminNewsPage() {
   const [hasToken, setHasToken] = useState<boolean | null>(null);
-  const [rows, setRows] = useState<NewsRow[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("");
@@ -63,31 +61,25 @@ export default function AdminNewsPage() {
     setHasToken(getToken() != null);
   }, []);
 
-  useEffect(() => {
-    if (hasToken !== true) return;
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const params = new URLSearchParams();
-        if (category) params.set("category", category);
-        if (q.trim()) params.set("q", q.trim());
-        const result = await adminGet<NewsRow[]>(
-          `/api/v1/admin/content/news${params.toString() ? `?${params}` : ""}`
-        );
-        if (!cancelled) setRows(result);
-      } catch (e) {
-        if (!cancelled)
-          setError(e instanceof Error ? e.message : "Failed to load posts.");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [hasToken, category, q]);
+  // SWR: cached + instant on repeat navigation; keeps the previous list on
+  // screen while a filter/search reloads.
+  const params = new URLSearchParams();
+  if (category) params.set("category", category);
+  if (q.trim()) params.set("q", q.trim());
+  const { data: rows = [], error: swrError, isLoading: loading } = useSWR<
+    NewsRow[]
+  >(
+    hasToken
+      ? `/api/v1/admin/content/news${params.toString() ? `?${params}` : ""}`
+      : null,
+    adminGet,
+    { keepPreviousData: true }
+  );
+  const error = swrError
+    ? swrError instanceof Error
+      ? swrError.message
+      : String(swrError)
+    : null;
 
   const visible = rows.filter((r) =>
     statusFilter ? r.status === statusFilter : true

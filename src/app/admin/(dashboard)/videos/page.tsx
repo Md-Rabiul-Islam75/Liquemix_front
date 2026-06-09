@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import useSWR from "swr";
 import {
   FiAlertCircle,
   FiArrowUpRight,
@@ -54,10 +55,6 @@ const CATEGORIES = Object.keys(CATEGORY_TINT);
  */
 export default function AdminVideosPage() {
   const [hasToken, setHasToken] = useState<boolean | null>(null);
-  const [standalone, setStandalone] = useState<StandaloneVideo[]>([]);
-  const [productVideos, setProductVideos] = useState<ProductVideo[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("");
@@ -76,7 +73,9 @@ export default function AdminVideosPage() {
     setDeleting(true);
     try {
       await adminDelete(`/api/v1/admin/content/videos/${pendingDelete.id}`);
-      setStandalone((prev) => prev.filter((v) => v.id !== pendingDelete.id));
+      mutateStd((prev) => (prev ?? []).filter((v) => v.id !== pendingDelete.id), {
+        revalidate: false,
+      });
       SuccessToast("Deleted", pendingDelete.title);
       setPendingDelete(null);
     } catch (e) {
@@ -89,36 +88,28 @@ export default function AdminVideosPage() {
     }
   }
 
-  useEffect(() => {
-    if (hasToken !== true) return;
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const params = new URLSearchParams();
-        if (category) params.set("category", category);
-        const [std, prod] = await Promise.all([
-          adminGet<StandaloneVideo[]>(
-            `/api/v1/admin/content/videos${params.toString() ? `?${params}` : ""}`
-          ),
-          adminGet<ProductVideo[]>("/api/v1/admin/catalog/products/media/videos"),
-        ]);
-        if (!cancelled) {
-          setStandalone(std);
-          setProductVideos(prod);
-        }
-      } catch (e) {
-        if (!cancelled)
-          setError(e instanceof Error ? e.message : "Failed to load videos.");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [hasToken, category]);
+  // SWR: serves the cached list instantly on repeat navigation (no spinner)
+  // and keeps the previous list on screen while a category filter reloads.
+  const stdKey = hasToken
+    ? `/api/v1/admin/content/videos${
+        category ? `?category=${encodeURIComponent(category)}` : ""
+      }`
+    : null;
+  const {
+    data: standalone = [],
+    error: stdError,
+    isLoading: loading,
+    mutate: mutateStd,
+  } = useSWR<StandaloneVideo[]>(stdKey, adminGet, { keepPreviousData: true });
+  const { data: productVideos = [] } = useSWR<ProductVideo[]>(
+    hasToken ? "/api/v1/admin/catalog/products/media/videos" : null,
+    adminGet
+  );
+  const error = stdError
+    ? stdError instanceof Error
+      ? stdError.message
+      : String(stdError)
+    : null;
 
   const ql = q.trim().toLowerCase();
   const matchesQ = (t: string) => (ql ? t.toLowerCase().includes(ql) : true);

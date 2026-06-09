@@ -33,6 +33,7 @@ import {
   adminGet,
   adminPost,
   adminPut,
+  adminDelete,
   getToken,
 } from "@/lib/adminApi";
 import { ErrorToast, SuccessToast } from "@/helpers/ToastHelper";
@@ -120,6 +121,8 @@ export default function AdminProductEditPage() {
   // Submission state — feedback goes to a toast.
   const [submitting, setSubmitting] = useState<null | "draft" | "publish">(null);
   const [discardOpen, setDiscardOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Load product + segments
   useEffect(() => {
@@ -253,6 +256,21 @@ export default function AdminProductEditPage() {
     router.push("/admin/products");
   }
 
+  async function onDelete() {
+    if (!product) return;
+    setDeleting(true);
+    try {
+      await adminDelete(`/api/v1/admin/catalog/products/${product.id}`);
+      SuccessToast(`"${product.name}" deleted`);
+      router.push("/admin/products");
+      router.refresh();
+    } catch (e) {
+      ErrorToast(e instanceof Error ? e.message : "Delete failed");
+      setDeleting(false);
+      setDeleteOpen(false);
+    }
+  }
+
   // ─── Render: gates ────────────────────────────────────────────────
   if (hasToken === false) {
     return (
@@ -325,6 +343,14 @@ export default function AdminProductEditPage() {
             >
               <FiArrowLeft /> Back
             </Link>
+            <button
+              type="button"
+              onClick={() => setDeleteOpen(true)}
+              disabled={submitting !== null}
+              className="inline-flex items-center gap-1.5 h-10 px-3 rounded-lg border border-error-200 bg-white-base text-sm font-semibold text-error-500 hover:bg-error-50 hover:border-error-300 disabled:opacity-60"
+            >
+              <FiTrash /> Delete
+            </button>
           </>
         }
       />
@@ -573,6 +599,17 @@ export default function AdminProductEditPage() {
         confirmLabel="Discard changes"
         onConfirm={onDiscard}
         onCancel={() => setDiscardOpen(false)}
+      />
+
+      <ConfirmDialog
+        open={deleteOpen}
+        danger
+        busy={deleting}
+        title={`Delete "${product.name}"?`}
+        message="This removes the product from the catalog and the public site. This action can be reversed by an administrator."
+        confirmLabel="Delete product"
+        onConfirm={onDelete}
+        onCancel={() => setDeleteOpen(false)}
       />
     </>
   );

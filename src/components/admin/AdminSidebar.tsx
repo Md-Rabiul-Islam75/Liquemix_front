@@ -168,7 +168,7 @@ export default function AdminSidebar({ counts }: { counts: Counts }) {
       label: "Settings",
       items: [
         { href: "/admin/settings", label: "Site settings", icon: <FiSettings /> },
-        // User management is Super-Admin only.
+        // User management + audit log are Super-Admin only.
         ...(isSuperAdmin
           ? [
               {
@@ -176,9 +176,13 @@ export default function AdminSidebar({ counts }: { counts: Counts }) {
                 label: "Users & roles",
                 icon: <FiUsers />,
               },
+              {
+                href: "/admin/audit",
+                label: "Audit log",
+                icon: <FiActivity />,
+              },
             ]
           : []),
-        { href: "/admin/audit", label: "Audit log", icon: <FiActivity /> },
       ],
     },
   ];

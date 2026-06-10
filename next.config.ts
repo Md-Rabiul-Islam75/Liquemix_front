@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "sandbox.sslcommerz.com" },
       { protocol: "https", hostname: "placehold.co" },
+      // Firebase Storage — product images/datasheets migrated off base64
+      { protocol: "https", hostname: "firebasestorage.googleapis.com" },
     ],
   },
   async rewrites() {

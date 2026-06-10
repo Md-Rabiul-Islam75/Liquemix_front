@@ -19,6 +19,7 @@ import {
   FiBox,
   FiClipboard,
   FiDownload,
+  FiInbox,
   FiFolder,
   FiGrid,
   FiHome,
@@ -162,6 +163,7 @@ export default function AdminSidebar({ counts }: { counts: Counts }) {
           icon: <FiDownload />,
           count: c.downloads,
         },
+        { href: "/admin/enquiries", label: "Enquiries", icon: <FiInbox /> },
       ],
     },
     {

@@ -58,3 +58,24 @@ export function whatsappUrl(
   u.searchParams.set("text", message);
   return u.toString();
 }
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+
+/**
+ * Records the person enquiring by sending their Google ID token to the
+ * backend, which verifies it and upserts the user (name + email). That's
+ * what surfaces them in the admin "Enquiries" list. Throws on failure so the
+ * caller can show an error.
+ */
+export async function recordEnquiryIdentity(idToken: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/v1/auth/google`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idToken }),
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error(`Could not record your details (HTTP ${res.status}).`);
+  }
+}

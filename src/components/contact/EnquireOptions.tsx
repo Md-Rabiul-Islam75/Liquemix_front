@@ -1,14 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { FaWhatsapp, FaLinkedinIn, FaFacebookF } from "react-icons/fa";
-import { FiMail, FiPhone, FiArrowUpRight } from "react-icons/fi";
+import { FcGoogle } from "react-icons/fc";
+import { FiMail, FiPhone, FiArrowUpRight, FiCheckCircle } from "react-icons/fi";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import {
   buildEnquiryMessage,
+  recordEnquiryIdentity,
   whatsappUrl,
   type EnquireContext,
 } from "@/lib/enquiry";
+import { isFirebaseConfigured, signInWithGoogle } from "@/lib/firebase";
+
+type Enquirer = { name: string; email: string };
+const ENQUIRER_KEY = "liquemix_enquirer";
 
 export default function EnquireOptions({
   context,
@@ -21,6 +28,73 @@ export default function EnquireOptions({
   const settings = useSettings();
   const message = buildEnquiryMessage(context);
   const wa = whatsappUrl(message, settings);
+
+  // ─── Enquire → Google sign-in gate ────────────────────────────────
+  // When Firebase is configured, the visitor identifies themselves with
+  // Google first (so the team can follow up + it shows in admin Enquiries).
+  // Cached per session. If Firebase isn't set up, channels show directly.
+  const [enquirer, setEnquirer] = useState<Enquirer | null>(null);
+  const [signing, setSigning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const gateEnabled = isFirebaseConfigured();
+
+  useEffect(() => {
+    if (!gateEnabled) return;
+    try {
+      const raw = sessionStorage.getItem(ENQUIRER_KEY);
+      if (raw) setEnquirer(JSON.parse(raw) as Enquirer);
+    } catch {
+      /* ignore */
+    }
+  }, [gateEnabled]);
+
+  async function handleGoogle() {
+    setSigning(true);
+    setError(null);
+    try {
+      const id = await signInWithGoogle();
+      await recordEnquiryIdentity(id.idToken);
+      const who: Enquirer = { name: id.name, email: id.email };
+      sessionStorage.setItem(ENQUIRER_KEY, JSON.stringify(who));
+      setEnquirer(who);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(
+        msg.includes("popup-closed") || msg.includes("cancelled")
+          ? "Sign-in was cancelled."
+          : "Couldn't sign you in. Please try again."
+      );
+    } finally {
+      setSigning(false);
+    }
+  }
+
+  if (gateEnabled && !enquirer) {
+    return (
+      <div className="rounded-2xl border border-neutral-100 bg-white-base p-6 sm:p-8 text-center max-w-md mx-auto">
+        <span className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary-50 text-primary-600 text-xl mb-4">
+          <FiMail />
+        </span>
+        <h3 className="text-lg font-bold text-neutral-900">
+          Let&apos;s get you the right answer
+        </h3>
+        <p className="mt-2 text-sm text-neutral-600">
+          Sign in with Google so our engineer can follow up. We only use your
+          name and email to respond — it takes a second.
+        </p>
+        <button
+          type="button"
+          onClick={handleGoogle}
+          disabled={signing}
+          className="mt-5 inline-flex items-center justify-center gap-2 h-11 px-5 rounded-lg border border-neutral-200 bg-white-base text-sm font-semibold text-neutral-800 hover:border-primary-300 hover:bg-neutral-50 disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          <FcGoogle className="text-lg" />
+          {signing ? "Signing in…" : "Continue with Google"}
+        </button>
+        {error && <p className="mt-3 text-xs text-error-500">{error}</p>}
+      </div>
+    );
+  }
 
   const channels = [
     {
@@ -126,11 +200,24 @@ export default function EnquireOptions({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {channels.map((c) => (
-        <Link
-          key={c.key}
-          href={c.href}
+    <div>
+      {enquirer && (
+        <div className="mb-4 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-success-50 border border-success-200 text-success-700 text-sm">
+          <FiCheckCircle className="shrink-0" />
+          <span>
+            Signed in as{" "}
+            <span className="font-semibold">
+              {enquirer.name || enquirer.email}
+            </span>{" "}
+            — pick how you&apos;d like to reach us.
+          </span>
+        </div>
+      )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {channels.map((c) => (
+          <Link
+            key={c.key}
+            href={c.href}
           target={c.external ? "_blank" : undefined}
           rel={c.external ? "noreferrer noopener" : undefined}
           className={`group relative rounded-2xl border p-6 transition-all ${
@@ -158,6 +245,7 @@ export default function EnquireOptions({
           )}
         </Link>
       ))}
+      </div>
     </div>
   );
 }

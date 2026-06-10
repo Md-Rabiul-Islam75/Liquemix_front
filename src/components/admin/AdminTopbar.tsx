@@ -2,17 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  FiBell,
-  FiChevronRight,
-  FiMenu,
-  FiPlus,
-  FiSearch,
-} from "react-icons/fi";
+import { FiChevronRight, FiMenu, FiPlus } from "react-icons/fi";
+
+import AdminSearch from "@/components/admin/AdminSearch";
 
 /**
- * Admin topbar — breadcrumbs derived from the URL, plus a search-stub and
- * a "+ Create" button that drops a menu of common new-record shortcuts.
+ * Admin topbar — breadcrumbs derived from the URL, a global search, and a
+ * "+ Create" shortcut.
  *
  * Breadcrumbs are computed client-side from `pathname` rather than
  * threaded through every page, because every admin page sits under a
@@ -95,24 +91,8 @@ export default function AdminTopbar() {
 
         <div className="flex-1" />
 
-        {/* Global search stub */}
-        <div className="hidden md:flex items-center gap-2 h-9 px-3 rounded-lg border border-neutral-200 text-sm text-neutral-500 bg-neutral-50 min-w-[280px]">
-          <FiSearch />
-          <span>Search products, references, news...</span>
-          <kbd className="ml-auto px-1.5 py-0.5 rounded bg-white-base border border-neutral-200 font-mono text-[10px] text-neutral-500">
-            ⌘ K
-          </kbd>
-        </div>
-
-        {/* Notifications */}
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="relative inline-flex items-center justify-center w-9 h-9 rounded-md text-neutral-600 hover:bg-neutral-100"
-        >
-          <FiBell />
-          <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-secondary-500 ring-2 ring-white-base" />
-        </button>
+        {/* Global search */}
+        <AdminSearch />
 
         {/* Create */}
         <Link

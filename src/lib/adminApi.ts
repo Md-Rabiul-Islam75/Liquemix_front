@@ -106,6 +106,44 @@ export async function adminLogin(
   return { token, user };
 }
 
+/**
+ * Upload one file to the admin media endpoint and return the public URL
+ * the backend stored it at (e.g. http://localhost:8000/files/products/
+ * images/<uuid>.jpg). This replaces the old base64-data-URL strategy:
+ * the bytes live on disk, the row keeps only this short URL.
+ *
+ * Multipart — we intentionally do NOT set Content-Type, so the browser
+ * adds the multipart boundary itself. `prefix` is the storage folder,
+ * e.g. "products/images" or "segments".
+ */
+export async function adminUploadFile(
+  file: File,
+  prefix: string
+): Promise<string> {
+  const token = getToken();
+  const form = new FormData();
+  form.append("file", file);
+  form.append("prefix", prefix);
+  const res = await fetch(`${BASE}/api/v1/admin/files`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+    credentials: "include",
+  });
+  const text = await res.text();
+  const json = text
+    ? (JSON.parse(text) as Envelope<{ url?: string }>)
+    : ({} as Envelope<{ url?: string }>);
+  if (!res.ok || json.status === "error" || !json.data?.url) {
+    throw new Error(
+      typeof json.message === "string" && json.message
+        ? json.message
+        : `Upload failed (HTTP ${res.status})`
+    );
+  }
+  return json.data.url;
+}
+
 /** The signed-in admin's access level, or null if unknown. */
 export function getAdminRole(): AdminRoleName | null {
   return getCachedUser()?.adminRole ?? null;

@@ -262,6 +262,7 @@ export default function AdminSegmentEditPage() {
               value={heroImage}
               onChange={setHeroImage}
               aspectClass="aspect-[16/9]"
+              prefix="segments"
               uploadLabel="Choose a hero image"
               replaceLabel="Replace hero image"
               helperText="JPG, PNG, WebP up to 5 MB. 16:9 looks best."

@@ -287,6 +287,7 @@ export default function DownloadEditor(props: Props) {
               value={url}
               onChange={onFileChange}
               accept="application/pdf"
+              prefix="downloads"
               uploadLabel="Choose a PDF"
               replaceLabel="Replace PDF"
             />

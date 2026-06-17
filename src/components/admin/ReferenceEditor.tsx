@@ -423,6 +423,7 @@ export default function ReferenceEditor(props: Props) {
               value={heroImage}
               onChange={setHeroImage}
               aspectClass="aspect-[16/10]"
+              prefix="references"
               uploadLabel="Choose a hero image"
               replaceLabel="Replace hero image"
             />

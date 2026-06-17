@@ -885,6 +885,7 @@ function CategoryForm({
             value={image ?? ""}
             onChange={setImage}
             aspectClass="aspect-[4/3]"
+            prefix="categories"
             uploadLabel="Choose a category image"
             replaceLabel="Replace category image"
             helperText="JPG, PNG, WebP up to 5 MB. Square or 4:3 looks best."

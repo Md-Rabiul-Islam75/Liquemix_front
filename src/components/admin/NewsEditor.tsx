@@ -336,6 +336,7 @@ export default function NewsEditor(props: Props) {
               value={coverImage}
               onChange={setCoverImage}
               aspectClass="aspect-[16/9]"
+              prefix="news"
               uploadLabel="Choose a cover image"
               replaceLabel="Replace cover image"
             />

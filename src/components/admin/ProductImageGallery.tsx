@@ -10,6 +10,7 @@ import {
   FiUpload,
   FiX,
 } from "react-icons/fi";
+import { adminUploadFile } from "@/lib/adminApi";
 
 export type ProductImage = {
   url: string;
@@ -18,18 +19,12 @@ export type ProductImage = {
 };
 
 /**
- * Image gallery editor. v1 stores images as base64 data URLs so we don't
- * need a backend file-storage endpoint yet — the user picks an image
- * file from disk, the browser reads it into a `data:image/...;base64,…`
- * string, and that goes straight into the product's images JSON.
+ * Image gallery editor. Each picked file is uploaded to the backend
+ * (POST /api/v1/admin/files) which stores it on disk and returns a short
+ * /files/... URL — that URL is what goes into the product's images JSON.
+ * The row stays tiny; no base64 bytes ever live in the database.
  *
- * When real upload (Firebase / S3) lands, swap the FileReader pass in
- * {@link addFiles} for a multipart POST that returns a CDN URL — the
- * downstream {@link ProductImage} shape and the rest of the editor stay
- * unchanged.
- *
- * Files over MAX_BYTES are rejected client-side. Anything larger should
- * really go to object storage anyway.
+ * Files over MAX_BYTES are rejected client-side before the upload.
  */
 
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB per image
@@ -38,15 +33,6 @@ function fmtSize(b: number) {
   if (b < 1024) return `${b} B`;
   if (b < 1024 * 1024) return `${(b / 1024).toFixed(0)} KB`;
   return `${(b / 1024 / 1024).toFixed(1)} MB`;
-}
-
-function readAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result ?? ""));
-    reader.onerror = () => reject(new Error("Could not read file."));
-    reader.readAsDataURL(file);
-  });
 }
 
 export default function ProductImageGallery({
@@ -78,14 +64,14 @@ export default function ProductImageGallery({
       }
       try {
         setBusy(true);
-        const dataUrl = await readAsDataUrl(file);
+        const url = await adminUploadFile(file, "products/images");
         accepted.push({
-          url: dataUrl,
+          url,
           alt: file.name.replace(/\.[^.]+$/, ""), // strip extension for default alt
           isPrimary: images.length === 0 && accepted.length === 0,
         });
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Could not read file.");
+        setError(e instanceof Error ? e.message : "Upload failed.");
       } finally {
         setBusy(false);
       }
@@ -219,7 +205,7 @@ export default function ProductImageGallery({
         <FiImage className="mx-auto text-3xl text-neutral-400 group-hover:text-primary-500 mb-3" />
         <p className="text-sm font-semibold text-neutral-800 mb-1">
           {busy
-            ? "Reading file…"
+            ? "Uploading…"
             : images.length === 0
             ? "Choose images to upload"
             : "Add more images"}

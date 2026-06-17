@@ -12,6 +12,7 @@ import {
 } from "react-icons/fi";
 import { DOCUMENT_LIBRARY, findInLibrary } from "@/data/documentLibrary";
 import { SuccessToast } from "@/helpers/ToastHelper";
+import { adminUploadFile } from "@/lib/adminApi";
 
 export type DocumentType =
   | "TDS"
@@ -48,7 +49,7 @@ const DOCUMENT_TYPES: { value: DocumentType; label: string }[] = [
   { value: "OTHER", label: "Other" },
 ];
 
-const MAX_BYTES = 25 * 1024 * 1024; // 25 MB cap for PDF uploads (matches backend AVATAR_MAX_SIZE × 5)
+const MAX_BYTES = 10 * 1024 * 1024; // 10 MB — matches the backend upload cap (AdminFileController)
 
 function fmtSize(b: number) {
   if (b < 1024) return `${b} B`;
@@ -60,24 +61,14 @@ function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function readAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result ?? ""));
-    reader.onerror = () => reject(new Error("Could not read file."));
-    reader.readAsDataURL(file);
-  });
-}
-
 /**
  * Product documents editor.
  *
  * Two add-flows:
  *   1. Pick from the in-project library (the PDFs under
  *      public/document-sheet/) — fastest path, no upload.
- *   2. Upload a new PDF — the browser reads it into a base64 data URL,
- *      same pragmatic v1 strategy as the image gallery. When Firebase /
- *      S3 lands, the data-URL becomes a CDN URL and nothing else changes.
+ *   2. Upload a new PDF — sent to POST /api/v1/admin/files, stored on disk,
+ *      and the returned /files/... URL goes onto the document. No base64.
  *
  * Each attached document carries: type (dropdown), title, language,
  * revision, optional file size, and the upload date. Editors can tweak
@@ -143,12 +134,12 @@ export default function ProductDocumentsEditor({
       }
       try {
         setBusy(true);
-        const dataUrl = await readAsDataUrl(file);
+        const url = await adminUploadFile(file, "products/documents");
         const cleanName = file.name.replace(/\.pdf$/i, "");
         accepted.push({
           type: defaultType,
           title: cleanName,
-          url: dataUrl,
+          url,
           language: "EN",
           revision: "R01",
           fileSizeKb: Math.round(file.size / 1024),
@@ -156,7 +147,7 @@ export default function ProductDocumentsEditor({
         });
         acceptedNames.push(file.name);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Could not read file.");
+        setError(e instanceof Error ? e.message : "Upload failed.");
       } finally {
         setBusy(false);
       }
@@ -402,7 +393,7 @@ export default function ProductDocumentsEditor({
         />
         <FiUpload className="mx-auto text-2xl text-neutral-400 group-hover:text-primary-500 mb-2" />
         <p className="text-sm font-semibold text-neutral-800">
-          {busy ? "Reading PDF…" : "Upload a new PDF"}
+          {busy ? "Uploading PDF…" : "Upload a new PDF"}
         </p>
         <p className="mt-1 text-xs text-neutral-500">
           Click to pick a file from your computer.

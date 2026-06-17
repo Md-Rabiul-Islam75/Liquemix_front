@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { FiFile, FiTrash, FiUpload, FiX } from "react-icons/fi";
+import { adminUploadFile } from "@/lib/adminApi";
 
 const DEFAULT_MAX_BYTES = 10 * 1024 * 1024; // 10 MB — TDS PDFs run a few MB
 
@@ -9,15 +10,6 @@ function fmtSize(b: number) {
   if (b < 1024) return `${b} B`;
   if (b < 1024 * 1024) return `${(b / 1024).toFixed(0)} KB`;
   return `${(b / 1024 / 1024).toFixed(1)} MB`;
-}
-
-function readAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result ?? ""));
-    reader.onerror = () => reject(new Error("Could not read file."));
-    reader.readAsDataURL(file);
-  });
 }
 
 /** Best-effort filename extraction from a URL. */
@@ -40,9 +32,9 @@ function filenameFromUrl(url: string): string | null {
  * file-type agnostic and renders an icon + filename + size instead of
  * an image preview.
  *
- * v1 strategy: uploads become base64 data URLs that go straight into
- * the parent row. When real object storage lands, the upload branch
- * swaps to a POST that returns a CDN URL; nothing else changes.
+ * Uploads go to POST /api/v1/admin/files, which stores the file on disk
+ * and returns a /files/... URL — that URL is stored on the parent row.
+ * No base64. `prefix` is the storage folder (e.g. "solutions/drawings").
  */
 export default function FilePicker({
   value,
@@ -53,6 +45,7 @@ export default function FilePicker({
   replaceLabel = "Replace file",
   helperText,
   showUrlField = true,
+  prefix = "media/documents",
 }: {
   value: string;
   onChange: (next: string) => void;
@@ -62,6 +55,7 @@ export default function FilePicker({
   replaceLabel?: string;
   helperText?: string;
   showUrlField?: boolean;
+  prefix?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -82,11 +76,11 @@ export default function FilePicker({
     }
     try {
       setBusy(true);
-      const dataUrl = await readAsDataUrl(file);
+      const url = await adminUploadFile(file, prefix);
       setUploadName(file.name);
-      onChange(dataUrl);
+      onChange(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not read file.");
+      setError(err instanceof Error ? err.message : "Upload failed.");
     } finally {
       setBusy(false);
     }
@@ -173,7 +167,7 @@ export default function FilePicker({
         />
         <FiFile className="mx-auto text-2xl text-neutral-400 group-hover:text-primary-500 mb-2" />
         <p className="text-sm font-semibold text-neutral-800">
-          {busy ? "Reading file…" : value ? replaceLabel : uploadLabel}
+          {busy ? "Uploading…" : value ? replaceLabel : uploadLabel}
         </p>
         <span className="inline-flex items-center gap-1.5 mt-3 h-9 px-4 rounded-lg bg-primary-500 text-white-base text-sm font-semibold">
           <FiUpload /> Choose file

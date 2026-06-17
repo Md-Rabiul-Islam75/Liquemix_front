@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { FiImage, FiTrash, FiUpload, FiX } from "react-icons/fi";
+import { adminUploadFile } from "@/lib/adminApi";
 
 const DEFAULT_MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 
@@ -12,26 +13,16 @@ function fmtSize(b: number) {
   return `${(b / 1024 / 1024).toFixed(1)} MB`;
 }
 
-function readAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result ?? ""));
-    reader.onerror = () => reject(new Error("Could not read file."));
-    reader.readAsDataURL(file);
-  });
-}
-
 /**
  * Single-image picker. Two flows in one component:
- *   1. Upload from disk — FileReader → base64 data URL. v1 strategy:
- *      the data URL goes straight into the parent row. When S3 lands,
- *      this branch swaps to a POST that returns a CDN URL; nothing else
- *      changes.
- *   2. Paste a URL — for assets already served from /public.
+ *   1. Upload from disk — POST /api/v1/admin/files stores the file and
+ *      returns a /files/... URL, which goes into the parent row. No base64.
+ *   2. Paste a URL — for assets already served from /public or /files.
  *
  * Used by the segment hero editor and the category image field.
- * `aspectClass` lets each caller pick the preview ratio that matches
- * how the image is actually rendered on the public site.
+ * `aspectClass` lets each caller pick the preview ratio that matches how
+ * the image is rendered on the public site. `prefix` is the storage
+ * folder the upload lands in (e.g. "segments", "categories").
  */
 export default function ImagePicker({
   value,
@@ -42,6 +33,7 @@ export default function ImagePicker({
   replaceLabel = "Replace hero image",
   helperText,
   showUrlField = true,
+  prefix = "media/images",
 }: {
   value: string;
   onChange: (next: string) => void;
@@ -51,6 +43,7 @@ export default function ImagePicker({
   replaceLabel?: string;
   helperText?: string;
   showUrlField?: boolean;
+  prefix?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -74,10 +67,10 @@ export default function ImagePicker({
     }
     try {
       setBusy(true);
-      const dataUrl = await readAsDataUrl(file);
-      onChange(dataUrl);
+      const url = await adminUploadFile(file, prefix);
+      onChange(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not read file.");
+      setError(err instanceof Error ? err.message : "Upload failed.");
     } finally {
       setBusy(false);
     }
@@ -146,7 +139,7 @@ export default function ImagePicker({
         />
         <FiImage className="mx-auto text-2xl text-neutral-400 group-hover:text-primary-500 mb-2" />
         <p className="text-sm font-semibold text-neutral-800">
-          {busy ? "Reading image…" : value ? replaceLabel : uploadLabel}
+          {busy ? "Uploading…" : value ? replaceLabel : uploadLabel}
         </p>
         <p className="mt-1 text-xs text-neutral-500">
           Click to pick from your computer.

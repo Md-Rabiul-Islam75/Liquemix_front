@@ -639,6 +639,7 @@ export default function SolutionEditor(props: SolutionEditorProps) {
                           updateDownload(d.uid, { url: next })
                         }
                         accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,application/pdf"
+                        prefix="solutions/downloads"
                         uploadLabel="Choose a file"
                         replaceLabel="Replace file"
                         helperText="PDF, DOC, XLS, PPT, TXT, ZIP up to 10 MB."
@@ -717,6 +718,7 @@ export default function SolutionEditor(props: SolutionEditorProps) {
               value={heroImage}
               onChange={setHeroImage}
               aspectClass="aspect-[4/3]"
+              prefix="solutions"
               uploadLabel="Choose a hero image"
               replaceLabel="Replace hero image"
               helperText="JPG, PNG, WebP up to 5 MB. 4:3 looks best."
@@ -788,6 +790,7 @@ export default function SolutionEditor(props: SolutionEditorProps) {
               value={technicalDrawingUrl}
               onChange={setTechnicalDrawingUrl}
               accept=".pdf,.dwg,.dxf,application/pdf"
+              prefix="solutions/drawings"
               uploadLabel="Choose a drawing"
               replaceLabel="Replace drawing"
               helperText="PDF or CAD file (DWG, DXF) up to 10 MB."

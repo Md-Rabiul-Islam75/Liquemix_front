@@ -30,6 +30,8 @@ export default function AdminDashboardLayout({
     news: newsPosts.length,
     videos: videos.length,
     downloads: standaloneDocuments.length,
+    // No mock enquiries — starts at 0, the live count fills in on mount.
+    enquiries: 0,
   };
 
   return (

@@ -4,7 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { FiSearch, FiMenu, FiX, FiChevronDown } from "react-icons/fi";
+import { FiSearch, FiMenu, FiX, FiChevronDown, FiCheckCircle } from "react-icons/fi";
+import { useEnquirer } from "@/lib/enquirer";
 import {
   segments as fallbackSegments,
   fetchSegments,
@@ -32,6 +33,10 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  // The public visitor's Google sign-in (set in the Enquire flow). Shown as
+  // a "Signed in as …" chip to the left of the search icon.
+  const enquirer = useEnquirer();
 
   // Live segments + categories. Seed with the mock list so the very
   // first paint has hover targets; the effect below replaces it with
@@ -507,6 +512,18 @@ export default function Header() {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          {mounted && enquirer && (
+            <span
+              title={`Signed in as ${enquirer.name || enquirer.email}`}
+              className="hidden sm:inline-flex items-center gap-1.5 h-9 max-w-[180px] pl-2.5 pr-3 rounded-full bg-success-50 border border-success-200 text-success-700 text-xs font-semibold"
+            >
+              <FiCheckCircle className="shrink-0 text-sm" />
+              <span className="truncate">
+                {enquirer.name || enquirer.email}
+              </span>
+            </span>
+          )}
+
           <button
             type="button"
             aria-label="Search products"

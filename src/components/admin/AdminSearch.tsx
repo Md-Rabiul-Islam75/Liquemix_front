@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { FiBarChart2, FiBox, FiFileText, FiSearch, FiX } from "react-icons/fi";
+import { FiBarChart2, FiBox, FiFileText, FiLayers, FiSearch, FiX } from "react-icons/fi";
 
 import { adminGet, getToken } from "@/lib/adminApi";
 
-type Kind = "Product" | "News" | "Reference";
+type Kind = "Product" | "News" | "Reference" | "Solution";
 
 type Result = {
   key: string;
@@ -21,12 +21,14 @@ const KIND_ICON: Record<Kind, React.ReactNode> = {
   Product: <FiBox />,
   News: <FiFileText />,
   Reference: <FiBarChart2 />,
+  Solution: <FiLayers />,
 };
 
 const KIND_TINT: Record<Kind, string> = {
   Product: "bg-primary-50 text-primary-600",
   News: "bg-secondary-50 text-secondary-700",
   Reference: "bg-success-50 text-success-700",
+  Solution: "bg-accent-50 text-accent-700",
 };
 
 /**
@@ -80,7 +82,8 @@ export default function AdminSearch() {
     setLoading(true);
     const timer = setTimeout(async () => {
       const enc = encodeURIComponent(term);
-      const [p, n, r] = await Promise.all([
+      const lower = term.toLowerCase();
+      const [p, n, r, s] = await Promise.all([
         adminGet<{ items: { id: number; name: string; sku: string }[] }>(
           `/api/v1/admin/catalog/products?q=${enc}&page=1&size=5`
         ).catch(() => ({ items: [] })),
@@ -90,6 +93,11 @@ export default function AdminSearch() {
         adminGet<{ id: number; title: string; projectType: string }[]>(
           `/api/v1/admin/content/references?q=${enc}`
         ).catch(() => []),
+        // Solutions have no server-side `q` filter; the list is tiny, so we
+        // fetch all and match by name on the client.
+        adminGet<
+          { id: number; name: string; segmentName?: string; status?: string }[]
+        >(`/api/v1/admin/catalog/solutions`).catch(() => []),
       ]);
       if (cancelled) return;
       setResults([
@@ -100,6 +108,16 @@ export default function AdminSearch() {
           href: `/admin/products/${x.id}`,
           kind: "Product" as const,
         })),
+        ...(Array.isArray(s) ? s : [])
+          .filter((x) => x.name?.toLowerCase().includes(lower))
+          .slice(0, 5)
+          .map((x) => ({
+            key: `s-${x.id}`,
+            title: x.name,
+            subtitle: x.segmentName ?? x.status,
+            href: `/admin/solutions/${x.id}`,
+            kind: "Solution" as const,
+          })),
         ...n.slice(0, 5).map((x) => ({
           key: `n-${x.id}`,
           title: x.title,
@@ -151,7 +169,7 @@ export default function AdminSearch() {
             }
             if (e.key === "Enter" && results[0]) go(results[0].href);
           }}
-          placeholder="Search products, references, news..."
+          placeholder="Search products, solutions, references, news..."
           className="flex-1 min-w-0 bg-transparent text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none"
         />
         {q ? (

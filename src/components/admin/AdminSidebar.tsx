@@ -51,6 +51,7 @@ type Counts = {
   news: number;
   videos: number;
   downloads: number;
+  enquiries: number;
 };
 
 /**
@@ -163,7 +164,12 @@ export default function AdminSidebar({ counts }: { counts: Counts }) {
           icon: <FiDownload />,
           count: c.downloads,
         },
-        { href: "/admin/enquiries", label: "Enquiries", icon: <FiInbox /> },
+        {
+          href: "/admin/enquiries",
+          label: "Enquiries",
+          icon: <FiInbox />,
+          count: c.enquiries,
+        },
       ],
     },
     {

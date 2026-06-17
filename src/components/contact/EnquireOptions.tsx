@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FaWhatsapp, FaLinkedinIn, FaFacebookF } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { FiMail, FiPhone, FiArrowUpRight, FiCheckCircle } from "react-icons/fi";
@@ -13,9 +13,7 @@ import {
   type EnquireContext,
 } from "@/lib/enquiry";
 import { isFirebaseConfigured, signInWithGoogle } from "@/lib/firebase";
-
-type Enquirer = { name: string; email: string };
-const ENQUIRER_KEY = "liquemix_enquirer";
+import { useEnquirer, saveEnquirer } from "@/lib/enquirer";
 
 export default function EnquireOptions({
   context,
@@ -33,20 +31,12 @@ export default function EnquireOptions({
   // When Firebase is configured, the visitor identifies themselves with
   // Google first (so the team can follow up + it shows in admin Enquiries).
   // Cached per session. If Firebase isn't set up, channels show directly.
-  const [enquirer, setEnquirer] = useState<Enquirer | null>(null);
+  // Shared across the tab — also drives the "Signed in as …" chip in the
+  // site header (see lib/enquirer.ts + Header.tsx).
+  const enquirer = useEnquirer();
   const [signing, setSigning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const gateEnabled = isFirebaseConfigured();
-
-  useEffect(() => {
-    if (!gateEnabled) return;
-    try {
-      const raw = sessionStorage.getItem(ENQUIRER_KEY);
-      if (raw) setEnquirer(JSON.parse(raw) as Enquirer);
-    } catch {
-      /* ignore */
-    }
-  }, [gateEnabled]);
 
   async function handleGoogle() {
     setSigning(true);
@@ -54,9 +44,7 @@ export default function EnquireOptions({
     try {
       const id = await signInWithGoogle();
       await recordEnquiryIdentity(id.idToken);
-      const who: Enquirer = { name: id.name, email: id.email };
-      sessionStorage.setItem(ENQUIRER_KEY, JSON.stringify(who));
-      setEnquirer(who);
+      saveEnquirer({ name: id.name, email: id.email });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       setError(

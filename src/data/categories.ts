@@ -220,7 +220,7 @@ export function getRootCategoriesBySegment(segmentId: string): Category[] {
 }
 
 // ─── Live fetchers ────────────────────────────────────────────────────
-import { apiGetOr } from "@/lib/api";
+import { apiGetOr, USE_MOCK_FALLBACK } from "@/lib/api";
 
 /**
  * Live flat list of categories under a segment, ordered by menuOrder.
@@ -232,7 +232,9 @@ export async function fetchCategoriesBySegment(
 ): Promise<Category[]> {
   return apiGetOr<Category[]>(
     `/api/v1/catalog/categories?segmentId=${encodeURIComponent(String(segmentId))}`,
-    categories.filter((c) => String(c.segmentId) === String(segmentId))
+    USE_MOCK_FALLBACK
+      ? categories.filter((c) => String(c.segmentId) === String(segmentId))
+      : []
   );
 }
 
@@ -246,7 +248,7 @@ export async function fetchCategoryTree(
 ): Promise<Category[]> {
   return apiGetOr<Category[]>(
     `/api/v1/catalog/categories?segmentId=${encodeURIComponent(String(segmentId))}&tree=true`,
-    buildMockTree(String(segmentId))
+    USE_MOCK_FALLBACK ? buildMockTree(String(segmentId)) : []
   );
 }
 

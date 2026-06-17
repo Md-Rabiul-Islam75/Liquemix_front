@@ -472,33 +472,51 @@ export function getRelatedProducts(productId: string): Product[] {
 }
 
 // ─── Live fetchers ────────────────────────────────────────────────────
-// Public reads from the backend. Fall back to the mock array when the
-// API is unreachable so the public site keeps rendering during dev.
-import { apiGetOr } from "@/lib/api";
+// Public reads from the backend. The fallback is the bundled mock ONLY
+// when USE_MOCK_FALLBACK is on (offline dev/demo). In normal operation it
+// is empty/undefined, so the public site shows exclusively real admin
+// data — never a phantom mock product that 404s on its detail page.
+import { apiGetOr, USE_MOCK_FALLBACK } from "@/lib/api";
 
 export async function fetchFeaturedProducts(limit = 6): Promise<Product[]> {
   return apiGetOr<Product[]>(
     `/api/v1/catalog/products/featured?limit=${limit}`,
-    products.filter((p) => p.isFeatured).slice(0, limit)
+    USE_MOCK_FALLBACK ? products.filter((p) => p.isFeatured).slice(0, limit) : []
   );
 }
 
 export async function fetchNewProducts(limit = 4): Promise<Product[]> {
   return apiGetOr<Product[]>(
     `/api/v1/catalog/products/new?limit=${limit}`,
-    products.filter((p) => p.isNew).slice(0, limit)
+    USE_MOCK_FALLBACK ? products.filter((p) => p.isNew).slice(0, limit) : []
   );
 }
 
 /**
- * Look up a product by slug. Tries the live API first; if the API has
- * no such row (404 / non-success), falls back to the seeded mock so the
- * public site keeps rendering for the demo seed during dev.
+ * Look up a product by slug. Tries the live API first; if the API has no
+ * such row (404 / non-success), returns undefined so the detail page
+ * renders a genuine 404. Only with USE_MOCK_FALLBACK on does it fall back
+ * to the seeded mock (a mock product here would otherwise 404 anyway, on
+ * the segment-id guard).
  */
 export async function fetchProductBySlug(slug: string): Promise<Product | undefined> {
   return apiGetOr<Product | undefined>(
     `/api/v1/catalog/products/${encodeURIComponent(slug)}`,
-    products.find((p) => p.slug === slug)
+    USE_MOCK_FALLBACK ? products.find((p) => p.slug === slug) : undefined
+  );
+}
+
+/**
+ * Card-shape lookup by slug — same as fetchProductBySlug but asks the
+ * backend for the compact payload (primary image only, no base64
+ * documents/videos). Used by the home hero, which renders just a name +
+ * one image; pulling the full multi-MB detail payload there blocked the
+ * server render. The detail page still uses fetchProductBySlug.
+ */
+export async function fetchProductCardBySlug(slug: string): Promise<Product | undefined> {
+  return apiGetOr<Product | undefined>(
+    `/api/v1/catalog/products/${encodeURIComponent(slug)}?compact=true`,
+    USE_MOCK_FALLBACK ? products.find((p) => p.slug === slug) : undefined
   );
 }
 
@@ -515,7 +533,7 @@ export async function fetchAllPublishedProducts(): Promise<Product[]> {
   type Paged = { items: Product[] };
   const paged = await apiGetOr<Paged>(
     `/api/v1/catalog/products?page=1&size=100`,
-    { items: products }
+    { items: USE_MOCK_FALLBACK ? products : [] }
   );
   return paged.items ?? [];
 }

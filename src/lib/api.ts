@@ -15,6 +15,25 @@
 const BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
+/**
+ * Whether public fetchers may fall back to the bundled mock catalog when
+ * the backend is unreachable. OFF by default — and that default matters.
+ *
+ * The mock catalog is a *different* set of products/solutions than what
+ * admin manages. If it leaks into the live site (e.g. a slow call trips
+ * the request timeout), it renders phantom cards that:
+ *   • don't match the admin catalog ("why is this product here?"), and
+ *   • 404 on their detail page, because a mock product's string segmentId
+ *     can never match a real numeric segment id.
+ *
+ * So in normal operation the public site shows ONLY real admin data; a
+ * failed fetch yields empty/undefined (an honest "nothing here") instead
+ * of a fake product. Set NEXT_PUBLIC_USE_MOCK_FALLBACK=true only for
+ * offline dev or a backend-less demo, where seeing the mock is the point.
+ */
+export const USE_MOCK_FALLBACK =
+  process.env.NEXT_PUBLIC_USE_MOCK_FALLBACK === "true";
+
 /** Safety-net revalidation window (seconds). On-demand purges keep content
  *  fresh in real time; this just guarantees eventual freshness. */
 const REVALIDATE_SECONDS = 600;
@@ -63,11 +82,13 @@ function isJunkPath(path: string): boolean {
  * Hard cap on how long any single backend call can hang. Node's default
  * fetch has no timeout — if the backend wedges (Hibernate stuck on a
  * locked row, GC pause, network partition), Next.js will keep awaiting
- * the request forever and a page render can wait minutes. 15s is well
+ * the request forever and a page render can wait minutes. 8s is well
  * above any healthy API call and well below "user thinks the site is
- * broken". apiGetOr will fall through to the mock fallback on timeout.
+ * broken". apiGetOr will fall through to the mock fallback on timeout,
+ * so a slow/overloaded backend degrades to mock content fast instead of
+ * blocking the whole server render.
  */
-const REQUEST_TIMEOUT_MS = 15_000;
+const REQUEST_TIMEOUT_MS = 8_000;
 
 export async function apiGet<T>(path: string): Promise<T> {
   if (isJunkPath(path)) {

@@ -1,4 +1,4 @@
-import { apiGetOr, ApiNotFoundError, apiGet } from "@/lib/api";
+import { apiGetOr, ApiNotFoundError, apiGet, USE_MOCK_FALLBACK } from "@/lib/api";
 import type {
   SystemSolution,
   SystemSolutionDownload,
@@ -137,7 +137,13 @@ export async function fetchSystemSolutions(): Promise<SystemSolution[]> {
     "/api/v1/catalog/solutions",
     null
   );
-  if (!raw || raw.length === 0) return systemSolutions;
+  // No live data: show the mock only in offline-dev mode. Otherwise return
+  // empty — a mock solution would 404 on its /solutions/{slug} detail page
+  // (it doesn't exist in the real DB), the same phantom-card trap products
+  // had. An empty list just hides the section.
+  if (!raw || raw.length === 0) {
+    return USE_MOCK_FALLBACK ? systemSolutions : [];
+  }
   return raw.map((r) => normalize(r as never));
 }
 
@@ -151,16 +157,16 @@ export async function fetchSolutionBySlug(
     return normalize(raw as never);
   } catch (e) {
     if (e instanceof ApiNotFoundError) {
-      return getSolutionBySlug(slug);
+      return USE_MOCK_FALLBACK ? getSolutionBySlug(slug) : undefined;
     }
     if (process.env.NODE_ENV !== "production") {
       console.warn(
         `[api] /api/v1/catalog/solutions/${slug} failed (${
           e instanceof Error ? e.message : String(e)
-        }); using mock.`
+        })${USE_MOCK_FALLBACK ? "; using mock." : "."}`
       );
     }
-    return getSolutionBySlug(slug);
+    return USE_MOCK_FALLBACK ? getSolutionBySlug(slug) : undefined;
   }
 }
 

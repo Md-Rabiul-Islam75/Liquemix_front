@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FiArrowRight, FiArrowUpRight, FiPlay } from "react-icons/fi";
-import { fetchProductBySlug } from "@/data/products";
+import { fetchProductCardBySlug } from "@/data/products";
 import { fetchSegmentsMap } from "@/data/segments";
 import { fetchSiteSettings } from "@/data/settings";
 
@@ -19,10 +19,10 @@ export default async function Hero() {
   // plus the segment map (for their URLs + segment labels).
   const [hydroGuard, fixMt3, segMap] = await Promise.all([
     settings.heroPrimaryProductSlug
-      ? fetchProductBySlug(settings.heroPrimaryProductSlug)
+      ? fetchProductCardBySlug(settings.heroPrimaryProductSlug)
       : Promise.resolve(undefined),
     settings.heroSecondaryProductSlug
-      ? fetchProductBySlug(settings.heroSecondaryProductSlug)
+      ? fetchProductCardBySlug(settings.heroSecondaryProductSlug)
       : Promise.resolve(undefined),
     fetchSegmentsMap(),
   ]);

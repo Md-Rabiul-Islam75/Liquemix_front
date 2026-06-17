@@ -225,8 +225,8 @@ export default async function SolutionDetailPage({ params }: Props) {
             >
               <p className="brand-panel__eyebrow mb-3">Areas of application</p>
               <ul className="space-y-2.5">
-                {solution.applicationAreas.map((a) => (
-                  <li key={a} className="flex gap-2 text-sm text-neutral-800">
+                {solution.applicationAreas.map((a, i) => (
+                  <li key={`${a}-${i}`} className="flex gap-2 text-sm text-neutral-800">
                     <FiCheck className="mt-0.5 text-primary-500 shrink-0" />
                     <span>{a}</span>
                   </li>

@@ -59,7 +59,7 @@ export const segments: Segment[] = [
   },
 ];
 
-import { apiGetOr } from "@/lib/api";
+import { apiGetOr, USE_MOCK_FALLBACK } from "@/lib/api";
 
 export function getSegmentById(id: string | number): Segment | undefined {
   return segments.find((s) => String(s.id) === String(id));
@@ -74,13 +74,21 @@ export function getSegmentBySlug(slug: string): Segment | undefined {
  * the API is unreachable so the public site keeps rendering during dev.
  */
 export async function fetchSegments(): Promise<Segment[]> {
-  return apiGetOr<Segment[]>("/api/v1/catalog/segments", segments);
+  // Mock fallback is gated OFF by default: the mock segments have string ids
+  // ("seg-concrete") that don't match the real DB's numeric ids. If they leak
+  // in (e.g. a timeout), every downstream call breaks — categories?segmentId=
+  // seg-concrete 400s, and product detail pages 404 on the segment-id guard.
+  // Empty is the honest fallback; real data shows once the API responds.
+  return apiGetOr<Segment[]>(
+    "/api/v1/catalog/segments",
+    USE_MOCK_FALLBACK ? segments : []
+  );
 }
 
 export async function fetchSegmentBySlug(slug: string): Promise<Segment | undefined> {
   return apiGetOr<Segment | undefined>(
     `/api/v1/catalog/segments/${encodeURIComponent(slug)}`,
-    segments.find((s) => s.slug === slug)
+    USE_MOCK_FALLBACK ? segments.find((s) => s.slug === slug) : undefined
   );
 }
 

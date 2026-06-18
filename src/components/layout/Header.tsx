@@ -11,11 +11,12 @@ import {
   fetchSegments,
 } from "@/data/segments";
 import { fetchCategoriesBySegment } from "@/data/categories";
+import { fetchAllPublishedProducts } from "@/data/products";
 import {
   systemSolutions as fallbackSolutions,
   fetchSystemSolutions,
 } from "@/data/solutions";
-import type { Category, Segment, SystemSolution } from "@/types/Catalog";
+import type { Category, Product, Segment, SystemSolution } from "@/types/Catalog";
 import ProductSearchModal from "@/components/search/ProductSearchModal";
 import TopBar from "./TopBar";
 
@@ -50,6 +51,7 @@ export default function Header() {
   const [allCatsBySegment, setAllCatsBySegment] = useState<
     Record<string, Category[]>
   >({});
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [hoveredSegment, setHoveredSegment] = useState<string | null>(
     fallbackSegments[0]?.id != null ? String(fallbackSegments[0].id) : null
   );
@@ -72,13 +74,18 @@ export default function Header() {
     let cancelled = false;
     (async () => {
       try {
-        const [segs, sols] = await Promise.all([
+        const [segs, sols, prods] = await Promise.all([
           fetchSegments(),
           fetchSystemSolutions(),
+          fetchAllPublishedProducts(),
         ]);
         if (cancelled) return;
+        setAllProducts(prods);
+        // Keep the seeded solutions if the fetch came back empty (cold/slow
+        // backend) so the System Solutions menu is never blank.
+        if (sols.length) setSolutions(sols);
+        if (!segs.length) return; // keep the seeded segments + categories
         setSegments(segs);
-        setSolutions(sols);
         if (segs[0]?.id != null) setHoveredSegment(String(segs[0].id));
         const allCats = await Promise.all(
           segs.map((s) => fetchCategoriesBySegment(s.id))
@@ -270,7 +277,7 @@ export default function Header() {
               </div>
 
               {/* Categories panel */}
-              <div className="col-span-6 p-6">
+              <div className="col-span-5 p-6">
                 {hoveredSegment &&
                   (() => {
                     const seg = segments.find((s) => String(s.id) === hoveredSegment);
@@ -358,26 +365,81 @@ export default function Header() {
                   })()}
               </div>
 
-              {/* Promo panel */}
-              <div className="col-span-3 m-2 rounded-xl overflow-hidden relative brand-gradient text-white-base p-6 flex flex-col justify-between min-h-[260px]">
-                <div>
-                  <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-white/80">
-                    Featured
-                  </p>
-                  <h4 className="mt-2 text-xl font-bold leading-snug">
-                    Lique Hydro-Guard 3X
-                  </h4>
-                  <p className="mt-1 text-sm text-white/90">
-                    Triple-action waterproofing in a single coat.
-                  </p>
-                </div>
-                <Link
-                  href="/products/waterproofing-and-restoration/lique-hydro-guard-3x"
-                  onClick={closeAll}
-                  className="inline-flex items-center gap-1 text-sm font-semibold text-white-base hover:gap-2 transition-all"
-                >
-                  Discover →
-                </Link>
+              {/* Products of the hovered segment */}
+              <div className="col-span-4 p-5 border-l border-neutral-100 max-h-[420px] overflow-y-auto">
+                {(() => {
+                  const seg = segments.find(
+                    (s) => String(s.id) === hoveredSegment
+                  );
+                  const list = allProducts
+                    .filter((p) => String(p.segmentId) === hoveredSegment)
+                    .slice(0, 6);
+                  return (
+                    <>
+                      <div className="flex items-baseline justify-between mb-3">
+                        <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-neutral-500">
+                          Products
+                        </p>
+                        {seg && (
+                          <Link
+                            href={`/products/${seg.slug}`}
+                            onClick={closeAll}
+                            className="text-xs font-semibold text-primary-600 hover:text-primary-700"
+                          >
+                            All →
+                          </Link>
+                        )}
+                      </div>
+                      {list.length === 0 ? (
+                        <p className="text-sm text-neutral-400">
+                          No products in this segment yet.
+                        </p>
+                      ) : (
+                        <ul className="space-y-1">
+                          {list.map((p) => {
+                            const segSlug = p.segmentSlug ?? seg?.slug;
+                            const img =
+                              p.images?.find((i) => i.isPrimary) ??
+                              p.images?.[0];
+                            return (
+                              <li key={p.id}>
+                                <Link
+                                  href={
+                                    segSlug
+                                      ? `/products/${segSlug}/${p.slug}`
+                                      : "/products"
+                                  }
+                                  onClick={closeAll}
+                                  className="group flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-50 transition-colors"
+                                >
+                                  <span className="relative w-10 h-10 shrink-0 rounded-md bg-neutral-100 overflow-hidden">
+                                    {img && (
+                                      <Image
+                                        src={encodeURI(img.url)}
+                                        alt={img.alt}
+                                        fill
+                                        sizes="40px"
+                                        className="object-contain p-0.5"
+                                      />
+                                    )}
+                                  </span>
+                                  <span className="min-w-0">
+                                    <span className="block text-sm font-semibold text-neutral-900 group-hover:text-primary-700 truncate">
+                                      {p.name}
+                                    </span>
+                                    <span className="block text-xs text-neutral-500 truncate">
+                                      {p.shortDescription}
+                                    </span>
+                                  </span>
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </div>

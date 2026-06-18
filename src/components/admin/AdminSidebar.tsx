@@ -56,10 +56,10 @@ type Counts = {
 
 /**
  * Admin sidebar. Groups mirror the IA in ADMIN_PANEL_DESIGN.md §3.
- * The `counts` prop is a mock-derived placeholder for first paint; on mount
- * we fetch live counts from /api/v1/admin/dashboard/counts and override.
+ * Counts are fetched live from /api/v1/admin/dashboard/counts on mount; each
+ * badge renders only once its real number arrives (no mock placeholders).
  */
-export default function AdminSidebar({ counts }: { counts: Counts }) {
+export default function AdminSidebar() {
   const pathname = usePathname();
 
   const [live, setLive] = useState<Partial<Counts>>({});
@@ -78,8 +78,11 @@ export default function AdminSidebar({ counts }: { counts: Counts }) {
     };
   }, [pathname]);
 
-  // Live numbers win once loaded; placeholders show instantly meanwhile.
-  const c: Counts = { ...counts, ...live };
+  // Counts appear only once the live numbers load. We deliberately do NOT
+  // seed mock placeholders — those would flash misleading counts (e.g.
+  // "Products 12") during the brief fetch. Until `live` arrives, each badge
+  // simply renders nothing (the count is undefined).
+  const c: Partial<Counts> = live;
 
   // Signed-in admin (for the footer + role-based nav gating).
   const [me, setMe] = useState<AdminUser | null>(null);

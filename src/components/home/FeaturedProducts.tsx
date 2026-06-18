@@ -4,18 +4,20 @@ import { fetchFeaturedProducts, fetchNewProducts } from "@/data/products";
 import ProductCard from "@/components/product/ProductCard";
 
 export default async function FeaturedProducts() {
+  // Pull plenty from both feeds; the slice below decides the final count.
   const [featured, fresh] = await Promise.all([
-    fetchFeaturedProducts(4),
-    fetchNewProducts(2),
+    fetchFeaturedProducts(8),
+    fetchNewProducts(8),
   ]);
-  // Dedup by id in case the same product appears in both feeds.
+  // Featured first, then New fills the remaining slots — any mix, up to 8
+  // total (no fixed featured/new split). Dedup by id across the two feeds.
   const seen = new Set<string>();
   const list = [...featured, ...fresh].filter((p) => {
     const key = String(p.id);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
-  }).slice(0, 6);
+  }).slice(0, 8);
 
   return (
     <section className="section bg-neutral-50">
@@ -39,9 +41,9 @@ export default async function FeaturedProducts() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {list.map((p, i) => (
-            <ProductCard key={p.id} product={p} priority={i < 3} />
+            <ProductCard key={p.id} product={p} priority={i < 4} />
           ))}
         </div>
       </div>

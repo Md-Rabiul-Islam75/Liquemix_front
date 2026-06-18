@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { FiCornerDownLeft, FiSearch, FiX } from "react-icons/fi";
-import { products } from "@/data/products";
-import { segments } from "@/data/segments";
+import { fetchAllPublishedProducts } from "@/data/products";
+import { getSegmentById } from "@/data/segments";
 import type { Product } from "@/types/Catalog";
 
 const SEGMENT_DOT: Record<string, string> = {
@@ -50,12 +50,28 @@ export default function ProductSearchModal({
   const [query, setQuery] = useState("");
   const [mounted, setMounted] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Load the real published catalog (lazily, on first open) for live search.
+  // Retries on a later open if the first attempt returned nothing.
+  useEffect(() => {
+    if (!open || allProducts.length > 0) return;
+    let cancelled = false;
+    fetchAllPublishedProducts()
+      .then((list) => {
+        if (!cancelled) setAllProducts(list);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [open, allProducts.length]);
 
   // Autofocus and reset state when opened
   useEffect(() => {
@@ -91,16 +107,18 @@ export default function ProductSearchModal({
   const results = useMemo(() => {
     const q = query.trim();
     if (!q) {
-      // Empty state: show featured products as a starting point.
-      return products.filter((p) => p.isFeatured).slice(0, 6);
+      // Empty state: featured products as a starting point; if none are
+      // flagged featured, just show the first few so the modal isn't blank.
+      const featured = allProducts.filter((p) => p.isFeatured);
+      return (featured.length ? featured : allProducts).slice(0, 6);
     }
-    return products
+    return allProducts
       .map((p) => ({ p, score: scoreProduct(p, q) }))
       .filter((r) => r.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, 12)
       .map((r) => r.p);
-  }, [query]);
+  }, [query, allProducts]);
 
   // Reset active index when results change
   useEffect(() => {
@@ -208,7 +226,12 @@ export default function ProductSearchModal({
               )}
               <ul className="pb-2">
                 {results.map((p, i) => {
-                  const segment = segments.find((s) => s.id === p.segmentId);
+                  // Prefer the segment fields the backend embeds on each
+                  // product; fall back to the mock lookup for offline dev.
+                  const fallbackSeg = getSegmentById(p.segmentId);
+                  const segSlug = p.segmentSlug ?? fallbackSeg?.slug;
+                  const segName = p.segmentName ?? fallbackSeg?.name ?? "";
+                  const segColor = p.segmentColor ?? fallbackSeg?.color ?? "blue";
                   const primaryImage =
                     p.images.find((img) => img.isPrimary) ?? p.images[0];
                   const isActive = i === activeIdx;
@@ -216,7 +239,7 @@ export default function ProductSearchModal({
                     <li key={p.id}>
                       <Link
                         data-result-item
-                        href={`/products/${segment?.slug}/${p.slug}`}
+                        href={segSlug ? `/products/${segSlug}/${p.slug}` : "/products"}
                         onClick={onClose}
                         onMouseEnter={() => setActiveIdx(i)}
                         className={`flex items-center gap-4 px-5 py-3 transition-colors ${
@@ -244,10 +267,10 @@ export default function ProductSearchModal({
                             <span className="inline-flex items-center gap-1.5">
                               <span
                                 className={`block w-1.5 h-1.5 rounded-full ${
-                                  SEGMENT_DOT[segment?.color ?? "blue"]
+                                  SEGMENT_DOT[segColor]
                                 }`}
                               />
-                              {segment?.name}
+                              {segName}
                             </span>{" "}
                             · {p.sku}
                           </p>

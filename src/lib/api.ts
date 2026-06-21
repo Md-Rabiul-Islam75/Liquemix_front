@@ -12,8 +12,15 @@
  * purge is ever missed.
  */
 
+// This client runs only in server components. In production it prefers
+// BACKEND_INTERNAL_URL (e.g. http://backend:8000) so SSR fetches reach the
+// backend container directly over the internal Docker network, instead of
+// hair-pinning back out through the public HTTPS domain. Browser-side code
+// (enquiry.ts, Firebase) still uses the baked NEXT_PUBLIC_API_BASE_URL.
 const BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+  process.env.BACKEND_INTERNAL_URL ??
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  "http://localhost:8000";
 
 /**
  * Whether public fetchers may fall back to the bundled mock catalog when

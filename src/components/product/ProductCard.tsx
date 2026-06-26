@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import SafeImage from "@/components/common/SafeImage";
 import { FiArrowUpRight, FiDownload } from "react-icons/fi";
 import type { Product } from "@/types/Catalog";
 import { getSegmentById } from "@/data/segments";
@@ -58,6 +58,20 @@ export default function ProductCard({
     ? `/products/${segmentSlug}/${product.slug}`
     : "/products";
 
+  /* Shown for products without an image yet, AND when a referenced image
+     file fails to load (missing in storage) — see SafeImage fallback below. */
+  const imagePlaceholder = (
+    <div className="absolute inset-0 flex items-center justify-center">
+      <div className="w-1/2 h-3/4 rounded-lg bg-white-base shadow-lg flex flex-col items-center justify-center text-center p-3">
+        <div className={`w-8 h-1 rounded-full mb-2 bg-gradient-to-r ${accent.bar}`} />
+        <p className="text-xs font-bold text-neutral-900 leading-tight">
+          {product.name}
+        </p>
+        <p className="mt-1 text-[10px] text-neutral-500">{product.sku}</p>
+      </div>
+    </div>
+  );
+
   return (
     <article className="group card-product">
       {/* Top color bar */}
@@ -72,25 +86,17 @@ export default function ProductCard({
         className={`relative block aspect-[4/3] bg-gradient-to-br ${accent.tint} overflow-hidden`}
       >
         {primaryImage ? (
-          <Image
+          <SafeImage
             src={encodeURI(primaryImage.url)}
             alt={primaryImage.alt}
             fill
             sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
             className="object-contain p-6 transition-transform duration-500 group-hover:scale-105"
             priority={priority}
+            fallback={imagePlaceholder}
           />
         ) : (
-          /* Fallback for products without an image yet (admin-uploaded later). */
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-1/2 h-3/4 rounded-lg bg-white-base shadow-lg flex flex-col items-center justify-center text-center p-3">
-              <div className={`w-8 h-1 rounded-full mb-2 bg-gradient-to-r ${accent.bar}`} />
-              <p className="text-xs font-bold text-neutral-900 leading-tight">
-                {product.name}
-              </p>
-              <p className="mt-1 text-[10px] text-neutral-500">{product.sku}</p>
-            </div>
-          </div>
+          imagePlaceholder
         )}
 
         {/* Badges */}

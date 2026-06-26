@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
+import SafeImage from "@/components/common/SafeImage";
 import { notFound } from "next/navigation";
 import {
   FiArrowLeft,
@@ -208,6 +208,25 @@ export default async function ProductDetailPage({ params }: Props) {
             {(() => {
               const primaryImage =
                 product.images.find((img) => img.isPrimary) ?? product.images[0];
+              /* Shown when there's no image, AND when a referenced image file
+                 fails to load (missing in storage) via SafeImage's fallback. */
+              const imagePlaceholder = (
+                <div className="absolute inset-0 grid place-items-center p-10">
+                  <div className="w-full max-w-[280px] aspect-[3/4] rounded-2xl bg-white-base shadow-xl flex flex-col justify-between p-6">
+                    <div>
+                      <span className={`block w-10 h-1 rounded-full bg-gradient-to-r ${segBar} mb-3`} />
+                      <p className="text-xs text-neutral-500">{segment.name}</p>
+                      <h3 className="mt-1 text-xl font-bold text-neutral-900 leading-tight">
+                        {product.name}
+                      </h3>
+                      <p className="mt-1 text-[11px] font-mono text-neutral-400">
+                        {product.sku}
+                      </p>
+                    </div>
+                    <div className={`h-24 rounded-lg bg-gradient-to-br ${segBar} opacity-90`} />
+                  </div>
+                </div>
+              );
               return (
                 <div className={`relative aspect-square rounded-3xl bg-gradient-to-br ${heroTint} overflow-hidden`}>
                   <span
@@ -215,31 +234,17 @@ export default async function ProductDetailPage({ params }: Props) {
                     className={`absolute left-0 top-0 right-0 h-1.5 bg-gradient-to-r ${segBar} z-10`}
                   />
                   {primaryImage ? (
-                    <Image
+                    <SafeImage
                       src={encodeURI(primaryImage.url)}
                       alt={primaryImage.alt}
                       fill
                       priority
                       sizes="(min-width: 1024px) 40vw, 100vw"
                       className="object-contain p-8 md:p-12"
+                      fallback={imagePlaceholder}
                     />
                   ) : (
-                    /* Fallback for products without an image yet. */
-                    <div className="absolute inset-0 grid place-items-center p-10">
-                      <div className="w-full max-w-[280px] aspect-[3/4] rounded-2xl bg-white-base shadow-xl flex flex-col justify-between p-6">
-                        <div>
-                          <span className={`block w-10 h-1 rounded-full bg-gradient-to-r ${segBar} mb-3`} />
-                          <p className="text-xs text-neutral-500">{segment.name}</p>
-                          <h3 className="mt-1 text-xl font-bold text-neutral-900 leading-tight">
-                            {product.name}
-                          </h3>
-                          <p className="mt-1 text-[11px] font-mono text-neutral-400">
-                            {product.sku}
-                          </p>
-                        </div>
-                        <div className={`h-24 rounded-lg bg-gradient-to-br ${segBar} opacity-90`} />
-                      </div>
-                    </div>
+                    imagePlaceholder
                   )}
                   <div className="absolute top-4 left-4 flex gap-2 z-10">
                     {product.isNew && <span className="chip-new">NEW</span>}
@@ -422,7 +427,7 @@ export default async function ProductDetailPage({ params }: Props) {
                   className="group flex gap-4 p-4 rounded-2xl border border-neutral-100 hover:border-primary-200 hover:shadow-soft transition-all"
                 >
                   <div className="relative w-24 h-20 shrink-0 rounded-lg overflow-hidden bg-neutral-200">
-                    <Image
+                    <SafeImage
                       src={encodeURI(proj.heroImage)}
                       alt={proj.title}
                       fill

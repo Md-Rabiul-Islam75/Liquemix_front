@@ -41,9 +41,15 @@ const BASE =
 export const USE_MOCK_FALLBACK =
   process.env.NEXT_PUBLIC_USE_MOCK_FALLBACK === "true";
 
-/** Safety-net revalidation window (seconds). On-demand purges keep content
- *  fresh in real time; this just guarantees eventual freshness. */
-const REVALIDATE_SECONDS = 600;
+/** Safety-net revalidation window (seconds). On-demand purges (POST
+ *  /api/revalidate) keep content fresh in real time WHEN they succeed — but
+ *  that depends on a valid admin token at save time, and a frontend redeploy
+ *  can serve a stale pre-rendered snapshot until the window elapses. So this
+ *  window is the real guarantee, not a rare backstop: keep it short (60s) so
+ *  any stale page — e.g. a product still pointing at a replaced image UUID —
+ *  self-heals within a minute with zero manual intervention. Override with
+ *  PUBLIC_REVALIDATE_SECONDS if a specific deploy needs a different trade-off. */
+const REVALIDATE_SECONDS = Number(process.env.PUBLIC_REVALIDATE_SECONDS) || 60;
 
 /**
  * Derive the cache tag(s) for a backend path so a public fetch can be

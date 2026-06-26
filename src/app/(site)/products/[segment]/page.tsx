@@ -43,6 +43,10 @@ type Props = {
   searchParams: Promise<{ category?: string; q?: string }>;
 };
 
+/** Render fresh each request so product cards always show current images
+ *  (re-uploads mint new file UUIDs) instead of a stale pre-rendered grid. */
+export const dynamic = "force-dynamic";
+
 export async function generateStaticParams() {
   return segments.map((s) => ({ segment: s.slug }));
 }

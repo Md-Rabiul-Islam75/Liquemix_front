@@ -55,6 +55,16 @@ type Props = {
 };
 
 /**
+ * Always render with current data. Product images change whenever an admin
+ * re-uploads (each upload mints a new file UUID), so a statically cached page
+ * keeps pointing at a replaced/old image until the next rebuild — the source
+ * of the recurring "image not showing / 404" problem. Forcing dynamic render
+ * makes every request reflect the live DB, and means the production build no
+ * longer has to reach the API to pre-render each product (more reliable builds).
+ */
+export const dynamic = "force-dynamic";
+
+/**
  * Pre-build only the seed-mock paths. Anything created later via the
  * admin gets server-rendered on demand (dynamicParams default = true).
  */

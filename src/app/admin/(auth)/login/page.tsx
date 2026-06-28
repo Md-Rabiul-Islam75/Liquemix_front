@@ -24,8 +24,8 @@ export default function AdminLoginPage() {
   const params = useSearchParams();
   const next = params.get("next") || "/admin";
 
-  const [email, setEmail] = useState("admin@liquemix.local");
-  const [password, setPassword] = useState("Admin@1234");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -211,10 +211,10 @@ export default function AdminLoginPage() {
           <p className="mt-8 text-xs text-neutral-500 text-center">
             Trouble signing in? Contact{" "}
             <a
-              href="mailto:it@liquemix.com"
+              href="mailto:support@liquemix.com"
               className="font-semibold text-primary-600 hover:text-primary-700"
             >
-              it@liquemix.com
+              support@liquemix.com
             </a>
           </p>
         </div>

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build && tsc -p tsconfig.json",
-    "start": "cross-env NODE_ENV=production next start -p ${PORT:-3000}",
+    "start": "cross-env NODE_ENV=production next start",
     "lint": "next lint"
   },
   "dependencies": {

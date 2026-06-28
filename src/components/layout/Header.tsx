@@ -628,18 +628,33 @@ export default function Header() {
               className="absolute right-0 top-0 bottom-0 w-[88vw] max-w-sm sm:max-w-md bg-white-base shadow-2xl overflow-y-auto flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-neutral-100 sticky top-0 bg-white-base z-10">
-                <Image
-                  src="/logo/LiqueMix.png"
-                  alt="LiqueMix"
-                  width={140}
-                  height={40}
-                  className="h-8 w-auto"
-                />
+              <div className="flex items-center justify-between gap-2 px-5 sm:px-6 py-4 border-b border-neutral-100 sticky top-0 bg-white-base z-10">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Image
+                    src="/logo/LiqueMix.png"
+                    alt="LiqueMix"
+                    width={140}
+                    height={40}
+                    className="h-8 w-auto shrink-0"
+                  />
+                  {/* Signed-in indicator — mirrors the desktop name pill so
+                      mobile users can also see the Google login succeeded. */}
+                  {mounted && enquirer && (
+                    <span
+                      title={`Signed in as ${enquirer.name || enquirer.email}`}
+                      className="inline-flex items-center gap-1 min-w-0 max-w-[42vw] h-7 pl-2 pr-2.5 rounded-full bg-success-50 border border-success-200 text-success-700 text-[11px] font-semibold"
+                    >
+                      <FiCheckCircle className="shrink-0 text-xs" />
+                      <span className="truncate">
+                        {enquirer.name || enquirer.email}
+                      </span>
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={() => setMobileOpen(false)}
                   aria-label="Close menu"
-                  className="w-10 h-10 inline-flex items-center justify-center rounded-full text-neutral-700 hover:bg-neutral-50"
+                  className="w-10 h-10 inline-flex items-center justify-center rounded-full text-neutral-700 hover:bg-neutral-50 shrink-0"
                 >
                   <FiX className="text-2xl" />
                 </button>

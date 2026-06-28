@@ -144,6 +144,8 @@ export interface SystemSolution {
   layers: SystemSolutionLayer[];
   productIds: EntityId[];
   downloads?: SystemSolutionDownload[];
+  /** Embedded YouTube videos — same shape as product videos. */
+  videos?: ProductVideo[];
   technicalDrawingUrl?: string;
   heroImage: string;
 }
@@ -207,7 +209,8 @@ export interface Video {
     | "Application Technique"
     | "Case Study"
     | "Tutorial"
-    | "System Solution";
+    | "System Solution"
+    | "News";
   segmentId?: string;
   relatedProductIds?: string[];
   publishedAt: string;
@@ -226,4 +229,6 @@ export interface NewsPost {
   readMinutes: number;
   tags?: string[];
   relatedProductIds?: string[];
+  /** Embedded YouTube videos — same shape as product videos. */
+  videos?: ProductVideo[];
 }

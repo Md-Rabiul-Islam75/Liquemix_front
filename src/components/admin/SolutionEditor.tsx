@@ -17,6 +17,9 @@ import {
 import AdminPageHeader from "@/components/admin/PageHeader";
 import ImagePicker from "@/components/admin/ImagePicker";
 import FilePicker from "@/components/admin/FilePicker";
+import ProductVideosEditor, {
+  type ProductVideo,
+} from "@/components/admin/ProductVideosEditor";
 import {
   adminDelete,
   adminGet,
@@ -77,6 +80,7 @@ type SolutionResponse = {
     kind: SystemSolutionDownloadKind;
     displayOrder?: number;
   }>;
+  videos?: ProductVideo[];
   heroImage?: string | null;
   technicalDrawingUrl?: string | null;
   displayOrder?: number;
@@ -133,6 +137,7 @@ export default function SolutionEditor(props: SolutionEditorProps) {
   const [status, setStatus] = useState<SolutionResponse["status"]>("draft");
   const [layers, setLayers] = useState<LayerDraft[]>([]);
   const [downloads, setDownloads] = useState<DownloadDraft[]>([]);
+  const [videos, setVideos] = useState<ProductVideo[]>([]);
   const [productIds, setProductIds] = useState<Set<number>>(new Set());
 
   const [submitting, setSubmitting] = useState(false);
@@ -209,6 +214,7 @@ export default function SolutionEditor(props: SolutionEditorProps) {
             displayOrder: d.displayOrder ?? i,
           }))
         );
+        setVideos(s.videos ?? []);
         setProductIds(new Set(s.productIds ?? []));
       } catch (e) {
         setLoadError(
@@ -320,6 +326,7 @@ export default function SolutionEditor(props: SolutionEditorProps) {
           kind: d.kind,
           displayOrder: i,
         })),
+        videos,
       };
 
       if (props.mode === "new") {
@@ -665,6 +672,13 @@ export default function SolutionEditor(props: SolutionEditorProps) {
             >
               <FiPlus /> Add download
             </button>
+          </Section>
+
+          <Section
+            title="Videos"
+            hint="Paste a YouTube URL — the ID is extracted automatically. Shown as a video grid below Documents on the public detail page."
+          >
+            <ProductVideosEditor videos={videos} onChange={setVideos} />
           </Section>
 
           <Section

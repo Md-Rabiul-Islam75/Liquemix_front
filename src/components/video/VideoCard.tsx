@@ -17,6 +17,7 @@ const CATEGORY_TINT: Record<Video["category"], string> = {
   "Case Study": "bg-accent-100 text-accent-800",
   Tutorial: "bg-neutral-100 text-neutral-800",
   "System Solution": "bg-success-50 text-success-700",
+  News: "bg-primary-50 text-primary-700",
 };
 
 export default function VideoCard({

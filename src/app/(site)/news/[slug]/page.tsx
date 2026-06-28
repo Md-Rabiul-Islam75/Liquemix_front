@@ -13,11 +13,28 @@ import {
 
 import PageHeader from "@/components/common/PageHeader";
 import ProductCard from "@/components/product/ProductCard";
+import VideoCard from "@/components/video/VideoCard";
 import { fetchNews, fetchNewsBySlug, fetchRelatedNews } from "@/data/news";
 import { products } from "@/data/products";
 import { fetchSegmentsMap } from "@/data/segments";
+import type { ProductVideo, Video } from "@/types/Catalog";
 
 type Props = { params: Promise<{ slug: string }> };
+
+/**
+ * Lift a news post's embedded video (title + youtubeId) into the full
+ * `Video` shape VideoCard expects. News-post videos carry the "News"
+ * badge — for meetings, events, and company activity coverage.
+ */
+function newsVideoToVideo(v: ProductVideo, slug: string): Video {
+  return {
+    id: `news-${slug}-${v.youtubeId}`,
+    title: v.title,
+    youtubeId: v.youtubeId,
+    category: "News",
+    publishedAt: "",
+  };
+}
 
 const CATEGORY_TINT: Record<string, string> = {
   "Product Launch": "bg-secondary-100 text-secondary-800",
@@ -114,6 +131,21 @@ export default async function NewsDetailPage({ params }: Props) {
               className="prose-news"
               dangerouslySetInnerHTML={{ __html: post.body ?? `<p>${post.excerpt}</p>` }}
             />
+
+            {post.videos && post.videos.length > 0 && (
+              <div className="mt-10 pt-6 border-t border-neutral-100">
+                <p className="brand-panel__eyebrow mb-4">Videos</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {post.videos.map((v) => (
+                    <VideoCard
+                      key={v.youtubeId}
+                      video={newsVideoToVideo(v, post.slug)}
+                      compact
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
             {post.tags && post.tags.length > 0 && (
               <div className="mt-10 pt-6 border-t border-neutral-100">

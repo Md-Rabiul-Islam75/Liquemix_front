@@ -127,6 +127,7 @@ function normalize(raw: Partial<SystemSolution> & { id: SystemSolution["id"] }):
     layers: raw.layers ?? [],
     productIds: raw.productIds ?? [],
     downloads: (raw.downloads ?? []) as SystemSolutionDownload[],
+    videos: raw.videos ?? [],
     technicalDrawingUrl: raw.technicalDrawingUrl,
     heroImage: raw.heroImage ?? "",
   };

@@ -6,6 +6,7 @@ import { FiArrowUpRight, FiMessageCircle, FiFile, FiCheck, FiMapPin } from "reac
 
 import PageHeader from "@/components/common/PageHeader";
 import ProductCard from "@/components/product/ProductCard";
+import VideoCard from "@/components/video/VideoCard";
 
 import {
   systemSolutions,
@@ -15,7 +16,25 @@ import {
 import { fetchSegmentsMap } from "@/data/segments";
 import { products, getProductBySlug } from "@/data/products";
 import { referenceProjects } from "@/data/references";
-import type { SegmentColor } from "@/types/Catalog";
+import type { ProductVideo, SegmentColor, Video } from "@/types/Catalog";
+
+/**
+ * Lift a solution's embedded video (title + youtubeId) into the full
+ * `Video` shape VideoCard expects — mirrors the same helper on the
+ * product detail page.
+ */
+function solutionVideoToVideo(
+  v: ProductVideo,
+  solutionId: string | number
+): Video {
+  return {
+    id: `sol-${solutionId}-${v.youtubeId}`,
+    title: v.title,
+    youtubeId: v.youtubeId,
+    category: "System Solution",
+    publishedAt: "",
+  };
+}
 
 const PANEL_VARIANT: Record<SegmentColor, string> = {
   blue: "brand-panel-blue",
@@ -111,6 +130,16 @@ export default async function SolutionDetailPage({ params }: Props) {
     .slice(0, 3);
 
   const downloads = solution.downloads ?? [];
+
+  // Dedupe embedded videos by youtubeId, then lift to the VideoCard shape.
+  const seenYt = new Set<string>();
+  const videos = (solution.videos ?? [])
+    .filter((v) => {
+      if (!v.youtubeId || seenYt.has(v.youtubeId)) return false;
+      seenYt.add(v.youtubeId);
+      return true;
+    })
+    .map((v) => solutionVideoToVideo(v, solution.id));
 
   return (
     <>
@@ -348,6 +377,22 @@ export default async function SolutionDetailPage({ params }: Props) {
                 </li>
               ))}
             </ul>
+          </div>
+        </section>
+      )}
+
+      {/* System videos — embedded YouTube walkthroughs of the full system */}
+      {videos.length > 0 && (
+        <section className="section pt-0 bg-neutral-50">
+          <div className="container-page">
+            <div className="rounded-2xl bg-brand-deep text-white-base p-6 md:p-10">
+              <h2 className="text-xl md:text-2xl font-bold mb-6">Videos</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {videos.slice(0, 6).map((v) => (
+                  <VideoCard key={v.id} video={v} compact />
+                ))}
+              </div>
+            </div>
           </div>
         </section>
       )}

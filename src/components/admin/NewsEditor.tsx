@@ -15,6 +15,9 @@ import {
 import AdminPageHeader from "@/components/admin/PageHeader";
 import ImagePicker from "@/components/admin/ImagePicker";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import ProductVideosEditor, {
+  type ProductVideo,
+} from "@/components/admin/ProductVideosEditor";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { adminGet, adminPost, adminPut, adminDelete } from "@/lib/adminApi";
 import { ErrorToast, SuccessToast } from "@/helpers/ToastHelper";
@@ -40,6 +43,7 @@ type NewsPostDto = {
   tags?: string[] | null;
   relatedProductIds?: number[] | null;
   status: string;
+  videos?: ProductVideo[] | null;
 };
 
 type Props = { mode: "new"; id?: undefined } | { mode: "edit"; id: number };
@@ -69,6 +73,7 @@ export default function NewsEditor(props: Props) {
   const [tags, setTags] = useState<string[]>([""]);
   const [publishedAt, setPublishedAt] = useState("");
   const [status, setStatus] = useState<"draft" | "published">("draft");
+  const [videos, setVideos] = useState<ProductVideo[]>([]);
   // Carried through unchanged — no UI yet (products aren't routinely seeded).
   const [relatedProductIds, setRelatedProductIds] = useState<number[]>([]);
 
@@ -102,6 +107,7 @@ export default function NewsEditor(props: Props) {
         setTags(n.tags && n.tags.length > 0 ? n.tags : [""]);
         setPublishedAt(n.publishedAt ?? "");
         setStatus(n.status === "published" ? "published" : "draft");
+        setVideos(n.videos ?? []);
         setRelatedProductIds(n.relatedProductIds ?? []);
       } catch (e) {
         if (!cancelled) {
@@ -144,6 +150,7 @@ export default function NewsEditor(props: Props) {
       relatedProductIds,
       publishedAt: publishedAt || null,
       status,
+      videos,
     };
   }
 
@@ -349,6 +356,15 @@ export default function NewsEditor(props: Props) {
               ignored.
             </p>
             <ListEditor items={tags} setItems={setTags} placeholder="waterproofing" />
+          </section>
+
+          <section className="rounded-2xl bg-white-base border border-neutral-100 p-5 md:p-6">
+            <h2 className="text-base font-bold text-neutral-900 mb-1">Videos</h2>
+            <p className="text-xs text-neutral-500 mb-4">
+              Paste a YouTube URL — the ID is extracted automatically. Shown as
+              a video grid below the article on the public page.
+            </p>
+            <ProductVideosEditor videos={videos} onChange={setVideos} />
           </section>
         </div>
 

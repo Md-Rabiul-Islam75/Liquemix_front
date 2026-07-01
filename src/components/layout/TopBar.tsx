@@ -1,7 +1,18 @@
+"use client";
+
 import Link from "next/link";
 import { FaWhatsapp, FaLinkedinIn, FaFacebookF, FaWeixin } from "react-icons/fa";
+import { useSettings } from "@/components/providers/SettingsProvider";
 
+/**
+ * Thin dark bar above the main nav. Every social link is driven by admin
+ * Site Settings via the SettingsProvider context (same source the footer
+ * and contact page use), so editing settings updates here too — not just
+ * the footer.
+ */
 export default function TopBar() {
+  const settings = useSettings();
+
   return (
     <div className="hidden md:block bg-neutral-900 text-white-base">
       <div className="container-page flex items-center justify-between h-9 text-xs">
@@ -20,16 +31,41 @@ export default function TopBar() {
             Contact
           </Link>
           <div className="flex items-center gap-3 pl-4 border-l border-white/10">
-            <a aria-label="WhatsApp" href="https://wa.me/8801000000000" className="hover:text-accent-400 transition-colors">
+            <a
+              aria-label={`WhatsApp: +${settings.whatsappNumber}`}
+              href={`https://wa.me/${settings.whatsappNumber}`}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="hover:text-accent-400 transition-colors"
+            >
               <FaWhatsapp />
             </a>
-            <a aria-label="LinkedIn" href="https://linkedin.com" className="hover:text-accent-400 transition-colors">
+            <a
+              aria-label="LinkedIn"
+              href={settings.linkedinUrl}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="hover:text-accent-400 transition-colors"
+            >
               <FaLinkedinIn />
             </a>
-            <a aria-label="Facebook" href="https://facebook.com" className="hover:text-accent-400 transition-colors">
+            <a
+              aria-label="Facebook"
+              href={settings.facebookUrl}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="hover:text-accent-400 transition-colors"
+            >
               <FaFacebookF />
             </a>
-            <a aria-label="WeChat" href="#" className="hover:text-accent-400 transition-colors">
+            {/* WeChat has no URL from a handle — surface the handle on hover,
+                same as the footer. */}
+            <a
+              aria-label={`WeChat: ${settings.wechatHandle}`}
+              title={`WeChat: ${settings.wechatHandle}`}
+              href="#"
+              className="hover:text-accent-400 transition-colors"
+            >
               <FaWeixin />
             </a>
           </div>

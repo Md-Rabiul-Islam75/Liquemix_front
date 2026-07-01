@@ -174,29 +174,31 @@ export default function Header() {
 
         {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-1">
-          <button
-            type="button"
+          <Link
+            href="/products"
             className="nav-link"
             aria-expanded={openMenu === "products"}
+            onClick={closeAll}
             onMouseEnter={() => openWithIntent("products")}
             onMouseLeave={scheduleClose}
             onFocus={() => openWithIntent("products")}
             onBlur={scheduleClose}
           >
             Products <FiChevronDown className="text-base" />
-          </button>
+          </Link>
 
-          <button
-            type="button"
+          <Link
+            href="/solutions"
             className="nav-link"
             aria-expanded={openMenu === "solutions"}
+            onClick={closeAll}
             onMouseEnter={() => openWithIntent("solutions")}
             onMouseLeave={scheduleClose}
             onFocus={() => openWithIntent("solutions")}
             onBlur={scheduleClose}
           >
             System Solutions <FiChevronDown className="text-base" />
-          </button>
+          </Link>
 
           <Link
             href="/references"
@@ -206,29 +208,31 @@ export default function Header() {
             References
           </Link>
 
-          <button
-            type="button"
+          <Link
+            href="/service"
             className="nav-link"
             aria-expanded={openMenu === "service"}
+            onClick={closeAll}
             onMouseEnter={() => openWithIntent("service")}
             onMouseLeave={scheduleClose}
             onFocus={() => openWithIntent("service")}
             onBlur={scheduleClose}
           >
             Service <FiChevronDown className="text-base" />
-          </button>
+          </Link>
 
-          <button
-            type="button"
+          <Link
+            href="/about"
             className="nav-link"
             aria-expanded={openMenu === "about"}
+            onClick={closeAll}
             onMouseEnter={() => openWithIntent("about")}
             onMouseLeave={scheduleClose}
             onFocus={() => openWithIntent("about")}
             onBlur={scheduleClose}
           >
             About <FiChevronDown className="text-base" />
-          </button>
+          </Link>
 
           <Link
             href="/news"

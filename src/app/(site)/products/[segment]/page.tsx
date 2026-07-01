@@ -85,6 +85,17 @@ export default async function SegmentPage({ params, searchParams }: Props) {
   const allCats = await fetchCategoriesBySegment(segment.id);
   const categories = allCats.filter((c) => c.isActive !== false);
 
+  // Per-category product counts, keyed by category id. Descendant-inclusive
+  // so the badge matches what a click actually surfaces (clicking a parent
+  // shows products tagged into any category beneath it).
+  const categoryCounts: Record<string, number> = {};
+  for (const cat of categories) {
+    const allowed = descendantIdSet(allCats, cat.id);
+    categoryCounts[String(cat.id)] = allInSegment.filter((p) =>
+      p.categoryIds.some((id) => allowed.has(String(id)))
+    ).length;
+  }
+
   const categorySlug = sp.category;
   const q = (sp.q ?? "").trim().toLowerCase();
 
@@ -129,6 +140,7 @@ export default async function SegmentPage({ params, searchParams }: Props) {
           <div className="lg:col-span-3">
             <ProductFilters
               categories={categories}
+              categoryCounts={categoryCounts}
               total={allInSegment.length}
               filtered={filtered.length}
             />

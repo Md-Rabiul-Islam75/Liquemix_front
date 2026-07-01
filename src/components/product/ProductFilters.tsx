@@ -31,10 +31,13 @@ function flattenWithDepth(flat: Category[]): DepthRow[] {
 
 export default function ProductFilters({
   categories,
+  categoryCounts,
   total,
   filtered,
 }: {
   categories: Category[];
+  /** Product count per category id (descendant-inclusive). */
+  categoryCounts?: Record<string, number>;
   total: number;
   filtered: number;
 }) {
@@ -143,25 +146,36 @@ export default function ProductFilters({
                   style={{
                     paddingLeft: `${0.75 + cat.depth * 0.85}rem`,
                   }}
-                  className={`w-full text-left pr-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-1.5 ${
+                  className={`w-full text-left pr-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between gap-1.5 ${
                     currentCategory === cat.slug
                       ? "bg-primary-500 text-white-base font-semibold shadow-[0_4px_12px_-4px_rgba(21,101,192,0.4)]"
                       : "text-neutral-700 hover:bg-primary-50 hover:text-primary-700"
                   } ${cat.depth > 0 ? "text-[13px]" : "font-semibold"}`}
                 >
-                  {cat.depth > 0 && (
-                    <span
-                      className={`inline-block ${
-                        currentCategory === cat.slug
-                          ? "text-white/60"
-                          : "text-neutral-400"
-                      }`}
-                      aria-hidden
-                    >
-                      ↳
-                    </span>
-                  )}
-                  <span className="truncate">{cat.name}</span>
+                  <span className="flex items-center gap-1.5 min-w-0">
+                    {cat.depth > 0 && (
+                      <span
+                        className={`inline-block ${
+                          currentCategory === cat.slug
+                            ? "text-white/60"
+                            : "text-neutral-400"
+                        }`}
+                        aria-hidden
+                      >
+                        ↳
+                      </span>
+                    )}
+                    <span className="truncate">{cat.name}</span>
+                  </span>
+                  <span
+                    className={`text-xs shrink-0 ${
+                      currentCategory === cat.slug
+                        ? "text-white/75"
+                        : "text-neutral-400"
+                    }`}
+                  >
+                    {categoryCounts?.[String(cat.id)] ?? 0}
+                  </span>
                 </button>
               </li>
             ))}

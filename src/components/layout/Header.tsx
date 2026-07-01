@@ -254,9 +254,13 @@ export default function Header() {
                 <ul className="space-y-1">
                   {segments.map((seg) => (
                     <li key={seg.id}>
-                      <button
-                        type="button"
+                      {/* Link (not button): hover still reveals this segment's
+                          categories on the right, but a click now navigates
+                          straight to the segment page. */}
+                      <Link
+                        href={`/products/${seg.slug}`}
                         onMouseEnter={() => setHoveredSegment(String(seg.id))}
+                        onClick={closeAll}
                         className={`w-full flex items-center justify-between text-left px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
                           hoveredSegment === String(seg.id)
                             ? "bg-white-base text-primary-700 shadow-sm"
@@ -270,7 +274,7 @@ export default function Header() {
                           {seg.name}
                         </span>
                         <FiChevronDown className="-rotate-90 text-neutral-400" />
-                      </button>
+                      </Link>
                     </li>
                   ))}
                 </ul>

@@ -368,7 +368,7 @@ export default function AdminProductEditPage() {
                   className="admin-input"
                 />
               </Field>
-              <Field label="SKU" required>
+              <Field label="SKU" hint="Optional — auto-generated from the name if left blank.">
                 <input
                   type="text"
                   value={sku}
@@ -402,10 +402,10 @@ export default function AdminProductEditPage() {
               </Field>
               <Field label="Short description" required className="sm:col-span-2">
                 <textarea
-                  rows={2}
+                  rows={4}
                   value={shortDescription}
                   onChange={(e) => setShortDescription(e.target.value)}
-                  className="admin-input resize-none"
+                  className="admin-input resize-y"
                 />
               </Field>
               <Field label="Long description" className="sm:col-span-2">

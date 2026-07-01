@@ -91,6 +91,8 @@ export default function NewProductPage() {
   // ─── Form state ───────────────────────────────────────────────────
   const [segmentId, setSegmentId] = useState<number | null>(null);
   const [sku, setSku] = useState("");
+  // Once the admin edits the SKU by hand, stop auto-deriving it from the name.
+  const [skuTouched, setSkuTouched] = useState(false);
   const [name, setName] = useState("");
   const [shortDescription, setShortDescription] = useState("");
   const [longDescription, setLongDescription] = useState("");
@@ -139,14 +141,21 @@ export default function NewProductPage() {
     });
   };
 
+  // Uppercase kebab SKU derived from the name (e.g. "Lique PG70" -> "LIQUE-PG70").
+  const deriveSku = (s: string) =>
+    s
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+  // SKU is optional now (auto-generated from the name if left blank).
   const canSubmit = useMemo(
     () =>
       !submitting &&
       segmentId != null &&
-      sku.trim().length > 0 &&
       name.trim().length > 0 &&
       shortDescription.trim().length > 0,
-    [submitting, segmentId, sku, name, shortDescription]
+    [submitting, segmentId, name, shortDescription]
   );
 
   async function onSubmit(e: React.FormEvent) {
@@ -302,16 +311,21 @@ export default function NewProductPage() {
 
               <label className="block">
                 <span className="block text-xs font-bold tracking-wider uppercase text-neutral-700 mb-1.5">
-                  SKU <span className="text-error-500">*</span>
+                  SKU
                 </span>
                 <input
                   type="text"
-                  required
                   value={sku}
-                  onChange={(e) => setSku(e.target.value)}
-                  placeholder="LMX-WP-NEW-001"
+                  onChange={(e) => {
+                    setSku(e.target.value);
+                    setSkuTouched(true);
+                  }}
+                  placeholder="Auto-filled from the name"
                   className="admin-input font-mono"
                 />
+                <span className="mt-1 block text-[11px] text-neutral-400">
+                  Auto-generated from the name — edit for a specific code.
+                </span>
               </label>
 
               <label className="block sm:col-span-2">
@@ -322,12 +336,17 @@ export default function NewProductPage() {
                   type="text"
                   required
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setName(v);
+                    // Auto-fill the SKU from the name until the admin edits it.
+                    if (!skuTouched) setSku(deriveSku(v));
+                  }}
                   placeholder="e.g. Lique Hydro-Guard 3X"
                   className="admin-input"
                 />
                 <span className="mt-1 block text-[11px] text-neutral-400">
-                  Slug is auto-generated from the name on save.
+                  SKU and slug are auto-generated from the name.
                 </span>
               </label>
 
@@ -337,11 +356,11 @@ export default function NewProductPage() {
                 </span>
                 <textarea
                   required
-                  rows={2}
+                  rows={4}
                   value={shortDescription}
                   onChange={(e) => setShortDescription(e.target.value)}
                   placeholder="One-line tagline used on the catalog cards."
-                  className="admin-input resize-none"
+                  className="admin-input resize-y"
                 />
               </label>
 
@@ -536,7 +555,7 @@ export default function NewProductPage() {
             <p className="text-xs text-neutral-500 hidden sm:inline">
               {canSubmit
                 ? "Ready to save."
-                : "Fill segment, SKU, name, and short description to enable Save."}
+                : "Fill segment, name, and short description to enable Save."}
             </p>
             <div className="flex items-center gap-2 ml-auto">
               <Link

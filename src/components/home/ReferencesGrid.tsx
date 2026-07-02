@@ -1,10 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FiArrowUpRight, FiMapPin } from "react-icons/fi";
-import { referenceProjects } from "@/data/references";
+import { fetchReferences } from "@/data/references";
 
-export default function ReferencesGrid() {
-  const list = referenceProjects.slice(0, 6);
+export default async function ReferencesGrid() {
+  // Live published references (falls back to [] in prod, mock only in
+  // offline-dev) — so deleted references never appear on the homepage.
+  const list = (await fetchReferences()).slice(0, 6);
+  if (list.length === 0) return null;
 
   return (
     <section className="section bg-secondary-600 text-white-base">

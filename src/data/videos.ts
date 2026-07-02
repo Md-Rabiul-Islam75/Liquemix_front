@@ -172,7 +172,7 @@ export const VIDEO_CATEGORIES: Video["category"][] = [
 ];
 
 // ─── Live fetcher ─────────────────────────────────────────────────────
-import { apiGetOr } from "@/lib/api";
+import { apiGetOr, USE_MOCK_FALLBACK } from "@/lib/api";
 
 export async function fetchVideos(opts: {
   category?: string;
@@ -182,7 +182,7 @@ export async function fetchVideos(opts: {
   if (opts.category) qs.set("category", opts.category);
   if (opts.segmentId != null) qs.set("segmentId", String(opts.segmentId));
   const path = `/api/v1/content/videos${qs.toString() ? `?${qs}` : ""}`;
-  return apiGetOr<Video[]>(path, videos);
+  return apiGetOr<Video[]>(path, USE_MOCK_FALLBACK ? videos : []);
 }
 
 /**

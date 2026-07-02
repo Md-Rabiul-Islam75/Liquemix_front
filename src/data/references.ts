@@ -109,7 +109,7 @@ export function getReferenceBySlug(slug: string): ReferenceProject | undefined {
 // The public site reads from the backend (/api/v1/content/references),
 // falling back to the placeholder content above if the API is unreachable
 // so the marketing pages never render empty during local dev / downtime.
-import { apiGetOr, apiGet, ApiNotFoundError } from "@/lib/api";
+import { apiGetOr, apiGet, ApiNotFoundError, USE_MOCK_FALLBACK } from "@/lib/api";
 
 export async function fetchReferences(
   opts: { projectType?: string } = {}
@@ -117,7 +117,13 @@ export async function fetchReferences(
   const qs = new URLSearchParams();
   if (opts.projectType) qs.set("projectType", opts.projectType);
   const path = `/api/v1/content/references${qs.toString() ? `?${qs}` : ""}`;
-  return apiGetOr<ReferenceProject[]>(path, referenceProjects);
+  // Only fall back to the placeholder list in offline-dev mode. Otherwise
+  // return the live list (empty if the API has none) — never the mock, or
+  // deleted/seed references would haunt the public page.
+  return apiGetOr<ReferenceProject[]>(
+    path,
+    USE_MOCK_FALLBACK ? referenceProjects : []
+  );
 }
 
 export async function fetchReferenceBySlug(
@@ -126,7 +132,11 @@ export async function fetchReferenceBySlug(
   try {
     return await apiGet<ReferenceProject>(`/api/v1/content/references/${slug}`);
   } catch (e) {
-    if (e instanceof ApiNotFoundError) return getReferenceBySlug(slug);
-    return getReferenceBySlug(slug);
+    // A missing row (deleted/unpublished) should 404 in prod, not resolve to
+    // a mock. Only offline-dev mode falls back to placeholder content.
+    if (!(e instanceof ApiNotFoundError) && USE_MOCK_FALLBACK) {
+      return getReferenceBySlug(slug);
+    }
+    return USE_MOCK_FALLBACK ? getReferenceBySlug(slug) : undefined;
   }
 }

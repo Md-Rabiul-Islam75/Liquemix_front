@@ -149,7 +149,7 @@ export const NEWS_CATEGORIES: NewsPost["category"][] = [
 // The public site reads from the backend (/api/v1/content/news), falling
 // back to the placeholder content above if the API is unreachable so the
 // marketing pages never render empty during local dev / backend downtime.
-import { apiGetOr, apiGet, ApiNotFoundError } from "@/lib/api";
+import { apiGetOr, apiGet, ApiNotFoundError, USE_MOCK_FALLBACK } from "@/lib/api";
 
 export async function fetchNews(opts: { category?: string } = {}): Promise<
   NewsPost[]
@@ -157,7 +157,7 @@ export async function fetchNews(opts: { category?: string } = {}): Promise<
   const qs = new URLSearchParams();
   if (opts.category) qs.set("category", opts.category);
   const path = `/api/v1/content/news${qs.toString() ? `?${qs}` : ""}`;
-  return apiGetOr<NewsPost[]>(path, newsPosts);
+  return apiGetOr<NewsPost[]>(path, USE_MOCK_FALLBACK ? newsPosts : []);
 }
 
 export async function fetchNewsBySlug(

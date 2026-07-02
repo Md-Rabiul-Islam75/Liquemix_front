@@ -14,6 +14,10 @@ export const metadata: Metadata = {
     "Discover how LiqueMix construction-chemical systems perform on the ground — from metro stations and bridges to swimming pools and pharmaceutical plants.",
 };
 
+// Render fresh each request so deleting/editing a reference in the admin is
+// reflected immediately, instead of serving a stale ISR cache.
+export const dynamic = "force-dynamic";
+
 type Props = {
   searchParams: Promise<{
     segment?: string;

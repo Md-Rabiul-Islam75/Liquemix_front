@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Hero from "@/components/home/Hero";
-import TrustStrip from "@/components/home/TrustStrip";
+import CertificationStrip from "@/components/home/CertificationStrip";
+import TopClientsCarousel from "@/components/home/TopClientsCarousel";
 import SegmentsGrid from "@/components/home/SegmentsGrid";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 import SolutionsSection from "@/components/home/SolutionsSection";
@@ -22,7 +23,12 @@ export default function HomePage() {
       <Suspense fallback={<HeroFallback />}>
         <Hero />
       </Suspense>
-      <TrustStrip />
+      <Suspense fallback={null}>
+        <CertificationStrip />
+      </Suspense>
+      <Suspense fallback={null}>
+        <TopClientsCarousel />
+      </Suspense>
       <Suspense fallback={<SectionFallback />}>
         <SegmentsGrid />
       </Suspense>

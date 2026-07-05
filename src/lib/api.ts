@@ -65,6 +65,8 @@ export function tagsForPath(path: string): string[] {
   if (path.includes("/references")) return ["references"];
   if (path.includes("/downloads")) return ["downloads"];
   if (path.includes("/videos")) return ["videos"];
+  if (path.includes("/top-clients")) return ["top-clients"];
+  if (path.includes("/certifications")) return ["certifications"];
   if (path.includes("/settings")) return ["settings"];
   return ["public"];
 }

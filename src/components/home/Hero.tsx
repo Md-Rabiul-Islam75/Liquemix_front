@@ -4,9 +4,26 @@ import { FiArrowRight, FiArrowUpRight, FiPlay } from "react-icons/fi";
 import { fetchProductCardBySlug } from "@/data/products";
 import { fetchSegmentsMap } from "@/data/segments";
 import { fetchSiteSettings } from "@/data/settings";
+import VideoBanner from "@/components/home/VideoBanner";
 
 export default async function Hero() {
   const settings = await fetchSiteSettings();
+
+  // Video banner mode — replaces the default hero entirely when the admin
+  // has selected it AND provided a short banner video.
+  if (settings.bannerMode === "video" && settings.bannerShortVideoUrl) {
+    return (
+      <VideoBanner
+        shortUrl={settings.bannerShortVideoUrl}
+        longUrl={settings.bannerLongVideoUrl}
+        poster={settings.bannerVideoPoster}
+        eyebrow={settings.heroEyebrow}
+        headline={settings.heroHeadline}
+        subtitle={settings.heroSubtitle}
+      />
+    );
+  }
+
   // Headline is editable in admin as a single multi-line string. Split
   // on the first line break so the brand-gradient still wraps the first
   // line and the second line gets the muted treatment.

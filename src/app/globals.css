@@ -693,3 +693,26 @@ textarea.admin-input {
     print-color-adjust: exact !important;
   }
 }
+
+/* ── Top-clients logo marquee ──────────────────────────────────────────
+   Track is duplicated in the component, so translating by -50% scrolls
+   exactly one copy and loops seamlessly. Pauses on hover; respects
+   reduced-motion. */
+@keyframes lqx-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.lqx-marquee {
+  animation: lqx-marquee 32s linear infinite;
+}
+.lqx-marquee:hover {
+  animation-play-state: paused;
+}
+/* Soft fade at both edges of the strip */
+.lqx-marquee-mask {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lqx-marquee { animation: none; }
+}

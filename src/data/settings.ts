@@ -27,6 +27,12 @@ export type SiteSettings = {
   statReferences: string;
   heroPrimaryProductSlug: string;
   heroSecondaryProductSlug: string;
+  // Banner mode + video banner. bannerMode: "default" | "video".
+  // Each video URL is a YouTube link OR an uploaded /files/... URL.
+  bannerMode: string;
+  bannerShortVideoUrl: string;
+  bannerLongVideoUrl: string;
+  bannerVideoPoster: string;
   officeAddress: string;
   replySla: string;
   businessDays: string;
@@ -58,6 +64,10 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   statReferences: "1500+",
   heroPrimaryProductSlug: "lique-hydro-guard-3x",
   heroSecondaryProductSlug: "lique-fix-mt-3",
+  bannerMode: "default",
+  bannerShortVideoUrl: "",
+  bannerLongVideoUrl: "",
+  bannerVideoPoster: "",
   officeAddress: "Plot 42, Dhaka EPZ\nSavar, Dhaka 1349\nBangladesh",
   replySla: "< 4 business hours",
   businessDays: "Sunday–Thursday",

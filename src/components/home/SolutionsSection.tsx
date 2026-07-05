@@ -9,6 +9,9 @@ export default async function SolutionsSection() {
     fetchSegmentsMap(),
   ]);
 
+  // Hide the whole section when there's nothing to show (global empty rule).
+  if (solutions.length === 0) return null;
+
   return (
     <section className="section">
       <div className="container-page">

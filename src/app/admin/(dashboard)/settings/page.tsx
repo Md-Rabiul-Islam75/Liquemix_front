@@ -25,24 +25,6 @@ export default function AdminSettingsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
 
-  // Product list for the hero card selectors.
-  const [products, setProducts] = useState<{ slug: string; name: string }[]>([]);
-  useEffect(() => {
-    if (hasToken !== true) return;
-    (async () => {
-      try {
-        const page = await adminGet<{ items: { slug: string; name: string }[] }>(
-          "/api/v1/admin/catalog/products?page=1&size=100"
-        );
-        setProducts(
-          (page.items ?? []).map((p) => ({ slug: p.slug, name: p.name }))
-        );
-      } catch {
-        /* selector just falls back to a free-text slug if this fails */
-      }
-    })();
-  }, [hasToken]);
-
   useEffect(() => {
     if (hasToken !== true) return;
     (async () => {
@@ -135,7 +117,7 @@ export default function AdminSettingsPage() {
       <AdminPageHeader
         eyebrow="Settings"
         title="Site settings"
-        description="Global settings the public site reads from — contact channels, social URLs, homepage hero copy, business hours."
+        description="Global settings the public site reads from — contact channels, social URLs, business hours. (The homepage banner has its own page.)"
       />
 
       {!loaded ? (
@@ -254,109 +236,20 @@ export default function AdminSettingsPage() {
             </div>
           </section>
 
-          {/* Hero copy */}
-          <section className="lg:col-span-3 rounded-2xl bg-white-base border border-neutral-100 p-5 md:p-6">
+          {/* Homepage banner moved to its own page — link across for clarity. */}
+          <section className="lg:col-span-3 rounded-2xl border border-dashed border-neutral-200 bg-neutral-50/60 p-5 md:p-6">
             <h2 className="text-base font-bold text-neutral-900 mb-1">
-              Homepage hero
+              Homepage banner
             </h2>
-            <p className="text-xs text-neutral-500 mb-5">
-              The first thing every visitor sees on the public site.
-              Headline is split across two lines on a line-break.
+            <p className="text-xs text-neutral-500 mb-3">
+              The hero/banner and its certification strip now live on their own page.
             </p>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <Field label="Eyebrow">
-                <input
-                  type="text"
-                  value={form.heroEyebrow}
-                  onChange={(e) => set("heroEyebrow", e.target.value)}
-                  className="admin-input"
-                  maxLength={240}
-                />
-              </Field>
-              <Field label="Headline (two lines, separated by Enter)">
-                <textarea
-                  rows={2}
-                  value={form.heroHeadline}
-                  onChange={(e) => set("heroHeadline", e.target.value)}
-                  className="admin-input resize-none"
-                  maxLength={400}
-                />
-              </Field>
-              <Field label="Subtitle" className="lg:col-span-2">
-                <textarea
-                  rows={3}
-                  value={form.heroSubtitle}
-                  onChange={(e) => set("heroSubtitle", e.target.value)}
-                  className="admin-input resize-none"
-                />
-              </Field>
-            </div>
-
-            {/* KPI stats */}
-            <h3 className="mt-6 mb-1 text-sm font-bold text-neutral-900">
-              Banner stats
-            </h3>
-            <p className="text-xs text-neutral-500 mb-4">
-              The three numbers under the headline. Type them exactly as shown
-              (e.g. <code className="font-mono">200+</code>).
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Field label="Products">
-                <input
-                  type="text"
-                  value={form.statProducts}
-                  onChange={(e) => set("statProducts", e.target.value)}
-                  className="admin-input"
-                  maxLength={40}
-                  placeholder="200+"
-                />
-              </Field>
-              <Field label="Countries served">
-                <input
-                  type="text"
-                  value={form.statCountries}
-                  onChange={(e) => set("statCountries", e.target.value)}
-                  className="admin-input"
-                  maxLength={40}
-                  placeholder="40+"
-                />
-              </Field>
-              <Field label="Reference projects">
-                <input
-                  type="text"
-                  value={form.statReferences}
-                  onChange={(e) => set("statReferences", e.target.value)}
-                  className="admin-input"
-                  maxLength={40}
-                  placeholder="1500+"
-                />
-              </Field>
-            </div>
-
-            {/* Featured product cards */}
-            <h3 className="mt-6 mb-1 text-sm font-bold text-neutral-900">
-              Banner product cards
-            </h3>
-            <p className="text-xs text-neutral-500 mb-4">
-              The two products shown in the banner. The first is the large
-              card, the second is the smaller overlapping card.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Primary product (large card)">
-                <ProductSelect
-                  products={products}
-                  value={form.heroPrimaryProductSlug}
-                  onChange={(v) => set("heroPrimaryProductSlug", v)}
-                />
-              </Field>
-              <Field label="Secondary product (small card)">
-                <ProductSelect
-                  products={products}
-                  value={form.heroSecondaryProductSlug}
-                  onChange={(v) => set("heroSecondaryProductSlug", v)}
-                />
-              </Field>
-            </div>
+            <Link
+              href="/admin/banner"
+              className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-primary-500 text-white-base text-sm font-semibold hover:bg-primary-600"
+            >
+              Go to Banner settings
+            </Link>
           </section>
 
           {/* Operations */}
@@ -480,34 +373,5 @@ function Field({
       </span>
       {children}
     </label>
-  );
-}
-
-/** Product picker for the hero cards. Keeps the current slug selectable even
- *  if the product list failed to load (e.g. backend down). */
-function ProductSelect({
-  products,
-  value,
-  onChange,
-}: {
-  products: { slug: string; name: string }[];
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  const known = products.some((p) => p.slug === value);
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="admin-input"
-    >
-      <option value="">— None —</option>
-      {!known && value && <option value={value}>{value} (current)</option>}
-      {products.map((p) => (
-        <option key={p.slug} value={p.slug}>
-          {p.name}
-        </option>
-      ))}
-    </select>
   );
 }

@@ -31,6 +31,8 @@ const COLOR_CLASSES: Record<
 
 export default async function SegmentsGrid() {
   const segments = await fetchSegments();
+  // Hide the whole section when there's nothing to show (global empty rule).
+  if (segments.length === 0) return null;
   return (
     <section className="section">
       <div className="container-page">

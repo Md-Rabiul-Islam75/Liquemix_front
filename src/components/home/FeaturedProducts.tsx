@@ -19,6 +19,9 @@ export default async function FeaturedProducts() {
     return true;
   }).slice(0, 8);
 
+  // Hide the whole section when there's nothing to show (global empty rule).
+  if (list.length === 0) return null;
+
   return (
     <section className="section bg-neutral-50">
       <div className="container-page">

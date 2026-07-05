@@ -23,10 +23,12 @@ import {
   FiFolder,
   FiGrid,
   FiHome,
+  FiImage,
   FiInfo,
   FiLayers,
   FiLogOut,
   FiSettings,
+  FiStar,
   FiUsers,
   FiVideo,
 } from "react-icons/fi";
@@ -36,6 +38,8 @@ type NavItem = {
   label: string;
   icon: React.ReactNode;
   count?: number;
+  /** Small "NEW" pill shown to the right of the label (e.g. "New"). */
+  badge?: string;
 };
 
 type NavGroup = {
@@ -145,6 +149,18 @@ export default function AdminSidebar() {
       label: "Content",
       items: [
         {
+          href: "/admin/banner",
+          label: "Banner",
+          icon: <FiImage />,
+          badge: "New",
+        },
+        {
+          href: "/admin/top-clients",
+          label: "Top Clients",
+          icon: <FiStar />,
+          badge: "New",
+        },
+        {
           href: "/admin/references",
           label: "References",
           icon: <FiBarChart2 />,
@@ -176,8 +192,9 @@ export default function AdminSidebar() {
         },
         {
           href: "/admin/about",
-          label: "About page",
+          label: "About",
           icon: <FiInfo />,
+          badge: "New",
         },
       ],
     },
@@ -254,6 +271,11 @@ export default function AdminSidebar() {
                         {item.icon}
                       </span>
                       <span className="flex-1 min-w-0">{item.label}</span>
+                      {item.badge && (
+                        <span className="inline-flex items-center px-1.5 h-4 rounded-full bg-secondary-500 text-white-base text-[9px] font-bold uppercase tracking-wide">
+                          {item.badge}
+                        </span>
+                      )}
                       {typeof item.count === "number" && (
                         <span
                           className={`inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[10px] font-bold ${

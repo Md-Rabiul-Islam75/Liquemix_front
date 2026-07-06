@@ -147,18 +147,20 @@ export default async function ReferenceDetailPage({ params }: Props) {
                 <div className="mt-6 pt-6 border-t border-primary-100/50 space-y-4">
                   {project.applicator && (
                     <PartyCard
-                      label="Applicator"
+                      label="Contractor"
                       name={project.applicator.name}
                       website={project.applicator.website}
                       email={project.applicator.email}
+                      address={project.applicator.address}
                     />
                   )}
                   {project.architect && (
                     <PartyCard
-                      label="Architect"
+                      label="Consultant"
                       name={project.architect.name}
                       website={project.architect.website}
                       email={project.architect.email}
+                      address={project.architect.address}
                     />
                   )}
                 </div>
@@ -305,11 +307,13 @@ function PartyCard({
   name,
   website,
   email,
+  address,
 }: {
   label: string;
   name: string;
   website?: string;
   email?: string;
+  address?: string;
 }) {
   return (
     <div>
@@ -318,6 +322,12 @@ function PartyCard({
       </p>
       <p className="text-sm font-semibold text-neutral-900">{name}</p>
       <div className="mt-1 flex flex-col gap-1 text-xs">
+        {address && (
+          <p className="inline-flex items-start gap-1 text-neutral-600 whitespace-pre-line">
+            <FiMapPin className="text-[11px] mt-0.5 shrink-0 text-neutral-400" />
+            {address}
+          </p>
+        )}
         {website && (
           <a
             href={website}

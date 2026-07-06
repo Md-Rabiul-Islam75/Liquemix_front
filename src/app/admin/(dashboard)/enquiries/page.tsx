@@ -174,8 +174,13 @@ export default function AdminEnquiriesPage() {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <a
-                          href={`mailto:${u.email}`}
-                          aria-label="Reply"
+                          href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+                            u.email
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="Reply via Gmail"
+                          title="Reply via Gmail"
                           className="inline-flex items-center justify-center w-8 h-8 rounded-md text-neutral-500 hover:bg-primary-50 hover:text-primary-700"
                         >
                           <FiMail />

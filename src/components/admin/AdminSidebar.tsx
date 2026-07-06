@@ -64,8 +64,30 @@ type Counts = {
  * Counts are fetched live from /api/v1/admin/dashboard/counts on mount; each
  * badge renders only once its real number arrives (no mock placeholders).
  */
-export default function AdminSidebar() {
+export default function AdminSidebar({
+  mobileOpen = false,
+  onClose,
+}: {
+  mobileOpen?: boolean;
+  onClose?: () => void;
+} = {}) {
   const pathname = usePathname();
+
+  // Close the mobile drawer whenever the route changes (i.e. a nav link was
+  // tapped). onClose is memoised by the shell, so this only fires on navigation.
+  useEffect(() => {
+    onClose?.();
+  }, [pathname, onClose]);
+
+  // Lock body scroll while the mobile drawer is open.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileOpen]);
 
   const [live, setLive] = useState<Partial<Counts>>({});
   useEffect(() => {
@@ -227,8 +249,22 @@ export default function AdminSidebar() {
   };
 
   return (
-    <aside className="hidden lg:flex w-64 shrink-0 flex-col bg-primary-900 text-white-base h-screen sticky top-0">
-      {/* Brand */}
+    <>
+      {/* Mobile backdrop — tap to close */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-neutral-900/50 lg:hidden"
+          onClick={onClose}
+          aria-hidden
+        />
+      )}
+
+      <aside
+        className={`fixed left-0 top-0 z-50 h-screen w-64 shrink-0 flex flex-col bg-primary-900 text-white-base transition-transform duration-200 ease-out lg:sticky lg:z-auto lg:translate-x-0 ${
+          mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
+        }`}
+      >
+        {/* Brand */}
       <div className="px-5 py-5 border-b border-white/10">
         <Link href="/admin" className="flex items-center gap-2.5">
           <Image
@@ -331,6 +367,7 @@ export default function AdminSidebar() {
           </Link>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

@@ -14,7 +14,12 @@ import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { adminGet, adminPost, adminPut, adminDelete } from "@/lib/adminApi";
 import { ErrorToast, SuccessToast } from "@/helpers/ToastHelper";
 
-type Party = { name?: string | null; website?: string | null; email?: string | null };
+type Party = {
+  name?: string | null;
+  website?: string | null;
+  email?: string | null;
+  address?: string | null;
+};
 
 type ReferenceDto = {
   id: number;
@@ -62,9 +67,11 @@ export default function ReferenceEditor(props: Props) {
   const [applicatorName, setApplicatorName] = useState("");
   const [applicatorWebsite, setApplicatorWebsite] = useState("");
   const [applicatorEmail, setApplicatorEmail] = useState("");
+  const [applicatorAddress, setApplicatorAddress] = useState("");
   const [architectName, setArchitectName] = useState("");
   const [architectWebsite, setArchitectWebsite] = useState("");
   const [architectEmail, setArchitectEmail] = useState("");
+  const [architectAddress, setArchitectAddress] = useState("");
   const [status, setStatus] = useState<"draft" | "published">("draft");
   const [productsUsed, setProductsUsed] = useState<number[]>([]);
 
@@ -99,9 +106,11 @@ export default function ReferenceEditor(props: Props) {
         setApplicatorName(r.applicator?.name ?? "");
         setApplicatorWebsite(r.applicator?.website ?? "");
         setApplicatorEmail(r.applicator?.email ?? "");
+        setApplicatorAddress(r.applicator?.address ?? "");
         setArchitectName(r.architect?.name ?? "");
         setArchitectWebsite(r.architect?.website ?? "");
         setArchitectEmail(r.architect?.email ?? "");
+        setArchitectAddress(r.architect?.address ?? "");
         setStatus(r.status === "published" ? "published" : "draft");
         setProductsUsed(r.productsUsed ?? []);
       } catch (e) {
@@ -129,12 +138,19 @@ export default function ReferenceEditor(props: Props) {
     [submitting, title, projectType, year, challenge, solution]
   );
 
-  function party(name: string, website: string, email: string): Party | null {
-    if (!name.trim() && !website.trim() && !email.trim()) return null;
+  function party(
+    name: string,
+    website: string,
+    email: string,
+    address: string
+  ): Party | null {
+    if (!name.trim() && !website.trim() && !email.trim() && !address.trim())
+      return null;
     return {
       name: name.trim() || null,
       website: website.trim() || null,
       email: email.trim() || null,
+      address: address.trim() || null,
     };
   }
 
@@ -154,8 +170,8 @@ export default function ReferenceEditor(props: Props) {
       solution: solution.trim(),
       heroImage: heroImage.trim() || null,
       gallery,
-      applicator: party(applicatorName, applicatorWebsite, applicatorEmail),
-      architect: party(architectName, architectWebsite, architectEmail),
+      applicator: party(applicatorName, applicatorWebsite, applicatorEmail, applicatorAddress),
+      architect: party(architectName, architectWebsite, architectEmail, architectAddress),
       status,
     };
   }
@@ -467,7 +483,7 @@ export default function ReferenceEditor(props: Props) {
           </section>
 
           <section className="rounded-2xl bg-white-base border border-neutral-100 p-5 space-y-4">
-            <h3 className="text-sm font-bold text-neutral-900">Applicator</h3>
+            <h3 className="text-sm font-bold text-neutral-900">Contractor</h3>
             <PartyFields
               name={applicatorName}
               setName={setApplicatorName}
@@ -475,12 +491,14 @@ export default function ReferenceEditor(props: Props) {
               setWebsite={setApplicatorWebsite}
               email={applicatorEmail}
               setEmail={setApplicatorEmail}
+              address={applicatorAddress}
+              setAddress={setApplicatorAddress}
               namePlaceholder="Acme Waterproofing Co."
             />
           </section>
 
           <section className="rounded-2xl bg-white-base border border-neutral-100 p-5 space-y-4">
-            <h3 className="text-sm font-bold text-neutral-900">Architect</h3>
+            <h3 className="text-sm font-bold text-neutral-900">Consultant</h3>
             <PartyFields
               name={architectName}
               setName={setArchitectName}
@@ -488,7 +506,9 @@ export default function ReferenceEditor(props: Props) {
               setWebsite={setArchitectWebsite}
               email={architectEmail}
               setEmail={setArchitectEmail}
-              namePlaceholder="Urbana Studio"
+              address={architectAddress}
+              setAddress={setArchitectAddress}
+              namePlaceholder="DPI Engineering Group"
             />
           </section>
 
@@ -567,6 +587,8 @@ function PartyFields({
   setWebsite,
   email,
   setEmail,
+  address,
+  setAddress,
   namePlaceholder,
 }: {
   name: string;
@@ -575,6 +597,8 @@ function PartyFields({
   setWebsite: (v: string) => void;
   email: string;
   setEmail: (v: string) => void;
+  address: string;
+  setAddress: (v: string) => void;
   namePlaceholder: string;
 }) {
   return (
@@ -613,6 +637,18 @@ function PartyFields({
           onChange={(e) => setEmail(e.target.value)}
           placeholder="contact@example.com"
           className="admin-input"
+        />
+      </label>
+      <label className="block">
+        <span className="block text-xs font-bold tracking-wider uppercase text-neutral-700 mb-1.5">
+          Address
+        </span>
+        <textarea
+          rows={2}
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          placeholder="123 Industrial Ave, Dhaka 1212"
+          className="admin-input resize-none"
         />
       </label>
     </>

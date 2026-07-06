@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FiChevronRight, FiMenu, FiPlus } from "react-icons/fi";
@@ -39,7 +40,11 @@ function humanise(slug: string) {
     .join(" ");
 }
 
-export default function AdminTopbar() {
+export default function AdminTopbar({
+  onMenuClick,
+}: {
+  onMenuClick?: () => void;
+} = {}) {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
   // The first segment is always "admin" — keep it as the root crumb.
@@ -50,15 +55,34 @@ export default function AdminTopbar() {
 
   return (
     <header className="sticky top-0 z-30 bg-white-base border-b border-neutral-200">
-      <div className="flex items-center gap-3 px-4 sm:px-6 h-14">
-        {/* Mobile hamburger — placeholder, sidebar toggle wiring optional */}
+      <div className="relative flex items-center gap-3 px-4 sm:px-6 h-14">
+        {/* Mobile hamburger — opens the sidebar drawer (see AdminShell). */}
         <button
           type="button"
           aria-label="Open menu"
+          onClick={onMenuClick}
           className="lg:hidden inline-flex items-center justify-center w-9 h-9 rounded-md text-neutral-600 hover:bg-neutral-100"
         >
           <FiMenu />
         </button>
+
+        {/* Phone centred logo — breadcrumbs are hidden below sm and the sidebar
+            logo is hidden below lg, so this gives a tap-to-dashboard shortcut.
+            On sm+ the breadcrumbs (whose first crumb links to /admin) take over. */}
+        <Link
+          href="/admin"
+          aria-label="Go to dashboard"
+          className="sm:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+        >
+          <Image
+            src="/logo/LiqueMix.png"
+            alt="LiqueMix"
+            width={140}
+            height={36}
+            className="h-7 w-auto"
+            priority
+          />
+        </Link>
 
         {/* Breadcrumbs */}
         <nav

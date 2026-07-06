@@ -163,8 +163,9 @@ export interface ReferenceProject {
   solution: string;
   heroImage: string;
   gallery: ProductImage[];
-  applicator?: { name: string; website?: string; email?: string };
-  architect?: { name: string; website?: string; email?: string };
+  // Public labels: Contractor (applicator) and Consultant (architect).
+  applicator?: { name: string; website?: string; email?: string; address?: string };
+  architect?: { name: string; website?: string; email?: string; address?: string };
 }
 
 /**

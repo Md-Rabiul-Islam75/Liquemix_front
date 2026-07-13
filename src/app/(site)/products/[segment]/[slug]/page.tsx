@@ -18,6 +18,7 @@ import PrintButton from "@/components/product/PrintButton";
 import ProductCard from "@/components/product/ProductCard";
 import VideoCard from "@/components/video/VideoCard";
 import EnquireOptions from "@/components/contact/EnquireOptions";
+import JsonLd from "@/components/seo/JsonLd";
 import { whatsappUrl, buildEnquiryMessage } from "@/lib/enquiry";
 import { fetchSiteSettings } from "@/data/settings";
 import { FaWhatsapp } from "react-icons/fa";
@@ -176,8 +177,24 @@ export default async function ProductDetailPage({ params }: Props) {
     r.productsUsed.includes(String(product.id))
   );
 
+  // Product structured data — rich results + entity signals for search.
+  const primaryImage =
+    product.images.find((i) => i.isPrimary) ?? product.images[0];
+  const productSchema: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.shortDescription,
+    ...(product.sku ? { sku: product.sku } : {}),
+    ...(primaryImage ? { image: primaryImage.url } : {}),
+    brand: { "@type": "Brand", name: "LiqueMix" },
+    category: segment.name,
+    url: `https://liquemix.com/products/${segment.slug}/${product.slug}`,
+  };
+
   return (
     <>
+      <JsonLd data={productSchema} />
       <div className="print:hidden">
         <PageHeader
           breadcrumbs={[

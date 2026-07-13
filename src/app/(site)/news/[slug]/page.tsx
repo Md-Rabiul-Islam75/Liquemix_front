@@ -14,6 +14,7 @@ import {
 import PageHeader from "@/components/common/PageHeader";
 import ProductCard from "@/components/product/ProductCard";
 import VideoCard from "@/components/video/VideoCard";
+import JsonLd from "@/components/seo/JsonLd";
 import { fetchNews, fetchNewsBySlug, fetchRelatedNews } from "@/data/news";
 import { products } from "@/data/products";
 import { fetchSegmentsMap } from "@/data/segments";
@@ -84,8 +85,31 @@ export default async function NewsDetailPage({ params }: Props) {
     .filter((p): p is NonNullable<typeof p> => p !== undefined);
   const segMap = relatedProducts.length > 0 ? await fetchSegmentsMap() : null;
 
+  // NewsArticle structured data — eligible for news-style rich results.
+  const articleSchema: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline: post.title,
+    description: post.excerpt,
+    ...(post.coverImage ? { image: post.coverImage } : {}),
+    ...(post.publishedAt ? { datePublished: post.publishedAt } : {}),
+    author: post.author
+      ? { "@type": "Person", name: post.author.name }
+      : { "@type": "Organization", name: "LiqueMix" },
+    publisher: {
+      "@type": "Organization",
+      name: "LiqueMix",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://liquemix.com/logo/LiqueMix.png",
+      },
+    },
+    mainEntityOfPage: `https://liquemix.com/news/${post.slug}`,
+  };
+
   return (
     <>
+      <JsonLd data={articleSchema} />
       <PageHeader
         breadcrumbs={[
           { label: "Home", href: "/" },

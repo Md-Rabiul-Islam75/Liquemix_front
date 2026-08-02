@@ -16,6 +16,7 @@ import DocumentAccordion from "@/components/product/DocumentAccordion";
 import PackagingTable from "@/components/product/PackagingTable";
 import PrintButton from "@/components/product/PrintButton";
 import ProductCard from "@/components/product/ProductCard";
+import ProductGallery from "@/components/product/ProductGallery";
 import VideoCard from "@/components/video/VideoCard";
 import EnquireOptions from "@/components/contact/EnquireOptions";
 import JsonLd from "@/components/seo/JsonLd";
@@ -230,14 +231,18 @@ export default async function ProductDetailPage({ params }: Props) {
       {/* Hero block: image + key info — also the ONLY section printed. */}
       <section className="bg-white-base product-print-area">
         <div className="container-page py-10 md:py-14 grid grid-cols-1 lg:grid-cols-12 gap-10">
-          {/* Image / chips */}
+          {/* Image gallery / chips */}
           <div className="lg:col-span-5">
-            {(() => {
-              const primaryImage =
-                product.images.find((img) => img.isPrimary) ?? product.images[0];
-              /* Shown when there's no image, AND when a referenced image file
-                 fails to load (missing in storage) via SafeImage's fallback. */
-              const imagePlaceholder = (
+            <ProductGallery
+              images={product.images}
+              heroTint={heroTint}
+              segBar={segBar}
+              segColor={segColor}
+              isNew={!!product.isNew}
+              isFeatured={!!product.isFeatured}
+              placeholder={
+                /* Shown when there's no image, AND when a referenced image file
+                   fails to load (missing in storage) via SafeImage's fallback. */
                 <div className="absolute inset-0 grid place-items-center p-10">
                   <div className="w-full max-w-[280px] aspect-[3/4] rounded-2xl bg-white-base shadow-xl flex flex-col justify-between p-6">
                     <div>
@@ -253,35 +258,8 @@ export default async function ProductDetailPage({ params }: Props) {
                     <div className={`h-24 rounded-lg bg-gradient-to-br ${segBar} opacity-90`} />
                   </div>
                 </div>
-              );
-              return (
-                <div className={`relative aspect-square rounded-3xl bg-gradient-to-br ${heroTint} overflow-hidden`}>
-                  <span
-                    aria-hidden
-                    className={`absolute left-0 top-0 right-0 h-1.5 bg-gradient-to-r ${segBar} z-10`}
-                  />
-                  {primaryImage ? (
-                    <SafeImage
-                      src={encodeURI(primaryImage.url)}
-                      alt={primaryImage.alt}
-                      fill
-                      priority
-                      sizes="(min-width: 1024px) 40vw, 100vw"
-                      className="object-contain p-8 md:p-12"
-                      fallback={imagePlaceholder}
-                    />
-                  ) : (
-                    imagePlaceholder
-                  )}
-                  <div className="absolute top-4 left-4 flex gap-2 z-10">
-                    {product.isNew && <span className="chip-new">NEW</span>}
-                    {product.isFeatured && (
-                      <span className="chip-featured">★ Featured</span>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
+              }
+            />
           </div>
 
           {/* Details */}

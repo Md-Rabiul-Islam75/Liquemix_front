@@ -19,6 +19,8 @@ import {
 import type { Category, Product, Segment, SystemSolution } from "@/types/Catalog";
 import ProductSearchModal from "@/components/search/ProductSearchModal";
 import TopBar from "./TopBar";
+import Flag from "@/components/common/Flag";
+import { fetchOffices, type Office } from "@/data/offices";
 
 type MenuKey = "products" | "solutions" | "service" | "about" | null;
 
@@ -52,6 +54,8 @@ export default function Header() {
     Record<string, Category[]>
   >({});
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  // Active offices → the mobile "global presence" flags in the drawer header.
+  const [offices, setOffices] = useState<Office[]>([]);
   const [hoveredSegment, setHoveredSegment] = useState<string | null>(
     fallbackSegments[0]?.id != null ? String(fallbackSegments[0].id) : null
   );
@@ -103,6 +107,19 @@ export default function Header() {
         // Fall back to mock arrays already seeded; mega-menu still renders.
       }
     })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Live offices for the mobile drawer's presence flags (desktop uses TopBar).
+  useEffect(() => {
+    let cancelled = false;
+    fetchOffices()
+      .then((list) => {
+        if (!cancelled) setOffices(list);
+      })
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -659,6 +676,28 @@ export default function Header() {
                     </span>
                   )}
                 </div>
+
+                {/* Global presence — real flags between the logo and the close
+                    button, shown only when we're multi-office. */}
+                {offices.length > 1 && (
+                  <Link
+                    href="/contact"
+                    onClick={() => setMobileOpen(false)}
+                    aria-label="Our offices"
+                    className="flex items-center gap-1 shrink-0 mx-2"
+                  >
+                    {offices.map((o) => (
+                      <Flag
+                        key={o.id || o.label}
+                        label={o.label}
+                        w={20}
+                        h={14}
+                        className="ring-1 ring-black/5"
+                      />
+                    ))}
+                  </Link>
+                )}
+
                 <button
                   onClick={() => setMobileOpen(false)}
                   aria-label="Close menu"

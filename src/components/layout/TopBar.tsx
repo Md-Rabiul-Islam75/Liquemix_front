@@ -1,25 +1,72 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { FaWhatsapp, FaLinkedinIn, FaFacebookF, FaWeixin } from "react-icons/fa";
+import { FiArrowRight } from "react-icons/fi";
 import { useSettings } from "@/components/providers/SettingsProvider";
+import { fetchOffices, type Office } from "@/data/offices";
+import Flag from "@/components/common/Flag";
 
 /**
- * Thin dark bar above the main nav. Every social link is driven by admin
- * Site Settings via the SettingsProvider context (same source the footer
- * and contact page use), so editing settings updates here too — not just
- * the footer.
+ * Thin dark bar above the main nav. Social links are driven by admin Site
+ * Settings (same source as the footer). Centred between the tagline and the
+ * links is a "global presence" signal — real SVG flags of every active office
+ * — shown only when we're genuinely multi-office, linking to /contact.
  */
 export default function TopBar() {
   const settings = useSettings();
 
+  // Active offices for the centred presence flags. Fetched client side (same
+  // pattern as the header's live segments). Only surfaced when there is more
+  // than one office — a single office is nothing to advertise.
+  const [offices, setOffices] = useState<Office[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    fetchOffices()
+      .then((list) => {
+        if (!cancelled) setOffices(list);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const multi = offices.length > 1;
+
   return (
     <div className="hidden md:block bg-neutral-900 text-white-base">
-      <div className="container-page flex items-center justify-between h-9 text-xs">
+      <div className="container-page relative flex items-center justify-between h-9 text-xs">
         <p className="text-neutral-300">
           <span className="text-accent-400 font-semibold">LiqueMix</span> —
-          Construction Chemical & Industrial Solutions
+          Construction Chemical &amp; Industrial Solutions
         </p>
+
+        {/* Global presence — centred, real flags, only when multi-office */}
+        {multi && (
+          <Link
+            href="/contact"
+            aria-label="Our offices"
+            className="group absolute left-1/2 -translate-x-1/2 hidden lg:inline-flex items-center gap-2"
+          >
+            <span className="flex items-center gap-1">
+              {offices.map((o) => (
+                <Flag
+                  key={o.id || o.label}
+                  label={o.label}
+                  w={18}
+                  h={13}
+                  className="ring-1 ring-white/20"
+                />
+              ))}
+            </span>
+            <span className="font-semibold bg-gradient-to-r from-accent-300 via-secondary-300 to-accent-300 bg-clip-text text-transparent">
+              Now serving {offices.length} regions
+            </span>
+            <FiArrowRight className="text-white/50 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+          </Link>
+        )}
+
         <div className="flex items-center gap-5">
           <Link href="/service/downloads" className="text-neutral-300 hover:text-white-base transition-colors">
             Downloads

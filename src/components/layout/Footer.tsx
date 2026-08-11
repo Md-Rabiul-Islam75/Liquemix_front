@@ -3,17 +3,32 @@ import Image from "next/image";
 import { FaWhatsapp, FaLinkedinIn, FaFacebookF, FaWeixin } from "react-icons/fa";
 import { segments as fallbackSegments, fetchSegments } from "@/data/segments";
 import { fetchSiteSettings } from "@/data/settings";
+import {
+  fetchOffices,
+  officesOrFallback,
+  headquarters,
+  type Office,
+} from "@/data/offices";
 
 export default async function Footer() {
   // Footer renders inside the (site) layout server tree; we re-fetch
   // here (rather than pulling from context) so the segments column
   // always reflects the live segment list, not just the mock.
-  const [settings, fetchedSegments] = await Promise.all([
+  const [settings, fetchedSegments, offices] = await Promise.all([
     fetchSiteSettings(),
     fetchSegments().catch(() => fallbackSegments),
+    fetchOffices().catch(() => [] as Office[]),
   ]);
   const segments = fetchedSegments.length > 0 ? fetchedSegments : fallbackSegments;
   const waHref = `https://wa.me/${settings.whatsappNumber}`;
+
+  // Footer shows only the head office, plus a lean "Also in …" line linking to
+  // /contact when there are other offices.
+  const officeList = officesOrFallback(offices, settings);
+  const hq = headquarters(officeList);
+  const hqAddress = hq?.address ?? settings.officeAddress;
+  const hqEmail = hq?.email ?? settings.emailGeneral;
+  const otherOffices = officeList.filter((o) => o !== hq && o.isActive);
   return (
     <footer className="bg-neutral-900 text-neutral-300 mt-24 print:hidden">
       {/* CTA strip */}
@@ -139,14 +154,14 @@ export default async function Footer() {
           <p className="text-xs font-semibold tracking-[0.18em] uppercase text-white-base mb-4">
             Reach us
           </p>
-          <address className="not-italic text-sm text-neutral-400 leading-relaxed whitespace-pre-line">
-            {settings.officeAddress}
+          <address className="not-italic text-sm text-neutral-400 leading-relaxed">
+            <span className="whitespace-pre-line">{hqAddress}</span>
             {"\n"}
             <a
-              href={`mailto:${settings.emailGeneral}`}
+              href={`mailto:${hqEmail}`}
               className="text-accent-400 hover:underline"
             >
-              {settings.emailGeneral}
+              {hqEmail}
             </a>
             <br />
             <a
@@ -155,6 +170,14 @@ export default async function Footer() {
             >
               {settings.emailTechnical}
             </a>
+            {otherOffices.length > 0 && (
+              <Link
+                href="/contact"
+                className="mt-3 flex items-center gap-1 text-xs font-semibold text-neutral-300 hover:text-accent-400"
+              >
+                Also in: {otherOffices.map((o) => o.city || o.label).join(" · ")} →
+              </Link>
+            )}
           </address>
         </div>
       </div>

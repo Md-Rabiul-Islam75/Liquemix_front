@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
+import "flag-icons/css/flag-icons.min.css";
 import { StoreProvider } from "@/redux/store/StoreProvider";
 import { Toaster } from "sonner";
 import RouteProgress from "@/components/common/RouteProgress";

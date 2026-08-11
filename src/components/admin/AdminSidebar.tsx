@@ -27,6 +27,7 @@ import {
   FiInfo,
   FiLayers,
   FiLogOut,
+  FiMapPin,
   FiSettings,
   FiStar,
   FiUsers,
@@ -224,6 +225,12 @@ export default function AdminSidebar({
       label: "Settings",
       items: [
         { href: "/admin/settings", label: "Site settings", icon: <FiSettings /> },
+        {
+          href: "/admin/offices",
+          label: "Offices",
+          icon: <FiMapPin />,
+          badge: "New",
+        },
         // User management + audit log are Super-Admin only.
         ...(isSuperAdmin
           ? [

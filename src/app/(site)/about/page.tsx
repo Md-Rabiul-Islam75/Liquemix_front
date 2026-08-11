@@ -1,47 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import type { ReactNode } from "react";
 import {
-  FiActivity,
   FiAward,
   FiCheckCircle,
-  FiCompass,
-  FiDroplet,
-  FiGlobe,
-  FiHeart,
-  FiLayers,
   FiMail,
-  FiPackage,
-  FiShield,
-  FiTarget,
-  FiTrendingUp,
-  FiUsers,
-  FiZap,
   FiArrowUpRight,
   FiArrowRight,
 } from "react-icons/fi";
 import PageHeader from "@/components/common/PageHeader";
+import { AboutIcon } from "@/components/about/AboutIcon";
 import { fetchAbout } from "@/data/about";
-
-// Icon-key → component map. Admin stores a key string (see ABOUT_ICON_KEYS
-// in data/about.ts); we resolve it here. Unknown keys fall back gracefully.
-const ICONS: Record<string, ReactNode> = {
-  target: <FiTarget />,
-  shield: <FiShield />,
-  heart: <FiHeart />,
-  "trending-up": <FiTrendingUp />,
-  zap: <FiZap />,
-  droplet: <FiDroplet />,
-  package: <FiPackage />,
-  users: <FiUsers />,
-  compass: <FiCompass />,
-  layers: <FiLayers />,
-  award: <FiAward />,
-  "check-circle": <FiCheckCircle />,
-  globe: <FiGlobe />,
-  activity: <FiActivity />,
-};
-const icon = (key: string): ReactNode => ICONS[key] ?? <FiCheckCircle />;
 
 export async function generateMetadata(): Promise<Metadata> {
   const about = await fetchAbout();
@@ -105,7 +73,7 @@ export default async function AboutPage() {
             {about.values.map((v, i) => (
               <div key={`${v.title}-${i}`} className="brand-panel p-6 md:p-7">
                 <span className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary-500 text-white-base text-xl mb-4 shadow-[0_8px_24px_-8px_rgba(21,101,192,0.45)]">
-                  {icon(v.icon)}
+                  <AboutIcon name={v.icon} />
                 </span>
                 <h3 className="text-xl font-bold text-neutral-900">{v.title}</h3>
                 <p className="mt-2 text-sm md:text-base text-neutral-600 leading-relaxed">
@@ -295,7 +263,7 @@ export default async function AboutPage() {
                   className="rounded-2xl bg-white/10 backdrop-blur p-6 border border-white/15"
                 >
                   <span className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white/15 text-accent-300 text-xl mb-4">
-                    {icon(s.icon)}
+                    <AboutIcon name={s.icon} />
                   </span>
                   <p className="text-4xl font-bold leading-none">{s.metric}</p>
                   <p className="mt-2 text-sm font-semibold text-accent-300 uppercase tracking-wider">
@@ -331,7 +299,7 @@ export default async function AboutPage() {
                 {about.careerStats.map((m, i) => (
                   <div key={`${m.label}-${i}`}>
                     <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-secondary-50 text-secondary-700 mb-2">
-                      {icon(m.icon)}
+                      <AboutIcon name={m.icon} />
                     </span>
                     <p className="text-2xl font-bold text-neutral-900">{m.kpi}</p>
                     <p className="text-xs text-neutral-500 uppercase tracking-wider">

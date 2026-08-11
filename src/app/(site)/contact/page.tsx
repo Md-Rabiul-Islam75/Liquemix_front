@@ -5,13 +5,23 @@ import {
   FiClock,
   FiArrowUpRight,
   FiPhoneCall,
+  FiMail,
+  FiHome,
 } from "react-icons/fi";
 
 import PageHeader from "@/components/common/PageHeader";
 import EnquireOptions from "@/components/contact/EnquireOptions";
 import { products } from "@/data/products";
 import { fetchSegmentsMap } from "@/data/segments";
-import { fetchSiteSettings } from "@/data/settings";
+import { fetchSiteSettings, type SiteSettings } from "@/data/settings";
+import {
+  fetchOffices,
+  officesOrFallback,
+  headquarters,
+  telHref,
+  type Office,
+} from "@/data/offices";
+import Flag from "@/components/common/Flag";
 
 export const metadata: Metadata = {
   title: "Contact LiqueMix",
@@ -33,10 +43,18 @@ export default async function ContactPage({ searchParams }: Props) {
   const product = productSku
     ? products.find((p) => p.sku === productSku)
     : undefined;
-  const [settings, segMap] = await Promise.all([
+  const [settings, segMap, offices] = await Promise.all([
     fetchSiteSettings(),
     product ? fetchSegmentsMap() : Promise.resolve(null),
+    fetchOffices().catch(() => [] as Office[]),
   ]);
+  // Live offices, or a single HQ synthesised from settings when none exist yet.
+  // HQ is pinned first; the rest keep their display order.
+  const officeList = officesOrFallback(offices, settings);
+  const hq = headquarters(officeList);
+  const orderedOffices = hq
+    ? [hq, ...officeList.filter((o) => o !== hq)]
+    : officeList;
   const segment = product
     ? segMap?.get(String(product.segmentId))
     : undefined;
@@ -80,6 +98,29 @@ export default async function ContactPage({ searchParams }: Props) {
 
       <section className="section pt-10">
         <div className="container-page space-y-10">
+          {/* Global presence strip — flags + cities, only when we're multi-office */}
+          {orderedOffices.length > 1 && (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-primary-100 bg-primary-50/40 px-5 py-3">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-primary-700">
+                Global presence
+              </span>
+              <span className="hidden sm:inline text-primary-200" aria-hidden>
+                |
+              </span>
+              <ul className="flex flex-wrap items-center gap-2">
+                {orderedOffices.map((o) => (
+                  <li
+                    key={o.id || o.label}
+                    className="inline-flex items-center gap-2 rounded-full border border-primary-100 bg-white-base px-3 py-1 text-sm text-neutral-700"
+                  >
+                    <Flag label={o.label} w={20} h={14} className="ring-1 ring-black/5" />
+                    <span className="font-medium">{o.city || o.label}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Product context card (only when ?product= is set) */}
           {product && segment && (
             <div className="brand-panel-blue p-6 md:p-7 flex flex-col md:flex-row md:items-center gap-5 md:gap-8">
@@ -129,115 +170,64 @@ export default async function ContactPage({ searchParams }: Props) {
             />
           </div>
 
-          {/* Address / hours grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-7 rounded-2xl border border-neutral-100 bg-white-base p-6 md:p-8">
-              <p className="brand-panel__eyebrow mb-3">Head office</p>
-              <h3 className="text-xl font-bold text-neutral-900">
-                LiqueMix HQ — Dhaka
-              </h3>
-              <address className="not-italic mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                <div>
-                  <p className="flex items-center gap-2 text-[11px] font-bold tracking-wider uppercase text-neutral-500 mb-1">
-                    <FiMapPin className="text-primary-500" /> Address
-                  </p>
-                  <p className="text-neutral-800 whitespace-pre-line">
-                    {settings.officeAddress}
-                  </p>
-                </div>
-                <div>
-                  <p className="flex items-center gap-2 text-[11px] font-bold tracking-wider uppercase text-neutral-500 mb-1">
-                    <FiPhoneCall className="text-primary-500" /> Phone
-                  </p>
-                  <p className="text-neutral-800">
-                    <a
-                      href={`tel:${settings.phoneTel}`}
-                      className="hover:text-primary-600"
-                    >
-                      {settings.phoneDisplay}
-                    </a>
-                  </p>
-                </div>
-                <div>
-                  <p className="flex items-center gap-2 text-[11px] font-bold tracking-wider uppercase text-neutral-500 mb-1">
-                    <FiClock className="text-primary-500" /> Business hours
-                  </p>
-                  <p className="text-neutral-800">
-                    {settings.businessDays} · {settings.businessHours}
-                    <br />
-                    <span className="text-xs text-neutral-500">
-                      Reply SLA: {settings.replySla}
-                    </span>
-                  </p>
-                </div>
-                <div>
-                  <p className="flex items-center gap-2 text-[11px] font-bold tracking-wider uppercase text-neutral-500 mb-1">
-                    Email shortcuts
-                  </p>
-                  <ul className="space-y-1">
-                    <li>
-                      <a
-                        href={`mailto:${settings.emailSales}`}
-                        className="text-primary-600 hover:text-primary-700"
-                      >
-                        {settings.emailSales}
-                      </a>{" "}
-                      <span className="text-xs text-neutral-500">— sales</span>
-                    </li>
-                    <li>
-                      <a
-                        href={`mailto:${settings.emailTechnical}`}
-                        className="text-primary-600 hover:text-primary-700"
-                      >
-                        {settings.emailTechnical}
-                      </a>{" "}
-                      <span className="text-xs text-neutral-500">— technical</span>
-                    </li>
-                    <li>
-                      <a
-                        href={`mailto:${settings.emailGeneral}`}
-                        className="text-primary-600 hover:text-primary-700"
-                      >
-                        {settings.emailGeneral}
-                      </a>{" "}
-                      <span className="text-xs text-neutral-500">— general</span>
-                    </li>
-                  </ul>
-                </div>
-              </address>
+          {/* Offices */}
+          <div>
+            <h2 className="text-2xl font-bold text-neutral-900 mb-2">
+              {orderedOffices.length > 1 ? "Our offices" : "Head office"}
+            </h2>
+            <p className="text-sm text-neutral-600 mb-6 max-w-2xl">
+              Visit, call, or email the office nearest you — we reply during
+              business hours, GMT+6.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              {orderedOffices.map((office) => (
+                <OfficeCard
+                  key={office.id || office.label}
+                  office={office}
+                  settings={settings}
+                  showHours={office.isHeadquarters}
+                />
+              ))}
             </div>
 
-            {/* Map placeholder */}
-            <div
-              className="lg:col-span-5 rounded-2xl overflow-hidden relative min-h-[260px] p-8 flex flex-col justify-end text-white-base"
-              style={{
-                background:
-                  "linear-gradient(135deg, #072454 0%, #1565c0 50%, #3f88d6 100%)",
-              }}
-            >
-              <div
-                aria-hidden
-                className="absolute inset-0 opacity-15"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
-                  backgroundSize: "32px 32px",
-                }}
-              />
-              <div className="relative">
-                <FiMapPin className="text-3xl text-accent-400 mb-3" />
-                <p className="text-lg font-bold leading-tight whitespace-pre-line">
-                  {settings.officeAddress}
-                </p>
-                <a
-                  href={settings.mapLink}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent-300 hover:text-accent-200 mt-5"
-                >
-                  Open in Google Maps <FiArrowUpRight />
-                </a>
-              </div>
+            {/* Email shortcuts — company-wide department inboxes */}
+            <div className="mt-6 rounded-2xl border border-neutral-100 bg-white-base p-6">
+              <p className="brand-panel__eyebrow mb-3">Email shortcuts</p>
+              <ul className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                <li>
+                  <a
+                    href={`mailto:${settings.emailSales}`}
+                    className="font-medium text-primary-600 hover:text-primary-700"
+                  >
+                    {settings.emailSales}
+                  </a>
+                  <span className="block text-xs text-neutral-500">
+                    Sales & quotations
+                  </span>
+                </li>
+                <li>
+                  <a
+                    href={`mailto:${settings.emailTechnical}`}
+                    className="font-medium text-primary-600 hover:text-primary-700"
+                  >
+                    {settings.emailTechnical}
+                  </a>
+                  <span className="block text-xs text-neutral-500">
+                    Technical support
+                  </span>
+                </li>
+                <li>
+                  <a
+                    href={`mailto:${settings.emailGeneral}`}
+                    className="font-medium text-primary-600 hover:text-primary-700"
+                  >
+                    {settings.emailGeneral}
+                  </a>
+                  <span className="block text-xs text-neutral-500">
+                    General enquiries
+                  </span>
+                </li>
+              </ul>
             </div>
           </div>
 
@@ -261,5 +251,103 @@ export default async function ContactPage({ searchParams }: Props) {
         </div>
       </section>
     </>
+  );
+}
+
+/**
+ * A single office address card. The headquarters card is visually promoted
+ * (primary tint + badge) and is the only one that shows the company-wide
+ * business hours / reply SLA. Fields render only when present.
+ */
+function OfficeCard({
+  office,
+  settings,
+  showHours,
+}: {
+  office: Office;
+  settings: SiteSettings;
+  showHours: boolean;
+}) {
+  const isHq = office.isHeadquarters;
+  return (
+    <div
+      className={`rounded-2xl border p-6 flex flex-col ${
+        isHq
+          ? "border-primary-200 bg-primary-50/30 ring-1 ring-primary-100"
+          : "border-neutral-100 bg-white-base"
+      }`}
+    >
+      <div className="flex items-start gap-2.5 mb-4">
+        <span className="inline-flex items-center justify-center w-9 h-9 shrink-0 rounded-lg bg-primary-500 text-white-base">
+          <FiMapPin />
+        </span>
+        <div className="min-w-0">
+          <p className="text-lg font-bold text-neutral-900 leading-tight">
+            {office.label}
+          </p>
+          {office.city && (
+            <p className="text-xs text-neutral-500">{office.city}</p>
+          )}
+        </div>
+        {isHq && (
+          <span className="ml-auto inline-flex items-center gap-1 px-2.5 h-6 shrink-0 rounded-full bg-primary-500 text-white-base text-[10px] font-bold uppercase tracking-wide">
+            <FiHome className="text-[10px]" /> Head office
+          </span>
+        )}
+      </div>
+
+      <div className="space-y-3 text-sm">
+        {office.address && (
+          <p className="text-neutral-700 whitespace-pre-line leading-relaxed">
+            {office.address}
+          </p>
+        )}
+        {office.phone && (
+          <p className="flex items-center gap-2">
+            <FiPhoneCall className="text-primary-500 shrink-0" />
+            <a
+              href={telHref(office.phone)}
+              className="text-neutral-800 hover:text-primary-600"
+            >
+              {office.phone}
+            </a>
+          </p>
+        )}
+        {office.email && (
+          <p className="flex items-center gap-2">
+            <FiMail className="text-primary-500 shrink-0" />
+            <a
+              href={`mailto:${office.email}`}
+              className="text-primary-600 hover:text-primary-700 break-all"
+            >
+              {office.email}
+            </a>
+          </p>
+        )}
+        {showHours && (
+          <p className="flex items-start gap-2">
+            <FiClock className="text-primary-500 shrink-0 mt-0.5" />
+            <span className="text-neutral-700">
+              {settings.businessDays} · {settings.businessHours}
+              <br />
+              <span className="text-xs text-neutral-500">
+                Reply SLA: {settings.replySla}
+              </span>
+            </span>
+          </p>
+        )}
+      </div>
+
+      {office.mapLink && (
+        <a
+          href={office.mapLink}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 hover:text-primary-700"
+        >
+          Open in Google Maps <FiArrowUpRight />
+        </a>
+      )}
+    </div>
   );
 }

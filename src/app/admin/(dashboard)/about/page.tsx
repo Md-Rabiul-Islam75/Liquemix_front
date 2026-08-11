@@ -6,6 +6,7 @@ import { FiLogIn, FiPlus, FiSave, FiX } from "react-icons/fi";
 import AdminPageHeader from "@/components/admin/PageHeader";
 import ImagePicker from "@/components/admin/ImagePicker";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
+import { AboutIcon } from "@/components/about/AboutIcon";
 import { adminGet, adminPut, getToken } from "@/lib/adminApi";
 import { ErrorToast, SuccessToast } from "@/helpers/ToastHelper";
 import {
@@ -377,11 +378,24 @@ function Field({ label, className, children }: { label: string; className?: stri
 
 function IconSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
-    <select className="admin-input" value={value} onChange={(e) => onChange(e.target.value)}>
-      {ABOUT_ICON_KEYS.map((k) => (
-        <option key={k} value={k}>{k}</option>
-      ))}
-    </select>
+    <div className="flex items-center gap-2">
+      {/* Live preview of the exact glyph the public /about page will render. */}
+      <span
+        aria-hidden
+        className="inline-flex items-center justify-center w-10 h-10 shrink-0 rounded-lg bg-primary-50 text-primary-600 text-lg ring-1 ring-inset ring-primary-100"
+      >
+        <AboutIcon name={value} />
+      </span>
+      <select
+        className="admin-input"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        {ABOUT_ICON_KEYS.map((k) => (
+          <option key={k} value={k}>{k}</option>
+        ))}
+      </select>
+    </div>
   );
 }
 

@@ -80,7 +80,7 @@ export default function NotFound() {
           </h1>
 
           <h2 className="mt-4 text-3xl md:text-5xl font-bold leading-tight tracking-tight text-balance">
-            This page hasn&apos;t set yet.
+            This page isn&apos;t ready yet.
           </h2>
           <p className="mt-4 text-base md:text-lg text-white/75 max-w-xl text-balance">
             The URL you followed has moved, never existed, or is still being

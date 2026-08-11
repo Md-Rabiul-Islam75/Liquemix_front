@@ -1,8 +1,17 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { FiFile, FiTrash, FiUpload, FiX } from "react-icons/fi";
+import {
+  FiBookOpen,
+  FiCheckCircle,
+  FiFile,
+  FiPlus,
+  FiTrash,
+  FiUpload,
+  FiX,
+} from "react-icons/fi";
 import { adminUploadFile } from "@/lib/adminApi";
+import { DOCUMENT_LIBRARY } from "@/data/documentLibrary";
 
 const DEFAULT_MAX_BYTES = 10 * 1024 * 1024; // 10 MB — TDS PDFs run a few MB
 
@@ -45,6 +54,7 @@ export default function FilePicker({
   replaceLabel = "Replace file",
   helperText,
   showUrlField = true,
+  showLibrary = false,
   prefix = "media/documents",
 }: {
   value: string;
@@ -55,6 +65,10 @@ export default function FilePicker({
   replaceLabel?: string;
   helperText?: string;
   showUrlField?: boolean;
+  /** Show a "Pick from existing library" list of the /public/document-sheet
+   *  PDFs. These are served by the frontend, so they always open regardless
+   *  of backend file storage — the same option the product editor offers. */
+  showLibrary?: boolean;
   prefix?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -144,6 +158,68 @@ export default function FilePicker({
             <FiTrash />
           </button>
         </div>
+      )}
+
+      {showLibrary && (
+        <details className="group rounded-xl border border-neutral-100 bg-white-base">
+          <summary className="cursor-pointer list-none p-3 flex items-center gap-3 hover:bg-neutral-50 rounded-xl">
+            <span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-accent-50 text-accent-800 shrink-0">
+              <FiBookOpen />
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-neutral-900">
+                Pick from existing library
+              </p>
+              <p className="text-xs text-neutral-500">
+                {DOCUMENT_LIBRARY.length} PDFs under{" "}
+                <code className="font-mono">public/document-sheet/</code> — these
+                always open.
+              </p>
+            </div>
+            <span className="text-xs font-semibold text-primary-600 group-open:hidden">
+              Show
+            </span>
+            <span className="text-xs font-semibold text-primary-600 hidden group-open:inline">
+              Hide
+            </span>
+          </summary>
+          <ul className="border-t border-neutral-100 divide-y divide-neutral-50 max-h-64 overflow-y-auto">
+            {DOCUMENT_LIBRARY.map((doc) => {
+              const active = value === doc.url;
+              return (
+                <li key={doc.url}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUploadName(null);
+                      onChange(doc.url);
+                    }}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-left ${
+                      active ? "bg-primary-50/60" : "hover:bg-primary-50/40"
+                    }`}
+                  >
+                    <FiFile className="text-primary-600 shrink-0" />
+                    <span className="flex-1 min-w-0">
+                      <span className="block text-sm font-semibold text-neutral-900 truncate">
+                        {doc.suggestedTitle}
+                      </span>
+                      <span className="block text-[10px] text-neutral-500 font-mono truncate">
+                        {doc.url}
+                      </span>
+                    </span>
+                    {active ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-success-700">
+                        <FiCheckCircle /> Selected
+                      </span>
+                    ) : (
+                      <FiPlus className="text-primary-600 shrink-0" />
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </details>
       )}
 
       <div

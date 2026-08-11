@@ -650,6 +650,7 @@ export default function SolutionEditor(props: SolutionEditorProps) {
                         uploadLabel="Choose a file"
                         replaceLabel="Replace file"
                         helperText="PDF, DOC, XLS, PPT, TXT, ZIP up to 10 MB."
+                        showLibrary
                       />
                     </Field>
                     <div className="flex justify-end">

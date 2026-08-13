@@ -185,7 +185,6 @@ export default async function ContactPage({ searchParams }: Props) {
                   key={office.id || office.label}
                   office={office}
                   settings={settings}
-                  showHours={office.isHeadquarters}
                 />
               ))}
             </div>
@@ -262,13 +261,16 @@ export default async function ContactPage({ searchParams }: Props) {
 function OfficeCard({
   office,
   settings,
-  showHours,
 }: {
   office: Office;
   settings: SiteSettings;
-  showHours: boolean;
 }) {
   const isHq = office.isHeadquarters;
+  // Per-office hours when set; the HQ falls back to the global Site-Settings
+  // business hours. Other offices simply show nothing when hours are blank.
+  const hoursText =
+    office.hours?.trim() ||
+    (isHq ? `${settings.businessDays} · ${settings.businessHours}` : null);
   return (
     <div
       className={`rounded-2xl border p-6 flex flex-col ${
@@ -324,15 +326,19 @@ function OfficeCard({
             </a>
           </p>
         )}
-        {showHours && (
+        {hoursText && (
           <p className="flex items-start gap-2">
             <FiClock className="text-primary-500 shrink-0 mt-0.5" />
             <span className="text-neutral-700">
-              {settings.businessDays} · {settings.businessHours}
-              <br />
-              <span className="text-xs text-neutral-500">
-                Reply SLA: {settings.replySla}
-              </span>
+              {hoursText}
+              {isHq && (
+                <>
+                  <br />
+                  <span className="text-xs text-neutral-500">
+                    Reply SLA: {settings.replySla}
+                  </span>
+                </>
+              )}
             </span>
           </p>
         )}

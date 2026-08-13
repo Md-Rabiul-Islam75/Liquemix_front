@@ -7,6 +7,7 @@ import {
   FiPhone,
   FiMail,
   FiLink,
+  FiClock,
   FiPlus,
   FiSave,
   FiTrash2,
@@ -31,6 +32,7 @@ type Draft = {
   phone: string;
   email: string;
   mapLink: string;
+  hours: string;
   isHeadquarters: boolean;
 };
 
@@ -41,6 +43,7 @@ const BLANK_DRAFT: Draft = {
   phone: "",
   email: "",
   mapLink: "",
+  hours: "",
   isHeadquarters: false,
 };
 
@@ -52,6 +55,7 @@ function toDraft(o: Office): Draft {
     phone: o.phone ?? "",
     email: o.email ?? "",
     mapLink: o.mapLink ?? "",
+    hours: o.hours ?? "",
     isHeadquarters: o.isHeadquarters,
   };
 }
@@ -297,6 +301,7 @@ function payload(d: Draft | Office, displayOrder: number, isActive: boolean) {
     phone: d.phone,
     email: d.email,
     mapLink: d.mapLink,
+    hours: d.hours,
     isHeadquarters: d.isHeadquarters,
     displayOrder,
     isActive,
@@ -358,14 +363,25 @@ function OfficeFields({
           />
         </Field>
       </div>
-      <Field label="Google Maps link" icon={<FiLink />}>
-        <input
-          className="admin-input"
-          placeholder="https://maps.google.com/?q=…"
-          value={value.mapLink}
-          onChange={(e) => onChange({ mapLink: e.target.value })}
-        />
-      </Field>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <Field label="Google Maps link" icon={<FiLink />}>
+          <input
+            className="admin-input"
+            placeholder="https://maps.google.com/?q=…"
+            value={value.mapLink}
+            onChange={(e) => onChange({ mapLink: e.target.value })}
+          />
+        </Field>
+        <Field label="Business hours" icon={<FiClock />}>
+          <input
+            className="admin-input"
+            placeholder="Mon–Sat · 10:00–19:00 (IST)"
+            value={value.hours}
+            onChange={(e) => onChange({ hours: e.target.value })}
+            maxLength={160}
+          />
+        </Field>
+      </div>
     </div>
   );
 }

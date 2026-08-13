@@ -18,6 +18,8 @@ export type Office = {
   phone: string | null;
   email: string | null;
   mapLink: string | null;
+  /** Free-text business hours, e.g. "Mon–Sat · 10:00–19:00 (IST)". */
+  hours: string | null;
   isHeadquarters: boolean;
   displayOrder: number;
   isActive: boolean;
@@ -47,6 +49,7 @@ export function officesOrFallback(
       phone: settings.phoneDisplay,
       email: settings.emailGeneral,
       mapLink: settings.mapLink,
+      hours: null,
       isHeadquarters: true,
       displayOrder: 0,
       isActive: true,

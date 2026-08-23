@@ -8,6 +8,7 @@ import {
   adminGet,
   getToken,
   getCachedUser,
+  isHrefLockedForEditor,
   type AdminRoleName,
   type AdminUser,
 } from "@/lib/adminApi";
@@ -26,6 +27,7 @@ import {
   FiImage,
   FiInfo,
   FiLayers,
+  FiLock,
   FiLogOut,
   FiMapPin,
   FiSettings,
@@ -298,6 +300,22 @@ export default function AdminSidebar({
             <ul className="space-y-0.5">
               {group.items.map((item) => {
                 const active = isActive(item.href);
+                const locked = isHrefLockedForEditor(me, item.href);
+                if (locked) {
+                  return (
+                    <li key={item.href}>
+                      <div
+                        aria-disabled="true"
+                        title="You don't have access to this section"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-white/35 cursor-not-allowed select-none"
+                      >
+                        <span className="text-base text-white/25">{item.icon}</span>
+                        <span className="flex-1 min-w-0">{item.label}</span>
+                        <FiLock className="text-xs text-white/40" />
+                      </div>
+                    </li>
+                  );
+                }
                 return (
                   <li key={item.href}>
                     <Link

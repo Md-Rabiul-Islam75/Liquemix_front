@@ -22,9 +22,79 @@ export type AdminUser = {
   role?: string;
   /** Admin access level: SUPER_ADMIN | EDITOR | VIEWER. */
   adminRole?: AdminRoleName;
+  /** For EDITORs: the sections they may edit. Others: ignored. */
+  sections?: AdminSectionKey[];
 };
 
 export type AdminRoleName = "SUPER_ADMIN" | "EDITOR" | "VIEWER";
+
+export type AdminSectionKey =
+  | "SEGMENTS"
+  | "CATEGORIES"
+  | "PRODUCTS"
+  | "SOLUTIONS"
+  | "TOP_CLIENTS"
+  | "REFERENCES"
+  | "NEWS"
+  | "VIDEOS"
+  | "DOWNLOADS"
+  | "ENQUIRIES"
+  | "ABOUT"
+  | "OFFICES"
+  | "SETTINGS";
+
+/** Assignable sections, in the order shown in the invite/edit form. */
+export const ADMIN_SECTIONS: { key: AdminSectionKey; label: string }[] = [
+  { key: "PRODUCTS", label: "Products" },
+  { key: "SOLUTIONS", label: "System Solutions" },
+  { key: "SEGMENTS", label: "Segments" },
+  { key: "CATEGORIES", label: "Categories" },
+  { key: "SETTINGS", label: "Banner & Site settings" },
+  { key: "TOP_CLIENTS", label: "Top Clients" },
+  { key: "REFERENCES", label: "References" },
+  { key: "NEWS", label: "News & Press" },
+  { key: "VIDEOS", label: "Videos" },
+  { key: "DOWNLOADS", label: "Downloads" },
+  { key: "ENQUIRIES", label: "Enquiries" },
+  { key: "ABOUT", label: "About" },
+  { key: "OFFICES", label: "Offices" },
+];
+
+/** Sidebar href → the section that governs its edits. */
+export const SECTION_BY_HREF: Record<string, AdminSectionKey> = {
+  "/admin/segments": "SEGMENTS",
+  "/admin/categories": "CATEGORIES",
+  "/admin/products": "PRODUCTS",
+  "/admin/solutions": "SOLUTIONS",
+  "/admin/banner": "SETTINGS",
+  "/admin/top-clients": "TOP_CLIENTS",
+  "/admin/references": "REFERENCES",
+  "/admin/news": "NEWS",
+  "/admin/videos": "VIDEOS",
+  "/admin/downloads": "DOWNLOADS",
+  "/admin/enquiries": "ENQUIRIES",
+  "/admin/about": "ABOUT",
+  "/admin/settings": "SETTINGS",
+  "/admin/offices": "OFFICES",
+};
+
+/**
+ * True when this menu href should be shown LOCKED for the given user — i.e. an
+ * EDITOR whose assigned sections don't include the section that governs it.
+ * Super Admins and Viewers are never locked (Viewers are read-only globally).
+ */
+export function isHrefLockedForEditor(
+  user: AdminUser | null,
+  href: string
+): boolean {
+  if (!user || user.adminRole !== "EDITOR") return false;
+  // Unknown scope (a login cached before this feature) — don't lock visually;
+  // the backend still enforces access. It resolves after the next sign-in.
+  if (user.sections === undefined) return false;
+  const section = SECTION_BY_HREF[href];
+  if (!section) return false; // non-scoped (e.g. Overview)
+  return !user.sections.includes(section);
+}
 
 type Envelope<T> = {
   status: "success" | "error";
@@ -100,6 +170,7 @@ export async function adminLogin(
     lastName: body.lastName as string | undefined,
     role: body.role as string | undefined,
     adminRole: body.adminRole as AdminRoleName | undefined,
+    sections: body.sections as AdminSectionKey[] | undefined,
   };
   setToken(token);
   cacheUser(user);

@@ -24,7 +24,9 @@ import {
   adminDelete,
   getToken,
   getAdminRole,
+  ADMIN_SECTIONS,
   type AdminRoleName,
+  type AdminSectionKey,
 } from "@/lib/adminApi";
 import { ErrorToast, SuccessToast } from "@/helpers/ToastHelper";
 
@@ -36,6 +38,7 @@ type AdminUser = {
   role: AdminRoleName;
   isActive: boolean;
   createdAt?: string | null;
+  sections?: AdminSectionKey[];
 };
 
 const ROLES: AdminRoleName[] = ["SUPER_ADMIN", "EDITOR", "VIEWER"];
@@ -295,6 +298,12 @@ export default function AdminUsersPage() {
                         <FiShield className="text-xs" />
                         {u.role.replace("_", " ")}
                       </span>
+                      {u.role === "EDITOR" && (
+                        <span className="mt-1 block text-[10px] text-neutral-400">
+                          {u.sections?.length ?? 0} section
+                          {(u.sections?.length ?? 0) === 1 ? "" : "s"}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-xs text-neutral-500 whitespace-nowrap">
                       {fmtDate(u.createdAt)}
@@ -385,9 +394,17 @@ function UserFormModal({
   const [email, setEmail] = useState(existing?.email ?? "");
   const [role, setRole] = useState<AdminRoleName>(existing?.role ?? "EDITOR");
   const [isActive, setIsActive] = useState(existing?.isActive ?? true);
+  const [sections, setSections] = useState<AdminSectionKey[]>(
+    existing?.sections ?? []
+  );
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const toggleSection = (key: AdminSectionKey) =>
+    setSections((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -408,6 +425,8 @@ function UserFormModal({
     email.trim() &&
     (isEdit || password.length >= 8) &&
     (!password || password.length >= 8) &&
+    // Editors must have at least one section (else they can edit nothing).
+    (role !== "EDITOR" || sections.length > 0) &&
     !submitting;
 
   async function onSubmit(e: React.FormEvent) {
@@ -421,6 +440,7 @@ function UserFormModal({
           lastName: lastName.trim(),
           role,
           isActive,
+          sections: role === "EDITOR" ? sections : [],
         });
         if (password) {
           await adminPut(`/api/v1/admin/users/${existing.id}/password`, {
@@ -435,6 +455,7 @@ function UserFormModal({
           email: email.trim(),
           password,
           role,
+          sections: role === "EDITOR" ? sections : [],
         });
         SuccessToast(
           "User invited",
@@ -540,6 +561,45 @@ function UserFormModal({
               </Field>
             )}
           </div>
+
+          {/* Assigned sections — only meaningful for Editors */}
+          {role === "EDITOR" ? (
+            <Field label="Assigned sections">
+              <div className="grid grid-cols-2 gap-2">
+                {ADMIN_SECTIONS.map((s) => {
+                  const on = sections.includes(s.key);
+                  return (
+                    <label
+                      key={s.key}
+                      className={`flex items-center gap-2 px-3 h-9 rounded-lg border text-sm cursor-pointer transition-colors ${
+                        on
+                          ? "border-primary-300 bg-primary-50/60 text-primary-800"
+                          : "border-neutral-200 text-neutral-600 hover:border-neutral-300"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={on}
+                        onChange={() => toggleSection(s.key)}
+                        className="shrink-0"
+                      />
+                      <span className="truncate">{s.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <span className="mt-1.5 block text-[11px] text-neutral-400">
+                This editor can only edit the sections you tick — everything else
+                is locked. At least one is required.
+              </span>
+            </Field>
+          ) : (
+            <p className="text-[11px] text-neutral-400">
+              {role === "SUPER_ADMIN"
+                ? "Super Admins can edit every section — no assignment needed."
+                : "Viewers are read-only across all sections."}
+            </p>
+          )}
 
           <Field
             label={

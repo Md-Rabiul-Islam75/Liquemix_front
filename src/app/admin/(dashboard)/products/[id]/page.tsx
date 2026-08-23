@@ -60,6 +60,7 @@ type ProductResponse = {
   segmentId: number;
   categoryIds: number[];
   applicationAreas: string[];
+  uses?: string[];
   advantages: string[];
   consumption?: { value: string | null; unit: string | null } | null;
   images: ProductImage[];
@@ -108,6 +109,8 @@ export default function AdminProductEditPage() {
   const [segmentId, setSegmentId] = useState<number | null>(null);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<number>>(new Set());
   const [applicationAreas, setApplicationAreas] = useState<string[]>([""]);
+  const [uses, setUses] = useState<string[]>([""]);
+  const [areaTab, setAreaTab] = useState<"areas" | "uses">("areas");
   const [advantages, setAdvantages] = useState<string[]>([""]);
   const [consumptionValue, setConsumptionValue] = useState("");
   const [consumptionUnit, setConsumptionUnit] = useState("");
@@ -143,6 +146,9 @@ export default function AdminProductEditPage() {
         setSegmentId(p.segmentId);
         setSelectedCategoryIds(new Set(p.categoryIds ?? []));
         setApplicationAreas(p.applicationAreas?.length ? p.applicationAreas : [""]);
+        setUses(p.uses?.length ? p.uses : [""]);
+        // Open the tab that already has content so editors land on the right one.
+        setAreaTab(p.uses?.length ? "uses" : "areas");
         setAdvantages(p.advantages?.length ? p.advantages : [""]);
         setConsumptionValue(p.consumption?.value ?? "");
         setConsumptionUnit(p.consumption?.unit ?? "");
@@ -199,6 +205,7 @@ export default function AdminProductEditPage() {
       longDescription: longDescription.trim() || null,
       categoryIds: Array.from(selectedCategoryIds),
       applicationAreas: applicationAreas.map((s) => s.trim()).filter(Boolean),
+      uses: uses.map((s) => s.trim()).filter(Boolean),
       advantages: advantages.map((s) => s.trim()).filter(Boolean),
       consumption:
         consumptionValue.trim() || consumptionUnit.trim()
@@ -420,13 +427,49 @@ export default function AdminProductEditPage() {
             </div>
           </Section>
 
-          <Section title="Application areas" hint="Empty rows are ignored.">
-            <ListEditor
-              items={applicationAreas}
-              setItems={setApplicationAreas}
-              placeholder="e.g. Basement walls and floors"
-            />
-          </Section>
+          <section className="rounded-2xl bg-white-base border border-neutral-100 p-5 md:p-6">
+            <div className="inline-flex p-0.5 rounded-lg bg-neutral-100 mb-3">
+              {([
+                ["areas", "Application areas"],
+                ["uses", "Uses"],
+              ] as const).map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setAreaTab(key)}
+                  className={`h-8 px-4 rounded-md text-sm font-semibold transition-colors ${
+                    areaTab === key
+                      ? "bg-white-base text-primary-700 shadow-sm"
+                      : "text-neutral-600 hover:text-neutral-900"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-neutral-500 mb-4">
+              {areaTab === "areas"
+                ? "Where this product can be used. Empty rows are ignored."
+                : "What this product is used for. Empty rows are ignored."}
+            </p>
+            {areaTab === "areas" ? (
+              <ListEditor
+                items={applicationAreas}
+                setItems={setApplicationAreas}
+                placeholder="e.g. Basement walls and floors"
+              />
+            ) : (
+              <ListEditor
+                items={uses}
+                setItems={setUses}
+                placeholder="e.g. Sealing construction joints"
+              />
+            )}
+            <p className="mt-3 text-[11px] text-neutral-400">
+              The public page shows <strong>Uses</strong> when filled, otherwise{" "}
+              <strong>Application areas</strong>.
+            </p>
+          </section>
 
           <Section title="Advantages">
             <ListEditor

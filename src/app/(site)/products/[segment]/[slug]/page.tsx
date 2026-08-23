@@ -278,9 +278,18 @@ export default async function ProductDetailPage({ params }: Props) {
 
               <div className="mt-7 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <p className="brand-panel__eyebrow mb-3">Areas of application</p>
+                  {/* Show "Uses" when the product has them, else "Areas of
+                      application". Some products carry one, some the other. */}
+                  <p className="brand-panel__eyebrow mb-3">
+                    {(product.uses?.length ?? 0) > 0
+                      ? "Uses"
+                      : "Areas of application"}
+                  </p>
                   <ul className="space-y-2">
-                    {product.applicationAreas.map((a) => (
+                    {((product.uses?.length ?? 0) > 0
+                      ? product.uses!
+                      : product.applicationAreas
+                    ).map((a) => (
                       <li key={a} className="flex gap-2 text-sm text-neutral-800">
                         <FiMapPin className="mt-0.5 text-primary-500 shrink-0" />
                         <span>{a}</span>

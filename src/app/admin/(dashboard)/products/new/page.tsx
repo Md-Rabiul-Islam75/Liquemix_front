@@ -97,6 +97,9 @@ export default function NewProductPage() {
   const [shortDescription, setShortDescription] = useState("");
   const [longDescription, setLongDescription] = useState("");
   const [applicationAreas, setApplicationAreas] = useState<string[]>([""]);
+  const [uses, setUses] = useState<string[]>([""]);
+  // Which of the two parallel lists the editor is showing.
+  const [areaTab, setAreaTab] = useState<"areas" | "uses">("areas");
   const [advantages, setAdvantages] = useState<string[]>([""]);
   const [consumptionValue, setConsumptionValue] = useState("");
   const [consumptionUnit, setConsumptionUnit] = useState("");
@@ -175,6 +178,7 @@ export default function NewProductPage() {
           applicationAreas: applicationAreas
             .map((s) => s.trim())
             .filter((s) => s.length > 0),
+          uses: uses.map((s) => s.trim()).filter((s) => s.length > 0),
           advantages: advantages
             .map((s) => s.trim())
             .filter((s) => s.length > 0),
@@ -380,17 +384,47 @@ export default function NewProductPage() {
           </section>
 
           <section className="rounded-2xl bg-white-base border border-neutral-100 p-5 md:p-6">
-            <h2 className="text-base font-bold text-neutral-900 mb-1">
-              Application areas
-            </h2>
+            <div className="inline-flex p-0.5 rounded-lg bg-neutral-100 mb-3">
+              {([
+                ["areas", "Application areas"],
+                ["uses", "Uses"],
+              ] as const).map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setAreaTab(key)}
+                  className={`h-8 px-4 rounded-md text-sm font-semibold transition-colors ${
+                    areaTab === key
+                      ? "bg-white-base text-primary-700 shadow-sm"
+                      : "text-neutral-600 hover:text-neutral-900"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
             <p className="text-xs text-neutral-500 mb-4">
-              Where this product can be used. Empty rows are ignored.
+              {areaTab === "areas"
+                ? "Where this product can be used. Empty rows are ignored."
+                : "What this product is used for. Empty rows are ignored."}
             </p>
-            <ListEditor
-              items={applicationAreas}
-              setItems={setApplicationAreas}
-              placeholder="e.g. Basement walls and floors"
-            />
+            {areaTab === "areas" ? (
+              <ListEditor
+                items={applicationAreas}
+                setItems={setApplicationAreas}
+                placeholder="e.g. Basement walls and floors"
+              />
+            ) : (
+              <ListEditor
+                items={uses}
+                setItems={setUses}
+                placeholder="e.g. Sealing construction joints"
+              />
+            )}
+            <p className="mt-3 text-[11px] text-neutral-400">
+              The public page shows <strong>Uses</strong> when filled, otherwise{" "}
+              <strong>Application areas</strong>.
+            </p>
           </section>
 
           <section className="rounded-2xl bg-white-base border border-neutral-100 p-5 md:p-6">

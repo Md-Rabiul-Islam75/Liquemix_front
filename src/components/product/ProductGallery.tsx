@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import SafeImage from "@/components/common/SafeImage";
 import type { SegmentColor } from "@/types/Catalog";
 
@@ -42,7 +43,10 @@ export default function ProductGallery({
     (a, b) => Number(Boolean(b.isPrimary)) - Number(Boolean(a.isPrimary))
   );
   const [selected, setSelected] = useState(0);
-  const current = ordered[Math.min(selected, ordered.length - 1)];
+  const count = ordered.length;
+  const current = ordered[Math.min(selected, count - 1)];
+  // Wrap-around step for the prev/next arrows.
+  const step = (dir: number) => setSelected((s) => (s + dir + count) % count);
 
   return (
     <div>
@@ -73,6 +77,28 @@ export default function ProductGallery({
           {isNew && <span className="chip-new">NEW</span>}
           {isFeatured && <span className="chip-featured">★ Featured</span>}
         </div>
+
+        {/* Prev / next arrows — step through images (hidden in print) */}
+        {count > 1 && (
+          <div className="print:hidden">
+            <button
+              type="button"
+              onClick={() => step(-1)}
+              aria-label="Previous image"
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 inline-flex items-center justify-center w-8 h-8 rounded-full bg-secondary-500 text-white-base shadow-soft hover:bg-secondary-600 transition-colors"
+            >
+              <FiChevronLeft className="text-lg" />
+            </button>
+            <button
+              type="button"
+              onClick={() => step(1)}
+              aria-label="Next image"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 inline-flex items-center justify-center w-8 h-8 rounded-full bg-secondary-500 text-white-base shadow-soft hover:bg-secondary-600 transition-colors"
+            >
+              <FiChevronRight className="text-lg" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Thumbnail strip — hidden in print (only the selected main image prints) */}

@@ -94,6 +94,9 @@ export interface Product {
   segmentColor?: SegmentColor;
   categoryIds: EntityId[];
   applicationAreas: string[];
+  /** Parallel to applicationAreas — "what it's used for". Public shows uses
+   *  when present, otherwise application areas. */
+  uses?: string[];
   advantages: string[];
   consumption?: { value: string; unit: string };
   packaging: PackagingOption[];

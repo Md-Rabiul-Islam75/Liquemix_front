@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import {
   FiArrowUpRight,
   FiEdit,
-  FiLock,
   FiLogIn,
+  FiPlus,
 } from "react-icons/fi";
 import AdminPageHeader from "@/components/admin/PageHeader";
 import { adminGet, getToken } from "@/lib/adminApi";
@@ -95,11 +95,14 @@ export default function AdminSegmentsPage() {
       <AdminPageHeader
         eyebrow="Catalog"
         title="Segments"
-        description="The four brand pillars. Structurally fixed — copy and hero imagery are editable. Counts reflect published rows."
+        description="The brand pillars. Add new segments or edit copy and hero imagery. New segments reuse one of the four brand colours. Counts reflect published rows."
         actions={
-          <span className="inline-flex items-center gap-1.5 px-3 h-10 rounded-lg bg-neutral-100 text-xs font-semibold text-neutral-600">
-            <FiLock /> Locked — {segments.length || 4} segments
-          </span>
+          <Link
+            href="/admin/segments/new"
+            className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg bg-primary-500 text-white-base text-sm font-semibold hover:bg-primary-600"
+          >
+            <FiPlus /> Add segment
+          </Link>
         }
       />
 
